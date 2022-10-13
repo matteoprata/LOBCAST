@@ -43,6 +43,9 @@ class OrderEvent(Enum):
     TRADING_HALT = 7
     OTHER = 8
 
+class DatasetType(Enum):
+    TRAIN = "train"
+    TEST = "test"
 
 OHLC_DATA = "old_data/ohlc_data/"
 DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
@@ -53,5 +56,15 @@ SAVE_GAN_MODEL_EVERY = 50
 VALIDATE_GAN_MODEL_EVERY = 2
 EPOCHS = 300
 
+SEED = 0
+RANDOM_GEN_DATASET = np.random.RandomState(SEED)
+
 # skip the first and last *BOUNDARY_PURGE seconds of the dataframe for every day
 BOUNDARY_PURGE = 60*30
+
+HISTORIC_WIN_SIZE = 100  # time units
+FUTURE_WIN_SIZE = 50     # time units
+
+DATA_DIR = "data/AVXL_010322_310322"
+
+

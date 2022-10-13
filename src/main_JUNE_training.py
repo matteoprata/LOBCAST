@@ -7,6 +7,9 @@ from collections import defaultdict
 from collections import Counter
 from src.models.cnn2_evolution import CNN2
 from pytorch_lightning import LightningDataModule, LightningModule, Trainer
+from src.data_preprocessing.LOBDataBuilder import LOBDataBuilder
+
+import src.config as co
 
 
 def parser_cl_arguments():
@@ -67,8 +70,8 @@ def load_data(batch_size, base_lob_dts, type_model) -> tuple:
     # create dataloaders
     # sampler option is mutually exclusive with shuffle
     train_loader = torch.utils.data.DataLoader(dataset=dataset_train, batch_size=batch_size, drop_last=True, shuffle=True)
-    val_loader = torch.utils.data.DataLoader(dataset=dataset_val, batch_size=batch_size, shuffle=False, drop_last=True)
-    test_loader = torch.utils.data.DataLoader(dataset=dataset_test, batch_size=batch_size, shuffle=False, drop_last=True)
+    val_loader   = torch.utils.data.DataLoader(dataset=dataset_val, batch_size=batch_size, shuffle=False, drop_last=True)
+    test_loader  = torch.utils.data.DataLoader(dataset=dataset_test, batch_size=batch_size, shuffle=False, drop_last=True)
 
     return train_loader, val_loader, test_loader
 
@@ -95,20 +98,41 @@ if __name__ == "__main__":
     args = parser_cl_arguments().parse_args()
 
     # dataset args
-    dir_data = "data/AVXL_010322_310322"
-    horizon = 60*15*4
+    # dir_data = "data/AVXL_010322_310322"
 
-    dir_results = "data/out"  # args.dir_results
-    type_model = args.type_model
-    n_epochs = args.epochs
-    batch_size = args.batch_size
-    learning_rate = args.learning_rate
+    # type_model = args.type_model
+    # n_epochs = args.epochs
+    # batch_size = args.batch_size
+    # learning_rate = args.learning_rate
 
     # 0. LOAD data
     print("here\n\n")
 
+    # train
+    lo_train = LOBDataBuilder(co.DATA_DIR,
+                              co.DatasetType.TRAIN,
+                              start_end_trading_day=("2022-03-07", "2022-03-08"),
+                              is_data_preload=False,
+                              crop_trading_day_by=60*30)
+
+    mu, sigma = lo_train.normalization_mean, lo_train.normalization_std
+
+    lo_test = LOBDataBuilder(co.DATA_DIR,
+                             co.DatasetType.TEST,
+                             start_end_trading_day=("2022-03-09", "2022-03-10"),
+                             is_data_preload=False,
+                             crop_trading_day_by=60*30,
+                             normalization_mean=mu,
+                             normalization_std=sigma)
+
+
+    # print(lo.samples[0])
+    # print(lo.samples[0][0].shape)
+    # print(len(lo.samples))
+    # exit()
+
     # generates the dataset normalized and balanced
-    base_lob_dts = LOBDataset(dir_data, horizon=horizon, sign_threshold=0.1)
+    base_lob_dts = LOBDataset(co.DATA_DIR, horizon=co.HISTORIC_WIN_SIZE, sign_threshold=0.1)
 
     print("ready, ", type(base_lob_dts))
 

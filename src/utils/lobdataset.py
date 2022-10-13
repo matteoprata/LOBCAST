@@ -73,8 +73,10 @@ class Dataset(data.Dataset):
         """Generates samples of data"""
         return self.x[index], self.y[index]
 
+
 class RawDataset(metaclass=ABCMeta):
-    
+    """ Split dataset. """
+
     # The only accepted horizon that we can use in our system.
     ACCEPTED_HORIZONS = [10, 20, 50, 100, 3600]
 
@@ -89,7 +91,7 @@ class RawDataset(metaclass=ABCMeta):
         """
         self.horizon = horizon
         self.n_levels = n_levels
-        self.train_val_test_split = train_val_test_split
+        self.train_val_test_split = train_val_test_split   #
         self.sign_threshold = sign_threshold
         self.one_hot_encoding = one_hot_encoding
         self.all_df_data = None
@@ -106,7 +108,7 @@ class RawDataset(metaclass=ABCMeta):
         
             perc_training (float) : How much percentage of all the data we have to return, for training.
         """
-        stop = int(len(self.all_df_data)*self.train_val_test_split[0])
+        stop = int(len(self.all_df_data)*self.train_val_test_split[0])  # first 50%
         data_df = self.all_df_data.iloc[:stop]
         if torch_dataset:
             return Dataset(data_df, horizon=self.horizon, one_hot_encoding=self.one_hot_encoding)
@@ -118,7 +120,7 @@ class RawDataset(metaclass=ABCMeta):
             perc_testing (float) : How much percentage of all the data we have to return, for testing.
         
         """
-        start = int(len(self.all_df_data)*(1-self.train_val_test_split[2]))
+        start = int(len(self.all_df_data)*(1-self.train_val_test_split[2]))  # last 25%
         data_df = self.all_df_data[start:]
         if torch_dataset:
             return Dataset(data_df, horizon=self.horizon, one_hot_encoding=self.one_hot_encoding)
@@ -178,7 +180,8 @@ class LOBDataset(RawDataset):
 
         # KEY CALL
         self.all_df_data, self.cost_df_data = self.__read_dataset()
-        # print(self.all_df_data.columns)
+        print(self.all_df_data.columns)
+        exit()
 
         if self.normalize:
             self.all_df_data = self.__normalize_data()
@@ -189,7 +192,7 @@ class LOBDataset(RawDataset):
                                               sign_threshold=self.sign_threshold)
 
         self.plot_dataframe_stats()
-        exit()
+
 
         # merge cost_df to all_df_data
         if self.add_costpredictor_columns:

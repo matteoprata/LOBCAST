@@ -286,12 +286,14 @@ def orderbook_columns(level: int):
     return orderbook_columns
 
 
-def from_folder_to_unique_df(file_7z: str, first_date: str = "1990-01-01",
-                             last_date: str = "2100-01-01",
+def from_folder_to_unique_df(file_7z: str,
+                             first_date: str = "1990-01-01",
+                             last_date:  str = "2100-01-01",
                              plot: bool = False, level: int = 10,
                              path: str = "",
                              granularity: config.Granularity = config.Granularity.Sec1,
-                             add_messages=False):
+                             add_messages=False,
+                             boundaries_purge=0):
     """ return a unique df with also the label
 
         add_messages : if True keep messages along the orderbook data. It does not work with granularity != None
@@ -304,8 +306,8 @@ def from_folder_to_unique_df(file_7z: str, first_date: str = "1990-01-01",
     assert list(message_dfs.keys()) == list(orderbook_dfs.keys()), "the messages and orderbooks have different days!!"
     print("Iterating over trading days...")
     for d in tqdm.tqdm(message_dfs.keys()):
-        tmp_df = lobster_to_gran_df(message_dfs[d], orderbook_dfs[d], d, granularity=granularity,
-                                    level=level, add_messages=add_messages)
+        tmp_df = lobster_to_gran_df(message_dfs[d], orderbook_dfs[d], d, granularity=granularity, level=level,
+                                    add_messages=add_messages, boundaries_purge=boundaries_purge)
         frames.append(tmp_df)
 
     # stacks all the days one on top of the other
@@ -387,7 +389,7 @@ def lobster_to_gran_df(message_df, orderbook_df,
                        granularity: config.Granularity = config.Granularity.Sec1,
                        level: int = 10,
                        add_messages=False,
-                       boundaries_purge=True):
+                       boundaries_purge=0):
     """ create a dataframe with midprices, sell and buy for each second
 
         message_df : a csv df with the messages (lobster old_data format) without initial start lob
@@ -420,14 +422,14 @@ def lobster_to_gran_df(message_df, orderbook_df,
         orderbook_df = orderbook_df.resample(granularity.value).first()
         orderbook_df.reset_index(inplace=True)
 
-    assert granularity == config.Granularity.Sec1 or not boundaries_purge, "Unhandled boundaries_purge."
+    assert granularity == config.Granularity.Sec1 or not boundaries_purge > 0, "Unhandled boundaries_purge."
 
     orderbook_df = orderbook_df.sort_values(by="date").reset_index(drop=True).copy()
     orderbook_df.drop(columns=['seconds'], inplace=True)
     orderbook_df = orderbook_df.set_index('date')
 
     # removes the first and last *boundaries_purge time units in the dataframe
-    purge = pd.Timedelta(config.BOUNDARY_PURGE, "sec")
+    purge = pd.Timedelta(boundaries_purge, "sec")
     orderbook_df = orderbook_df[orderbook_df.index.values[0] + purge: orderbook_df.index.values[-1] - purge]
     return orderbook_df
 
