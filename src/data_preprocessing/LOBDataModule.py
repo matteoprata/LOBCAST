@@ -3,11 +3,10 @@ import pytorch_lightning as pl
 
 
 class LOBDataModule(pl.LightningDataModule):
-    def __init__(self, data_builder, data_proportions=(.5, .25, .25), batch_size: int = 32):
+    def __init__(self, train_set, test_set, batch_size: int = 32):
         super().__init__()
-        self.data_builder = data_builder
+        self.train_set = train_set
         self.batch_size = batch_size
-        self.data_proportions = data_proportions
 
     def setup(self, stage=None):
         if stage == "fit" or stage is None:

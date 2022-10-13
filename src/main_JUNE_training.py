@@ -8,6 +8,7 @@ from collections import Counter
 from src.models.cnn2_evolution import CNN2
 from pytorch_lightning import LightningDataModule, LightningModule, Trainer
 from src.data_preprocessing.LOBDataBuilder import LOBDataBuilder
+from src.data_preprocessing.LOBDataset import LOBDataset
 
 import src.config as co
 
@@ -125,6 +126,11 @@ if __name__ == "__main__":
                              normalization_mean=mu,
                              normalization_std=sigma)
 
+    n_inst_train = int(len(lo_train.samples_x) * .7)
+
+    train_set = LOBDataset(x=lo_train.samples_x[:n_inst_train], y=lo_train.samples_y[:n_inst_train])
+    val_set   = LOBDataset(x=lo_train.samples_x[n_inst_train:], y=lo_train.samples_y[n_inst_train:])
+    test_set  = LOBDataset(x=lo_test.samples_x, y=lo_test.samples_y)
 
     # print(lo.samples[0])
     # print(lo.samples[0][0].shape)
