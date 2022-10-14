@@ -9,6 +9,7 @@ from src.models.model_callbacks import callback_save_model
 from pytorch_lightning import Trainer
 from src.models.mlp.mlpModule import MLP
 import src.config as co
+import wandb
 
 ModelsMap = {co.Models.MLP.value: MLP}
 
@@ -75,19 +76,38 @@ def prepare_data(cl_args):
 def lunch_training(cl_args):
     data_module = prepare_data(cl_args)
 
-    model = MLP(data_module.x_shape, data_module.y_shape, cl_args.lr, hidden_layer_dim=128)
+    # if cl_args.is_wandb:
+    wandb.init(project=co.PROJECT_NAME)
 
+    model = MLP(data_module.x_shape, data_module.y_shape, cl_args.lr, hidden_layer_dim=128, remote_log=wandb)
     trainer = Trainer(
         gpus=co.DEVICE,
-        val_check_interval=co.VALIDATE_EVERY,
+        check_val_every_n_epoch=co.VALIDATE_EVERY,  # val_check_interval
         max_epochs=cl_args.epochs,
         callbacks=[callback_save_model(cl_args.model)]
     )
-
     trainer.fit(model, data_module)
+
+
+# def lunch_training_sweep(cl_args):
+#     sweep_configuration = {
+#         'method': 'bayes',
+#         'name': 'sweep',
+#         'metric': {'goal': 'maximize', 'name': co.ModelSteps.VALIDATION.value + co.Metrics.F1.value},
+#         'parameters':
+#             {
+#                 'batch_size': {'values': [16, 32, 64]},
+#                 'epochs':     {'values': [5, 10, 15]},
+#                 'lr':         {'max': 0.1, 'min': 0.0001}
+#             }
+#     }
+#
+#     # 🐝 Step: Initialize sweep by passing in config
+#     sweep_id = wandb.sweep(sweep=sweep_configuration, project='my-first-sweep')
+#     wandb.agent(sweep_id, function=lunch_training(cl_args), count=1)
 
 
 if __name__ == "__main__":
     args = parser_cl_arguments().parse_args()
     lunch_training(args)
-
+    # lunch_training_sweep(args)
