@@ -468,7 +468,7 @@ if __name__ == "__main__":
     parser.add_argument('-m', '--type_model', default="LSTM", type=str,
                         help='Name of the type_model, can be MLP, CNN, CNN2, LSTM, DeepLob or CNN_LSTM',
                         choices=["MLP", "CNN", "CNN2", "DeepLob", "LSTM", "CNN_LSTM"])
-    parser.add_argument('-l', '--learning_rate', default=1e-3, type=float, help='The learning rate of the models')
+    parser.add_argument('-l', '--learning_rate', default=1e-3, type=float, help='The learning rate of the saved_models')
                         
     args = parser.parse_args()
 

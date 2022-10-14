@@ -12,34 +12,11 @@ import collections
 import numpy as np
 
 
-class NormalizationType(Enum):
-    STATIC = 0
-    DYNAMIC = 1
-    NONE = 2
-
-
-class WIN_SIZE(Enum):
-    SEC10 = 10
-    SEC20 = 20
-    SEC30 = 30
-
-    MIN01 = 60
-    MIN05 = 60 * 5
-    MIN10 = 60 * 10
-    MIN20 = 60 * 20
-
-
-class Predictions(Enum):
-    UPWARD = 2
-    DOWNWARD = 0
-    STATIONARY = 1
-
-
 class LOBDataBuilder:
-    def __init__(self, lobster_data_dir, dataset_type, n_lob_levels=10, normalization_type=NormalizationType.STATIC,
+    def __init__(self, lobster_data_dir, dataset_type, n_lob_levels=co.N_LOB_LEVELS, normalization_type=co.NormalizationType.STATIC,
                  normalization_mean=None, normalization_std=None,
                  start_end_trading_day=("1990-01-01", "2100-01-01"), crop_trading_day_by=0,
-                 window_size_forward=WIN_SIZE.MIN01.value, window_size_backward=WIN_SIZE.MIN01.value, label_threshold=.001,
+                 window_size_forward=co.FORWARD_WINDOW, window_size_backward=co.BACKWARD_WINDOW, label_threshold=.001,
                  data_granularity=co.Granularity.Sec1, is_data_preload=True):
 
         self.dataset_type = dataset_type
@@ -85,9 +62,9 @@ class LOBDataBuilder:
 
     def __normalize_dataset(self):
         """ Does normalization. """
-        if self.normalization_type == NormalizationType.STATIC:
+        if self.normalization_type == co.NormalizationType.STATIC:
             self.data = ppu.stationary_normalize_data(self.data, self.normalization_mean, self.normalization_std)
-        elif self.normalization_type == NormalizationType.NONE:
+        elif self.normalization_type == co.NormalizationType.NONE:
             pass
 
         # needed to update the mid-prices columns, after the normalization, mainly for visualization purposes
@@ -97,14 +74,17 @@ class LOBDataBuilder:
         self.label_threshold = label_threshold if label_threshold is not None else self.label_threshold
         self.data = ppu.add_lob_labels(self.data, self.window_size_forward, self.window_size_backward, self.label_threshold)
 
-    def __snapshotting(self):
+    def __snapshotting(self, do_shuffle=False):  # TODO implement
         """ This creates 4 X n_levels X window_size_backward -> prediction. """
         relevant_columns = [c for c in self.data.columns if "sell" in c or "buy" in c]
 
         X, Y = [], []
         for st in tqdm.tqdm(range(0, self.data.shape[0]-self.window_size_backward)):
-            X += [self.data.iloc[st:st+self.window_size_backward, :].loc[:, relevant_columns]]
-            Y += [self.data.iloc[st+self.window_size_backward, :][ppu.DataCols.PREDICTION.value]]
+            x_snap = self.data.iloc[st:st+self.window_size_backward, :].loc[:, relevant_columns]
+            y_snap = self.data.iloc[st+self.window_size_backward, :][ppu.DataCols.PREDICTION.value]
+            X.append(x_snap)
+            Y.append(y_snap)
+
         self.samples_x, self.samples_y = np.asarray(X), np.asarray(Y)
 
     def __under_sampling(self):
@@ -114,18 +94,22 @@ class LOBDataBuilder:
         n_min_occ = occurrences[i_min_occ]                 # number of occurrences of the minority class
 
         indexes_chosen = []
-        for i in [Predictions.UPWARD.value, Predictions.STATIONARY.value, Predictions.DOWNWARD.value]:
+        for i in [co.Predictions.UPWARD.value, co.Predictions.STATIONARY.value, co.Predictions.DOWNWARD.value]:
             indexes = np.where(self.samples_y == i)[0]
             indexes_chosen += list(co.RANDOM_GEN_DATASET.choice(indexes, n_min_occ, replace=False))
 
         self.samples_x = self.samples_x[indexes_chosen]
         self.samples_y = self.samples_y[indexes_chosen]
 
+    def __shuffle_snapshots(self):
+        pass
+
     def __plot_dataset(self):
         ppu.plot_dataframe_stats(self.data, self.label_threshold)
 
     def __prepare_dataset(self):
         """ Crucial call! """
+
         self.__read_dataset()
         self.__label_dataset()
         self.__normalize_dataset()

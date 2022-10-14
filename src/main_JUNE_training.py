@@ -21,7 +21,7 @@ def parser_cl_arguments():
     # parser.add_argument('-b', '--batch_size', default=32, type=int, metavar='N', help='mini-batch size')
     # parser.add_argument('-k', '--horizon', default=100, type=int, metavar='N', help='horizon can be 10, 20, 50 or 100', choices=[10, 20, 50, 100])
     # parser.add_argument('-m', '--type_model', default="LSTM", type=str, help='Name of the type_model, can be MLP, CNN, CNN2, LSTM, DeepLob or CNN_LSTM', choices=["MLP", "CNN", "CNN2", "DeepLob", "LSTM", "CNN_LSTM"]
-    # parser.add_argument('-l', '--learning_rate', default=1e-3, type=float, help='The learning rate of the models')
+    # parser.add_argument('-l', '--learning_rate', default=1e-3, type=float, help='The learning rate of the saved_models')
     return parser
 
 
@@ -95,55 +95,50 @@ def run_training(horizon, train_loader, val_loader, test_loader):
     # trainer.fit(model, test_loader)
 
 
-if __name__ == "__main__":
-    args = parser_cl_arguments().parse_args()
-
-    # dataset args
-    # dir_data = "data/AVXL_010322_310322"
-
-    # type_model = args.type_model
-    # n_epochs = args.epochs
-    # batch_size = args.batch_size
-    # learning_rate = args.learning_rate
-
-    # 0. LOAD data
-    print("here\n\n")
-
-    # train
-    lo_train = LOBDataBuilder(co.DATA_DIR,
-                              co.DatasetType.TRAIN,
-                              start_end_trading_day=("2022-03-07", "2022-03-08"),
-                              is_data_preload=False,
-                              crop_trading_day_by=60*30)
-
-    mu, sigma = lo_train.normalization_mean, lo_train.normalization_std
-
-    lo_test = LOBDataBuilder(co.DATA_DIR,
-                             co.DatasetType.TEST,
-                             start_end_trading_day=("2022-03-09", "2022-03-10"),
-                             is_data_preload=False,
-                             crop_trading_day_by=60*30,
-                             normalization_mean=mu,
-                             normalization_std=sigma)
-
-    n_inst_train = int(len(lo_train.samples_x) * .7)
-
-    train_set = LOBDataset(x=lo_train.samples_x[:n_inst_train], y=lo_train.samples_y[:n_inst_train])
-    val_set   = LOBDataset(x=lo_train.samples_x[n_inst_train:], y=lo_train.samples_y[n_inst_train:])
-    test_set  = LOBDataset(x=lo_test.samples_x, y=lo_test.samples_y)
-
-    # print(lo.samples[0])
-    # print(lo.samples[0][0].shape)
-    # print(len(lo.samples))
-    # exit()
-
-    # generates the dataset normalized and balanced
-    base_lob_dts = LOBDataset(co.DATA_DIR, horizon=co.HISTORIC_WIN_SIZE, sign_threshold=0.1)
-
-    print("ready, ", type(base_lob_dts))
-
-    # 1. SPLIT DATA
-    train_loader, val_loader, test_loader = load_data(batch_size, base_lob_dts, type_model)
-
-    print("OK")
-    # run_training(horizon, train_loader, val_loader, test_loader)
+# if __name__ == "__main__":
+#     args = parser_cl_arguments().parse_args()
+#
+#     # dataset args
+#     # dir_data = "data/AVXL_010322_310322"
+#
+#     # type_model = args.type_model
+#     # n_epochs = args.epochs
+#     # batch_size = args.batch_size
+#     # learning_rate = args.learning_rate
+#
+#     # 0. LOAD data
+#     print("here\n\n")
+#
+#     # train
+#     lo_train = LOBDataBuilder(co.DATA_DIR,
+#                               co.DatasetType.TRAIN,
+#                               start_end_trading_day=("2022-03-07", "2022-03-08"),
+#                               is_data_preload=False,
+#                               crop_trading_day_by=60*30)
+#
+#     mu, sigma = lo_train.normalization_mean, lo_train.normalization_std
+#
+#     lo_test = LOBDataBuilder(co.DATA_DIR,
+#                              co.DatasetType.TEST,
+#                              start_end_trading_day=("2022-03-09", "2022-03-10"),
+#                              is_data_preload=False,
+#                              crop_trading_day_by=60*30,
+#                              normalization_mean=mu,
+#                              normalization_std=sigma)
+#
+#     n_inst_train = int(len(lo_train.samples_x) * .7)
+#
+#     train_set = LOBDataset(x=lo_train.samples_x[:n_inst_train], y=lo_train.samples_y[:n_inst_train])
+#     val_set   = LOBDataset(x=lo_train.samples_x[n_inst_train:], y=lo_train.samples_y[n_inst_train:])
+#     test_set  = LOBDataset(x=lo_test.samples_x, y=lo_test.samples_y)
+#
+#     # generates the dataset normalized and balanced
+#     base_lob_dts = LOBDataset(co.DATA_DIR, horizon=co.HISTORIC_WIN_SIZE, sign_threshold=0.1)
+#
+#     print("ready, ", type(base_lob_dts))
+#
+#     # 1. SPLIT DATA
+#     train_loader, val_loader, test_loader = load_data(batch_size, base_lob_dts, type_model)
+#
+#     print("OK")
+#     # run_training(horizon, train_loader, val_loader, test_loader)
