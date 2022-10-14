@@ -99,6 +99,11 @@ class LOBDataBuilder:
 
         self.samples_x, self.samples_y = np.asarray(X), np.asarray(Y)
 
+        if do_shuffle:
+            index = co.RANDOM_GEN_DATASET.randint(0, self.samples_x.shape[0], size=self.samples_x.shape[0])
+            self.samples_x = self.samples_x[index]
+            self.samples_y = self.samples_y[index]
+
     def __under_sampling(self):
         """ Discard instances of the majority class. """
         occurrences = collections.Counter(self.samples_y)
@@ -110,6 +115,7 @@ class LOBDataBuilder:
             indexes = np.where(self.samples_y == i)[0]
             indexes_chosen += list(co.RANDOM_GEN_DATASET.choice(indexes, n_min_occ, replace=False))
 
+        indexes_chosen = np.sort(indexes_chosen)
         self.samples_x = self.samples_x[indexes_chosen]
         self.samples_y = self.samples_y[indexes_chosen]
 

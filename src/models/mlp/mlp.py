@@ -1,5 +1,6 @@
 from torch import nn
 
+
 class MLPModel(nn.Module):
 
     def __init__(
@@ -10,10 +11,10 @@ class MLPModel(nn.Module):
     ):
         super(MLPModel, self).__init__()
 
-        self.linear1 = nn.Linear(x_shape, hidden_layer_dim)
+        self.linear1   = nn.Linear(x_shape, hidden_layer_dim)
         self.leakyReLU = nn.LeakyReLU()
-        self.linear2 = nn.Linear(hidden_layer_dim, y_shape)
-        self.softmax = nn.Softmax(dim=1)
+        self.linear2   = nn.Linear(hidden_layer_dim, y_shape)
+        self.softmax   = nn.Softmax(dim=1)
 
     def forward(self, x):
         out = self.linear1(x)

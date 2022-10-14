@@ -75,12 +75,7 @@ def prepare_data(cl_args):
 def lunch_training(cl_args):
     data_module = prepare_data(cl_args)
 
-    model = MLP(
-        data_module.x_shape,
-        data_module.y_shape,
-        cl_args.lr,
-        hidden_layer_dim=128 # TODO: save in config?
-    )
+    model = MLP(data_module.x_shape, data_module.y_shape, cl_args.lr, hidden_layer_dim=128)
 
     trainer = Trainer(
         gpus=co.DEVICE,

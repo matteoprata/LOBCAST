@@ -7,19 +7,13 @@ from sklearn.metrics import accuracy_score
 import numpy as np
 import src.config as co
 
-from mlp import MLPModel
+from src.models.mlp.mlp import MLPModel
+
 
 class MLP(pl.LightningModule):
     """ Multi layer perceptron. """
 
-    def __init__(
-            self,
-            x_shape,
-            y_shape,
-            lr,
-            hidden_layer_dim=128,
-            remote_log=None
-    ):
+    def __init__(self, x_shape, y_shape, lr, hidden_layer_dim=128, remote_log=None ):
 
         super().__init__()
         self.lr = lr
@@ -67,10 +61,8 @@ class MLP(pl.LightningModule):
         loss_val = F.cross_entropy(prediction, y.float())
 
         # deriving prediction from softmax probs
-        print(y)
         prediction_ind = torch.argmax(prediction, dim=1)
         y_ind = torch.argmax(y, dim=1)
-        print(y_ind)
 
         return prediction_ind, y_ind, loss_val
 
@@ -92,11 +84,6 @@ class MLP(pl.LightningModule):
             model_step.value + co.Metrics.RECALL.value:    float(recall),
             model_step.value + co.Metrics.ACCURACY.value:  float(accuracy)
             }
-
-        # print(model_step)
-        # print(predictions)
-        # print(ys)
-        # print(val_dict)
 
         # for saving best model
         self.log(model_step.value + co.Metrics.F1.value, f1score, prog_bar=True)
