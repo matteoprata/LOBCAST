@@ -7,7 +7,7 @@ from src.data_preprocessing.LOBDataset import LOBDataset
 from src.models.model_callbacks import callback_save_model
 
 from pytorch_lightning import Trainer
-from src.models.mlp import MLP
+from src.models.mlp.mlpModule import MLP
 import src.config as co
 
 ModelsMap = {co.Models.MLP.value: MLP}
@@ -35,23 +35,27 @@ def parser_cl_arguments():
 def prepare_data(cl_args):
 
     # train
-    lo_train = LOBDataBuilder(co.DATA_DIR,
-                              co.DatasetType.TRAIN,
-                              start_end_trading_day=("2022-03-07", "2022-03-08"),
-                              is_data_preload=False,
-                              crop_trading_day_by=60 * 30)
+    lo_train = LOBDataBuilder(
+        co.DATA_DIR,
+        co.DatasetType.TRAIN,
+        start_end_trading_day=("2022-03-07", "2022-03-08"),
+        is_data_preload=False,
+        crop_trading_day_by=60 * 30
+    )
 
     # use the same
     mu, sigma = lo_train.normalization_mean, lo_train.normalization_std
 
     # test
-    lo_test = LOBDataBuilder(co.DATA_DIR,
-                             co.DatasetType.TEST,
-                             start_end_trading_day=("2022-03-09", "2022-03-10"),
-                             is_data_preload=True,
-                             crop_trading_day_by=60 * 30,
-                             normalization_mean=mu,
-                             normalization_std=sigma)
+    lo_test = LOBDataBuilder(
+        co.DATA_DIR,
+        co.DatasetType.TEST,
+        start_end_trading_day=("2022-03-09", "2022-03-10"),
+        is_data_preload=True,
+        crop_trading_day_by=60 * 30,
+        normalization_mean=mu,
+        normalization_std=sigma
+    )
 
     n_inst_train = int(len(lo_train.samples_x) * co.TRAIN_SPLIT_VAL)
 
@@ -70,12 +74,20 @@ def prepare_data(cl_args):
 
 def lunch_training(cl_args):
     data_module = prepare_data(cl_args)
-    model = MLP(data_module.x_shape, data_module.y_shape, cl_args.lr)
 
-    trainer = Trainer(gpus=co.DEVICE,
-                      val_check_interval=co.VALIDATE_EVERY,
-                      max_epochs=cl_args.epochs,
-                      callbacks=[callback_save_model(cl_args.model)])
+    model = MLP(
+        data_module.x_shape,
+        data_module.y_shape,
+        cl_args.lr,
+        hidden_layer_dim=128 # TODO: save in config?
+    )
+
+    trainer = Trainer(
+        gpus=co.DEVICE,
+        val_check_interval=co.VALIDATE_EVERY,
+        max_epochs=cl_args.epochs,
+        callbacks=[callback_save_model(cl_args.model)]
+    )
 
     trainer.fit(model, data_module)
 

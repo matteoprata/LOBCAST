@@ -8,20 +8,17 @@ from sklearn import metrics
 from torch import nn
 from torch.utils.data import Dataset
 from sklearn.metrics import precision_recall_fscore_support as score
-from torch.utils import data
 from collections import Counter
-from torchsampler import ImbalancedDatasetSampler
 
-import pytorch_lightning as pl
 import torch.nn.functional as F
 
-from src.models.mlp import MLP
+from src.models.mlp.mlpModule import MLP
 from src.models.cnn1 import CNN
 from src.models.cnn2 import CNN2
 from src.models.lstm import LSTM
 from src.models.deeplob import DeepLob
 from src.models.cnn_lstm import CNN_LSTM
-from src.utils.lobdataset import RawDataset, LOBDataset, DEEPDataset
+from src.utils.lobdataset import LOBDataset, DEEPDataset
 
 
 def load_data(batch_size, horizon, base_lob_dts, type_model, polluded) -> tuple:

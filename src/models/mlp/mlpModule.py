@@ -1,32 +1,44 @@
 import pytorch_lightning as pl
 
 import torch
-from torch import nn
 import torch.nn.functional as F
 from sklearn.metrics import precision_recall_fscore_support as prfs
 from sklearn.metrics import accuracy_score
 import numpy as np
 import src.config as co
 
+from mlp import MLPModel
 
 class MLP(pl.LightningModule):
     """ Multi layer perceptron. """
 
-    def __init__(self, x_shape, y_shape, lr, remote_log=None):
+    def __init__(
+            self,
+            x_shape,
+            y_shape,
+            lr,
+            hidden_layer_dim=128,
+            remote_log=None
+    ):
+
         super().__init__()
         self.lr = lr
         self.remote_log = remote_log
 
-        self.layers = nn.Sequential(
-            nn.Linear(x_shape, 128),
-            nn.LeakyReLU(),
-            nn.Linear(128, y_shape),
-            nn.Softmax(dim=1)  # TODO: check dim
+        self.x_shape = x_shape
+        self.y_shape = y_shape
+
+        self.hidden_layer_dim = hidden_layer_dim
+
+        self.MLPModel = MLPModel(
+            x_shape=self.x_shape,
+            y_shape=self.y_shape,
+            hidden_layer_dim=self.hidden_layer_dim
         )
 
     def forward(self, x):  # [batch_size x 40 x window]
         x = x.view(x.size(0), -1).float()
-        return self.layers(x)
+        return self.MLPModel(x)
 
     def training_step(self, batch, batch_idx):
         x, y = batch
@@ -73,12 +85,13 @@ class MLP(pl.LightningModule):
         precision, recall, f1score, _ = prfs(predictions, ys, average="macro", zero_division=0)
         accuracy = accuracy_score(predictions, ys)
 
-        val_dict = {model_step.value + co.Metrics.LOSS.value:      float(np.sum(loss_vals)),
-                    model_step.value + co.Metrics.F1.value:        float(f1score),
-                    model_step.value + co.Metrics.PRECISION.value: float(precision),
-                    model_step.value + co.Metrics.RECALL.value:    float(recall),
-                    model_step.value + co.Metrics.ACCURACY.value:  float(accuracy)
-                    }
+        val_dict = {
+            model_step.value + co.Metrics.LOSS.value:      float(np.sum(loss_vals)),
+            model_step.value + co.Metrics.F1.value:        float(f1score),
+            model_step.value + co.Metrics.PRECISION.value: float(precision),
+            model_step.value + co.Metrics.RECALL.value:    float(recall),
+            model_step.value + co.Metrics.ACCURACY.value:  float(accuracy)
+            }
 
         # print(model_step)
         # print(predictions)

@@ -13,11 +13,21 @@ import numpy as np
 
 
 class LOBDataBuilder:
-    def __init__(self, lobster_data_dir, dataset_type, n_lob_levels=co.N_LOB_LEVELS, normalization_type=co.NormalizationType.STATIC,
-                 normalization_mean=None, normalization_std=None,
-                 start_end_trading_day=("1990-01-01", "2100-01-01"), crop_trading_day_by=0,
-                 window_size_forward=co.FORWARD_WINDOW, window_size_backward=co.BACKWARD_WINDOW, label_threshold=.001,
-                 data_granularity=co.Granularity.Sec1, is_data_preload=True):
+    def __init__(
+            self,
+            lobster_data_dir,
+            dataset_type,
+            n_lob_levels=co.N_LOB_LEVELS,
+            normalization_type=co.NormalizationType.STATIC,
+            normalization_mean=None,
+            normalization_std=None,
+            start_end_trading_day=("1990-01-01", "2100-01-01"),
+            crop_trading_day_by=0,
+            window_size_forward=co.FORWARD_WINDOW,
+            window_size_backward=co.BACKWARD_WINDOW,
+            label_threshold=.001,
+            data_granularity=co.Granularity.Sec1,
+            is_data_preload=True):
 
         self.dataset_type = dataset_type
         self.lobster_data_dir = lobster_data_dir
@@ -48,12 +58,14 @@ class LOBDataBuilder:
         if self.is_data_preload and os.path.exists(self.lobster_data_dir + F_EXTENSION):
             out_df = util.read_data(F_NAME)
         else:
-            out_df = lbu.from_folder_to_unique_df(self.lobster_data_dir,
-                                                  level=self.n_lob_levels,
-                                                  granularity=self.data_granularity,
-                                                  first_date=self.start_end_trading_day[0],
-                                                  last_date=self.start_end_trading_day[0],
-                                                  boundaries_purge=self.crop_trading_day_by)
+            out_df = lbu.from_folder_to_unique_df(
+                self.lobster_data_dir,
+                level=self.n_lob_levels,
+                granularity=self.data_granularity,
+                first_date=self.start_end_trading_day[0],
+                last_date=self.start_end_trading_day[0],
+                boundaries_purge=self.crop_trading_day_by)
+
             if not os.path.exists(self.lobster_data_dir + F_EXTENSION):
                 util.write_data(out_df, F_NAME)
 

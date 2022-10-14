@@ -4,17 +4,14 @@ import argparse
 import wandb 
 import pandas as pd
 
-from matplotlib import pyplot as plt
-from sklearn import metrics
 from torch import nn
 from torch.utils.data import Dataset
 from sklearn.metrics import precision_recall_fscore_support as score
 from torch.utils import data
 
-import pytorch_lightning as pl
 import torch.nn.functional as F
 
-from src.models.mlp import MLP
+from src.models.mlp.mlpModule import MLP
 from src.models.cnn1 import CNN
 from src.models.cnn2 import CNN2
 from src.models.lstm import LSTM
