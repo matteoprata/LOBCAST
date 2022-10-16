@@ -12,10 +12,10 @@ from collections import Counter
 
 import torch.nn.functional as F
 
-from src.models.mlp.mlpModule import MLP
+from src.models.model_executor import MLP
 from src.models.cnn1 import CNN
 from src.models.cnn2 import CNN2
-from src.models.lstm import LSTM
+from src.models.lstm.lstm import LSTM
 from src.models.deeplob import DeepLob
 from src.models.cnn_lstm import CNN_LSTM
 from src.utils.lobdataset import LOBDataset, DEEPDataset

@@ -11,10 +11,10 @@ from torch.utils import data
 
 import torch.nn.functional as F
 
-from src.models.mlp.mlpModule import MLP
+from src.models.model_executor import MLP
 from src.models.cnn1 import CNN
 from src.models.cnn2 import CNN2
-from src.models.lstm import LSTM
+from src.models.lstm.lstm import LSTM
 from src.models.deeplob import DeepLob
 
 MODEL_LSTM = "results/LSTM_50_0.001_32_model.pt"

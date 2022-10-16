@@ -41,7 +41,8 @@ class NormalizationType(Enum):
 class WinSize(Enum):
     SEC10 = 10
     SEC20 = 20
-    SEC30 = 30
+    SEC50 = 50
+    SEC100 = 100
 
     MIN01 = 60
     MIN05 = 60 * 5
@@ -60,6 +61,7 @@ class Models(Enum):
     DEEPLOB = "DeepLob"
     MLP = "MLP"
     CNN = "CNN"
+    LSTM = "LSTM"
 
 
 class DatasetFamily(Enum):
@@ -120,6 +122,9 @@ LEARNING_RATE = 0.001
 VALIDATE_EVERY = 1
 MLP_HIDDEN = 128
 
+LSTM_HIDDEN = 32
+LSTM_N_HIDDEN = 1
+
 N_LOB_LEVELS = 10
 LABELING_THRESHOLD = None
 LABELING_SIGMA_SCALER = .5  # dynamic threshold
@@ -133,6 +138,6 @@ DATA_DIR = "data/AVXL_010322_310322"
 PROJECT_NAME = "lob-adversarial-attacks-22"
 IS_SWEEP = True
 
-CHOSEN_MODEL = Models.MLP
+CHOSEN_MODEL = Models.LSTM
 IS_SHUFFLE_INPUT = True
 INSTANCES_LOWERBOUND = 1000

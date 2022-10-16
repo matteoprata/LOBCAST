@@ -7,32 +7,19 @@ from sklearn.metrics import accuracy_score
 import numpy as np
 import src.config as co
 
-from src.models.mlp.mlp import MLPModel
 
-
-class MLP(pl.LightningModule):
+class NNEngine(pl.LightningModule):
     """ Multi layer perceptron. """
 
-    def __init__(self, x_shape, y_shape, lr, hidden_layer_dim=128, remote_log=None ):
+    def __init__(self,  neural_architecture, lr, remote_log=None ):
 
         super().__init__()
         self.lr = lr
         self.remote_log = remote_log
+        self.neural_architecture = neural_architecture
 
-        self.x_shape = x_shape
-        self.y_shape = y_shape
-
-        self.hidden_layer_dim = hidden_layer_dim
-
-        self.MLPModel = MLPModel(
-            x_shape=self.x_shape,
-            y_shape=self.y_shape,
-            hidden_layer_dim=self.hidden_layer_dim
-        )
-
-    def forward(self, x):  # [batch_size x 40 x window]
-        x = x.view(x.size(0), -1).float()
-        return self.MLPModel(x)
+    def forward(self, x):
+        return self.neural_architecture(x)
 
     def training_step(self, batch, batch_idx):
         x, y = batch

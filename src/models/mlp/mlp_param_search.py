@@ -1,7 +1,7 @@
 
 import src.config as co
 
-sweep_configuration_1 = {
+sweep_configuration_mlp = {
     'method': 'bayes',
     'name': 'sweep',
 
@@ -9,9 +9,9 @@ sweep_configuration_1 = {
                'name': co.ModelSteps.VALIDATION.value + co.Metrics.F1.value},
 
     'parameters': {co.TuningVars.BACKWARD_WINDOW.value:  {'values': [co.WinSize.SEC10.value,
-                                                                     co.WinSize.SEC30.value,
-                                                                     co.WinSize.MIN01.value,
-                                                                     co.WinSize.MIN05.value]},
+                                                                     co.WinSize.SEC20.value,
+                                                                     co.WinSize.SEC50.value,
+                                                                     co.WinSize.SEC100.value]},
 
                    # co.TuningVars.FORWARD_WINDOW.value:   {'values': [co.WinSize.SEC10.value,
                    #                                                   co.WinSize.SEC30.value,

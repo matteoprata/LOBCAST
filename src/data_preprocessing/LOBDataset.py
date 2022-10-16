@@ -18,7 +18,7 @@ class LOBDataset(data.Dataset):
         if one_hot_encoding:
             self.y = F.one_hot(self.y.to(torch.int64), num_classes=self.num_classes)
 
-        self.x_shape, self.y_shape = np.prod(list(self.x[0].shape)), np.prod(list(self.y[0].shape))
+        self.x_shape, self.y_shape = tuple(self.x[0].shape), np.prod(list(self.y[0].shape))
 
     def __len__(self):
         """ Denotes the total number of samples. """
