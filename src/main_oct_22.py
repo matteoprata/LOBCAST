@@ -36,7 +36,7 @@ def prepare_data():
     lo_train = LOBDataBuilder(
         co.DATA_DIR,
         co.DatasetType.TRAIN,
-        start_end_trading_day=("2022-03-01", "2022-03-23"),
+        start_end_trading_day=("2022-03-01", "2022-03-07"),
         is_data_preload=False,
         crop_trading_day_by=60 * 30
     )
@@ -48,7 +48,7 @@ def prepare_data():
     lo_test = LOBDataBuilder(
         co.DATA_DIR,
         co.DatasetType.TEST,
-        start_end_trading_day=("2022-03-24", "2022-03-31"),
+        start_end_trading_day=("2022-03-08", "2022-03-12"),
         is_data_preload=False,
         crop_trading_day_by=60 * 30,
         normalization_mean=mu,

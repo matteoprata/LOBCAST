@@ -65,7 +65,7 @@ class LOBDataBuilder:
                 level=self.n_lob_levels,
                 granularity=self.data_granularity,
                 first_date=self.start_end_trading_day[0],
-                last_date=self.start_end_trading_day[0],
+                last_date=self.start_end_trading_day[1],
                 boundaries_purge=self.crop_trading_day_by)
 
             if not os.path.exists(self.lobster_data_dir + F_EXTENSION):
