@@ -5,6 +5,19 @@ import torch
 np.set_printoptions(suppress=True)
 
 
+class TuningVars(Enum):
+    BATCH_SIZE = "batch_size"
+    LEARNING_RATE = "lr"
+    EPOCHS = "epochs"
+    IS_SHUFFLE = "is_shuffle"
+
+    MLP_HIDDEN = "hidden_mlp"
+    BACKWARD_WINDOW = "window_size_backward"
+    FORWARD_WINDOW = "window_size_forward"
+    LABELING_THRESHOLD = "labeling_threshold"
+    LABELING_SIGMA_SCALER = "labeling_sigma_scaler"
+
+
 class Metrics(Enum):
     LOSS = 'loss'
     F1 = 'f1'
@@ -96,29 +109,30 @@ DEVICE = 1 if torch.cuda.is_available() else 0
 
 MODEL_GAN = "data/GAN_models/"
 
-SAVE_GAN_MODEL_EVERY = 50
-VALIDATE_GAN_MODEL_EVERY = 2
+
 EPOCHS = 500
 
 SEED = 0
 RANDOM_GEN_DATASET = np.random.RandomState(SEED)
 
-# skip the first and last *BOUNDARY_PURGE seconds of the dataframe for every day
-BOUNDARY_PURGE = 60*30
-
-HISTORIC_WIN_SIZE = 100  # time units
-FUTURE_WIN_SIZE = 50     # time units
-
 BATCH_SIZE = 32
 LEARNING_RATE = 0.001
 VALIDATE_EVERY = 1
+MLP_HIDDEN = 128
 
 N_LOB_LEVELS = 10
+LABELING_THRESHOLD = None
+LABELING_SIGMA_SCALER = .5  # dynamic threshold
 BACKWARD_WINDOW = WinSize.SEC20.value
-FORWARD_WINDOW = WinSize.SEC20.value
+FORWARD_WINDOW  = WinSize.SEC20.value
 SAVED_MODEL_DIR = "data/saved_models"
 
 TRAIN_SPLIT_VAL = .7
 DATA_DIR = "data/AVXL_010322_310322"
 
 PROJECT_NAME = "lob-adversarial-attacks-22"
+IS_SWEEP = True
+
+CHOSEN_MODEL = Models.MLP
+IS_SHUFFLE_INPUT = True
+INSTANCES_LOWERBOUND = 1000

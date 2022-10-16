@@ -25,7 +25,8 @@ class LOBDataBuilder:
             crop_trading_day_by=0,
             window_size_forward=co.FORWARD_WINDOW,
             window_size_backward=co.BACKWARD_WINDOW,
-            label_threshold=.001,
+            label_threshold=co.LABELING_THRESHOLD,
+            label_dynamic_scaler=co.LABELING_SIGMA_SCALER,
             data_granularity=co.Granularity.Sec1,
             is_data_preload=True):
 
@@ -43,6 +44,7 @@ class LOBDataBuilder:
 
         self.window_size_forward = window_size_forward
         self.window_size_backward = window_size_backward
+        self.label_dynamic_scaler = label_dynamic_scaler
         self.label_threshold = label_threshold
 
         # KEY call, generates the dataset
@@ -82,15 +84,15 @@ class LOBDataBuilder:
         # needed to update the mid-prices columns, after the normalization, mainly for visualization purposes
         self.data = ppu.add_midprices_columns(self.data, self.window_size_forward, self.window_size_backward)
 
-    def __label_dataset(self, label_threshold=None):
-        self.label_threshold = label_threshold if label_threshold is not None else self.label_threshold
-        self.data = ppu.add_lob_labels(self.data, self.window_size_forward, self.window_size_backward, self.label_threshold)
+    def __label_dataset(self):
+        self.data, self.label_threshold = ppu.add_lob_labels(self.data, self.window_size_forward, self.window_size_backward, self.label_threshold, self.label_dynamic_scaler)
 
     def __snapshotting(self, do_shuffle=False):  # TODO implement
         """ This creates 4 X n_levels X window_size_backward -> prediction. """
         relevant_columns = [c for c in self.data.columns if "sell" in c or "buy" in c]
 
         X, Y = [], []
+        print("Snapshotting... (data has", self.data.shape[0], "rows)")
         for st in tqdm.tqdm(range(0, self.data.shape[0]-self.window_size_backward)):
             x_snap = self.data.iloc[st:st+self.window_size_backward, :].loc[:, relevant_columns]
             y_snap = self.data.iloc[st+self.window_size_backward, :][ppu.DataCols.PREDICTION.value]
@@ -106,6 +108,7 @@ class LOBDataBuilder:
 
     def __under_sampling(self):
         """ Discard instances of the majority class. """
+        print("Doing under-sampling...")
         occurrences = collections.Counter(self.samples_y)
         i_min_occ = min(occurrences, key=occurrences.get)  # index of the class with the least instances
         n_min_occ = occurrences[i_min_occ]                 # number of occurrences of the minority class
@@ -113,17 +116,23 @@ class LOBDataBuilder:
         indexes_chosen = []
         for i in [co.Predictions.UPWARD.value, co.Predictions.STATIONARY.value, co.Predictions.DOWNWARD.value]:
             indexes = np.where(self.samples_y == i)[0]
+            if len(indexes) < co.INSTANCES_LOWERBOUND:
+                print("The instance is not well formed, there are less than {} instances fo the class {} ({})."
+                      .format(co.INSTANCES_LOWERBOUND, i, len(indexes)))
+                self.__abort_generation()
+                return
+
             indexes_chosen += list(co.RANDOM_GEN_DATASET.choice(indexes, n_min_occ, replace=False))
 
         indexes_chosen = np.sort(indexes_chosen)
         self.samples_x = self.samples_x[indexes_chosen]
         self.samples_y = self.samples_y[indexes_chosen]
 
-    def __shuffle_snapshots(self):
-        pass
-
     def __plot_dataset(self):
         ppu.plot_dataframe_stats(self.data, self.label_threshold)
+
+    def __abort_generation(self):
+        self.data, self.samples_x, self.samples_y = None, None, None
 
     def __prepare_dataset(self):
         """ Crucial call! """
@@ -131,11 +140,9 @@ class LOBDataBuilder:
         self.__read_dataset()
         self.__label_dataset()
         self.__normalize_dataset()
-        self.__snapshotting()
-
-        if self.dataset_type == co.DatasetType.TRAIN:
-            self.__under_sampling()
-
+        self.__snapshotting(do_shuffle=co.IS_SHUFFLE_INPUT)
+        self.__under_sampling()  # if self.dataset_type == co.DatasetType.TRAIN:
         # self.__plot_dataset()
+
 
 

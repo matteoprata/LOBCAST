@@ -29,7 +29,6 @@ def stationary_normalize_data(data, normalization_mean=None, normalization_std=N
 
         # TODO: volumes and prices can be negative, add min value
         # + abs(data.loc[:, cols].stack().min())  # scale positive
-
         # data.loc[:, cols].stack().plot.hist(bins=200, alpha=0.5, title=col_name)
         # plt.show()
 
@@ -50,7 +49,7 @@ class DataCols(Enum):
     L1_SELL_PRICE = 'psell1'
 
 
-def add_lob_labels(data, window_size_forward, window_size_backward, label_threshold):
+def add_lob_labels(data, window_size_forward, window_size_backward, label_threshold, sigma_fraction):
     """ Labels the data in [0, 1, 2], labels 0 (down), 1 (stable), 2 (down). """
     data = add_midprices_columns(data, window_size_forward, window_size_backward)
 
@@ -58,12 +57,18 @@ def add_lob_labels(data, window_size_forward, window_size_backward, label_thresh
     data = data[(window_size_backward - 1):-(window_size_forward - 1)]
 
     data[DataCols.PERCENTAGE_CHANGE.value] = get_percentage_change(data, DataCols.MID_PRICE_PAST.value, DataCols.MID_PRICE_FUTURE.value)
+    ratio_mu, ratio_si = data[DataCols.PERCENTAGE_CHANGE.value].mean(), data[DataCols.PERCENTAGE_CHANGE.value].std()
+
+    # pd.DataFrame(data[DataCols.PERCENTAGE_CHANGE.value]).hist(bins=100)
+    # plt.show()
+
+    label_threshold = (ratio_mu + ratio_si * sigma_fraction) if sigma_fraction is not None else label_threshold
 
     # labels 0 (down), 1 (stable), 2 (down)
     data[DataCols.PREDICTION.value] = np.ones(data.shape[0])
     data[DataCols.PREDICTION.value] = np.where(data[DataCols.PERCENTAGE_CHANGE.value] > label_threshold, 2, data[DataCols.PREDICTION.value])
     data[DataCols.PREDICTION.value] = np.where(data[DataCols.PERCENTAGE_CHANGE.value] < -label_threshold, 0, data[DataCols.PREDICTION.value])
-    return data
+    return data, label_threshold
 
 
 def add_midprices_columns(data, window_size_forward, window_size_backward):

@@ -48,11 +48,19 @@ class MLP(pl.LightningModule):
         prediction_ind, y_ind, loss_val = self.__validation_and_testing(batch)
         return prediction_ind, y_ind, loss_val
 
+    def training_epoch_end(self, validation_step_outputs):
+        losses   = [el["loss"].item() for el in validation_step_outputs]
+        sum_losses = float(np.sum(losses))
+        self.log(co.ModelSteps.TRAINING.value + co.Metrics.LOSS.value, sum_losses, prog_bar=True)
+
+        if self.remote_log is not None:
+            self.remote_log.log({co.ModelSteps.TRAINING.value + co.Metrics.LOSS.value: sum_losses})
+
     def validation_epoch_end(self, validation_step_outputs):
-        self.__validation_and_testing_end(validation_step_outputs, co.ModelSteps.VALIDATION)
+        self.__validation_and_testing_end(validation_step_outputs, model_step=co.ModelSteps.VALIDATION)
 
     def test_epoch_end(self, validation_step_outputs):
-        self.__validation_and_testing_end(validation_step_outputs, co.ModelSteps.TESTING)
+        self.__validation_and_testing_end(validation_step_outputs, model_step=co.ModelSteps.TESTING)
 
     # COMMON
     def __validation_and_testing(self, batch):
