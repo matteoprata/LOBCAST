@@ -1,6 +1,7 @@
 import pytorch_lightning as pl
 from torch import nn
 
+
 class CNN(pl.LightningModule):
     def __init__(self, horizon, n_feat, outshape, temp):
         super().__init__()
@@ -47,7 +48,7 @@ class CNN(pl.LightningModule):
         out = self.relu2(out)
 
         # Max pool 1
-        # print('max1', out.shape)
+        #  print('max1', out.shape)
         out = self.maxpool1(out)
 
         # Convolution 3

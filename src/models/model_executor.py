@@ -6,7 +6,8 @@ from sklearn.metrics import precision_recall_fscore_support as prfs
 from sklearn.metrics import accuracy_score
 import numpy as np
 import src.config as co
-
+import wandb
+from collections import Counter
 
 class NNEngine(pl.LightningModule):
     """ Multi layer perceptron. """
@@ -69,7 +70,13 @@ class NNEngine(pl.LightningModule):
             ys += y.tolist()
             loss_vals += [loss_val.item()]
 
-        precision, recall, f1score, _ = prfs(predictions, ys, average="macro", zero_division=0)
+        # TODO: recode
+        counts_class = {k: 1/v for k, v in Counter(ys).items()}
+        yweights = np.ones(shape=len(ys)) * counts_class[0]
+        yweights[ys == 2] = counts_class[2]
+        yweights[ys == 1] = counts_class[1]
+
+        precision, recall, f1score, _ = prfs(predictions, ys, average="weighted", sample_weight=yweights, zero_division=0)
         accuracy = accuracy_score(predictions, ys)
 
         val_dict = {
@@ -85,6 +92,11 @@ class NNEngine(pl.LightningModule):
 
         if self.remote_log is not None:  # log to wandb
             self.remote_log.log(val_dict)
+            self.remote_log.log({model_step.value + "_conf_mat": wandb.plot.confusion_matrix(
+                probs=None,
+                y_true=ys, preds=predictions,
+                class_names=co.CLASS_NAMES,
+                title=model_step.value + "_conf_mat")})
 
     def configure_optimizers(self):
         return torch.optim.Adam(self.parameters(), lr=self.lr)

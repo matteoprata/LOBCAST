@@ -37,23 +37,25 @@ def prepare_data():
     lo_train = LOBDataBuilder(
         co.DATA_DIR,
         co.DatasetType.TRAIN,
-        start_end_trading_day=("2022-03-01", "2022-03-07"),  # ("2022-03-01", "2022-03-07")
+        start_end_trading_day=("2022-03-01", "2022-03-11"),  # ("2022-03-01", "2022-03-07")  5 days
         is_data_preload=False,
         crop_trading_day_by=60 * 30
     )
 
     # use the same
-    mu, sigma = lo_train.normalization_mean, lo_train.normalization_std
+    mu, sigma, train_lab_threshold = lo_train.normalization_mean, lo_train.normalization_std, lo_train.label_threshold
 
     # test
     lo_test = LOBDataBuilder(
         co.DATA_DIR,
         co.DatasetType.TEST,
-        start_end_trading_day=("2022-03-08", "2022-03-12"),  # ("2022-03-02", "2022-03-03")
+        start_end_trading_day=("2022-03-14", "2022-03-16"),  # ("2022-03-02", "2022-03-03") 3 test
         is_data_preload=False,
         crop_trading_day_by=60 * 30,
         normalization_mean=mu,
-        normalization_std=sigma
+        normalization_std=sigma,
+        label_dynamic_scaler=None,
+        label_threshold=train_lab_threshold,  # to fix the label to the
     )
 
     n_inst_train = int(len(lo_train.samples_x) * co.TRAIN_SPLIT_VAL)
@@ -71,27 +73,11 @@ def prepare_data():
     return lob_dm
 
 
-def pick_model(chosen_model, data_module, remote_log):
-    net_architecture = None
-    if chosen_model == co.Models.MLP:
-        net_architecture = MLP(x_shape=np.prod(data_module.x_shape),
-                               y_shape=data_module.y_shape,
-                               hidden_layer_dim=co.MLP_HIDDEN)
-
-    elif chosen_model == co.Models.LSTM:
-        net_architecture = LSTM(x_shape=data_module.x_shape[1],
-                                y_shape=data_module.y_shape,
-                                hidden_layer_dim=co.LSTM_HIDDEN,
-                                num_layers=co.LSTM_N_HIDDEN)
-
-    return NNEngine(net_architecture, lr=co.LEARNING_RATE, remote_log=remote_log)
-
-
 def lunch_training():
     print("Lunching the execution of {}.".format(co.CHOSEN_MODEL))
 
     remote_log = None
-    if co.IS_SWEEP:
+    if co.IS_WANDB:
 
         wandb.init()
         remote_log = wandb
@@ -114,7 +100,7 @@ def lunch_training():
                       callbacks=[cbk.callback_save_model(co.CHOSEN_MODEL.value),
                                  cbk.early_stopping()])
 
-    trainer .fit(model, data_module)
+    trainer. fit(model, data_module)
     trainer.test(model, data_module)
 
 
@@ -126,9 +112,25 @@ def lunch_training_sweep():
     # wandb agent -p lob-adversarial-attacks-22 -e matteoprata rygxo9ti
 
 
+def pick_model(chosen_model, data_module, remote_log):
+    net_architecture = None
+    if chosen_model == co.Models.MLP:
+        net_architecture = MLP(x_shape=np.prod(data_module.x_shape),  # 40 * wind
+                               y_shape=data_module.y_shape,
+                               hidden_layer_dim=co.MLP_HIDDEN)
+
+    elif chosen_model == co.Models.LSTM:
+        net_architecture = LSTM(x_shape=data_module.x_shape[1],  # 40, wind is the time
+                                y_shape=data_module.y_shape,
+                                hidden_layer_dim=co.LSTM_HIDDEN,
+                                num_layers=co.LSTM_N_HIDDEN)
+
+    return NNEngine(net_architecture, lr=co.LEARNING_RATE, remote_log=remote_log)
+
+
 if __name__ == "__main__":
 
-    if co.IS_SWEEP:
+    if co.IS_WANDB:
         lunch_training_sweep()
     else:
         lunch_training()

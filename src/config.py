@@ -106,6 +106,8 @@ class DatasetType(Enum):
     TEST = "test"
 
 
+CLASS_NAMES = ["DOWN", "STATIONARY", "UP"]
+
 OHLC_DATA = "old_data/ohlc_data/"
 DEVICE = 1 if torch.cuda.is_available() else 0
 
@@ -136,8 +138,8 @@ TRAIN_SPLIT_VAL = .7
 DATA_DIR = "data/AVXL_010322_310322"
 
 PROJECT_NAME = "lob-adversarial-attacks-22"
-IS_SWEEP = True
+IS_WANDB = True
 
-CHOSEN_MODEL = Models.LSTM
+CHOSEN_MODEL = Models.MLP
 IS_SHUFFLE_INPUT = True
 INSTANCES_LOWERBOUND = 1000

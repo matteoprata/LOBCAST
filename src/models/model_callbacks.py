@@ -18,9 +18,9 @@ def callback_save_model(ml_model_name):
 
 def early_stopping():
     """ Stops if models stops improving. """
-    monitor_var = co.ModelSteps.TRAINING.value + co.Metrics.LOSS.value
+    monitor_var = co.ModelSteps.VALIDATION.value + co.Metrics.F1.value
     return pl.callbacks.EarlyStopping(monitor=monitor_var,
                                       min_delta=0.00,
-                                      patience=10,
+                                      patience=20,
                                       verbose=True,
-                                      mode="min")
+                                      mode='max')

@@ -28,7 +28,7 @@ class LOBDataBuilder:
             label_threshold=co.LABELING_THRESHOLD,
             label_dynamic_scaler=co.LABELING_SIGMA_SCALER,
             data_granularity=co.Granularity.Sec1,
-            is_data_preload=True):
+            is_data_preload=False):
 
         self.dataset_type = dataset_type
         self.lobster_data_dir = lobster_data_dir
@@ -141,7 +141,10 @@ class LOBDataBuilder:
         self.__label_dataset()
         self.__normalize_dataset()
         self.__snapshotting(do_shuffle=co.IS_SHUFFLE_INPUT)
-        self.__under_sampling()  # if self.dataset_type == co.DatasetType.TRAIN:
+
+        if not self.dataset_type == co.DatasetType.TEST:
+            self.__under_sampling()
+
         # self.__plot_dataset()
 
 
