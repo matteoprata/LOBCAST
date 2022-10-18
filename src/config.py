@@ -1,6 +1,7 @@
 from enum import Enum
 import numpy as np
 import torch
+from datetime import datetime
 
 np.set_printoptions(suppress=True)
 
@@ -135,11 +136,16 @@ FORWARD_WINDOW  = WinSize.SEC20.value
 SAVED_MODEL_DIR = "data/saved_models"
 
 TRAIN_SPLIT_VAL = .7
-DATA_DIR = "data/AVXL_010322_310322"
+
+DATA_SOURCE = "data/"
+DATASET = "AVXL_2022-03-01_2022-03-31_10"
+DATA_PICKLES = "data/pickles/"
 
 PROJECT_NAME = "lob-adversarial-attacks-22"
-IS_WANDB = True
+IS_WANDB = False
 
 CHOSEN_MODEL = Models.MLP
 IS_SHUFFLE_INPUT = True
 INSTANCES_LOWERBOUND = 1000
+
+EXECUTION_ID = "18102022135745"  # datetime.now().strftime("%d%m%Y%H%M%S")

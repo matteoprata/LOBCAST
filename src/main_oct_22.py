@@ -1,9 +1,9 @@
-from src.data_preprocessing.LOBDataBuilder import LOBDataBuilder
+from src.data_preprocessing.LOBSTERDataBuilder import LOBSTERDataBuilder
 from src.data_preprocessing.LOBDataModule import LOBDataModule
 from src.data_preprocessing.LOBDataset import LOBDataset
 import src.models.model_callbacks as cbk
 import numpy as np
-
+from datetime import datetime
 from pytorch_lightning import Trainer
 from src.models.model_executor import NNEngine
 from src.models.mlp.mlp_param_search import sweep_configuration_mlp
@@ -34,11 +34,11 @@ SWEEP_CONF_DICT = {co.Models.MLP:  sweep_configuration_mlp,
 def prepare_data():
 
     # train & validation
-    lo_train = LOBDataBuilder(
-        co.DATA_DIR,
+    lo_train = LOBSTERDataBuilder(
+        co.DATASET,
         co.DatasetType.TRAIN,
         start_end_trading_day=("2022-03-01", "2022-03-11"),  # ("2022-03-01", "2022-03-07")  5 days
-        is_data_preload=False,
+        is_data_preload=True,
         crop_trading_day_by=60 * 30
     )
 
@@ -46,11 +46,11 @@ def prepare_data():
     mu, sigma, train_lab_threshold = lo_train.normalization_mean, lo_train.normalization_std, lo_train.label_threshold
 
     # test
-    lo_test = LOBDataBuilder(
-        co.DATA_DIR,
+    lo_test = LOBSTERDataBuilder(
+        co.DATASET,
         co.DatasetType.TEST,
         start_end_trading_day=("2022-03-14", "2022-03-16"),  # ("2022-03-02", "2022-03-03") 3 test
-        is_data_preload=False,
+        is_data_preload=True,
         crop_trading_day_by=60 * 30,
         normalization_mean=mu,
         normalization_std=sigma,
@@ -105,11 +105,10 @@ def lunch_training():
 
 
 def lunch_training_sweep():
-
     # 🐝 STEP: initialize sweep by passing in config
     sweep_id = wandb.sweep(sweep=SWEEP_CONF_DICT[co.CHOSEN_MODEL], project=co.PROJECT_NAME)
     wandb.agent(sweep_id, function=lunch_training)  # count=4 max trials
-    # wandb agent -p lob-adversarial-attacks-22 -e matteoprata rygxo9ti
+    # wandb agent -p lob-adversarial-attacks-22 -e matteoprata rygxo9ti  to run sweeps in parallel
 
 
 def pick_model(chosen_model, data_module, remote_log):
@@ -129,7 +128,6 @@ def pick_model(chosen_model, data_module, remote_log):
 
 
 if __name__ == "__main__":
-
     if co.IS_WANDB:
         lunch_training_sweep()
     else:

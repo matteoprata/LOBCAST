@@ -12,7 +12,7 @@ import collections
 import numpy as np
 
 
-class LOBDataBuilder:
+class LOBSTERDataBuilder:
     def __init__(
             self,
             lobster_data_dir,
@@ -28,10 +28,10 @@ class LOBDataBuilder:
             label_threshold=co.LABELING_THRESHOLD,
             label_dynamic_scaler=co.LABELING_SIGMA_SCALER,
             data_granularity=co.Granularity.Sec1,
-            is_data_preload=False):
+            is_data_preload=True):
 
         self.dataset_type = dataset_type
-        self.lobster_data_dir = lobster_data_dir
+        self.lobster_dataset_name = lobster_data_dir
         self.n_lob_levels = n_lob_levels
         self.normalization_type = normalization_type
         self.data_granularity = data_granularity
@@ -47,29 +47,27 @@ class LOBDataBuilder:
         self.label_dynamic_scaler = label_dynamic_scaler
         self.label_threshold = label_threshold
 
-        # KEY call, generates the dataset
+        # to store the datasets
+        self.STOCK_NAME    = self.lobster_dataset_name.split("_")[0]  # AVXL_2022-03-01_2022-03-31_10
+        self.F_NAME_PICKLE = "{}_{}_{}_{}_data.pickle".format(self.STOCK_NAME,
+                                                              self.start_end_trading_day[0],
+                                                              self.start_end_trading_day[1],
+                                                              self.dataset_type.value,
+                                                              co.EXECUTION_ID)
+
         self.data, self.samples_x, self.samples_y = None, None, None
-        self.__prepare_dataset()
+        self.__data_init()
 
     def __read_dataset(self):
         """ Reads the dataset from the pickle (generates it in case). """
 
-        F_EXTENSION = 'dat.pickle'
-        F_NAME = self.lobster_data_dir + "_{}_{}".format(self.dataset_type.value, F_EXTENSION)
-
-        if self.is_data_preload and os.path.exists(self.lobster_data_dir + F_EXTENSION):
-            out_df = util.read_data(F_NAME)
-        else:
-            out_df = lbu.from_folder_to_unique_df(
-                self.lobster_data_dir,
-                level=self.n_lob_levels,
-                granularity=self.data_granularity,
-                first_date=self.start_end_trading_day[0],
-                last_date=self.start_end_trading_day[1],
-                boundaries_purge=self.crop_trading_day_by)
-
-            if not os.path.exists(self.lobster_data_dir + F_EXTENSION):
-                util.write_data(out_df, F_NAME)
+        out_df = lbu.from_folder_to_unique_df(
+            co.DATA_SOURCE + self.lobster_dataset_name,
+            level=self.n_lob_levels,
+            granularity=self.data_granularity,
+            first_date=self.start_end_trading_day[0],
+            last_date=self.start_end_trading_day[1],
+            boundaries_purge=self.crop_trading_day_by)
 
         out_df = out_df.fillna(method="ffill")
         self.data = out_df
@@ -87,7 +85,7 @@ class LOBDataBuilder:
     def __label_dataset(self):
         self.data, self.label_threshold = ppu.add_lob_labels(self.data, self.window_size_forward, self.window_size_backward, self.label_threshold, self.label_dynamic_scaler)
 
-    def __snapshotting(self, do_shuffle=False):  # TODO implement
+    def __snapshotting(self, do_shuffle=False):
         """ This creates 4 X n_levels X window_size_backward -> prediction. """
         relevant_columns = [c for c in self.data.columns if "sell" in c or "buy" in c]
 
@@ -134,8 +132,22 @@ class LOBDataBuilder:
     def __abort_generation(self):
         self.data, self.samples_x, self.samples_y = None, None, None
 
+    def __serialize_dataset(self):
+        if not os.path.exists(co.DATA_PICKLES + self.F_NAME_PICKLE):
+            print("Serialization...", self.F_NAME_PICKLE)
+            util.write_data((self.data, self.samples_x, self.samples_y), co.DATA_PICKLES, self.F_NAME_PICKLE)
+
+    def __deserialize_dataset(self):
+        if os.path.exists(co.DATA_PICKLES + self.F_NAME_PICKLE):
+            print("Deserialization...", self.F_NAME_PICKLE)
+            out = util.read_data(co.DATA_PICKLES + self.F_NAME_PICKLE)
+        else:
+            out = None
+        return out
+
     def __prepare_dataset(self):
         """ Crucial call! """
+        print("Generating dataset", self.F_NAME_PICKLE)
 
         self.__read_dataset()
         self.__label_dataset()
@@ -147,5 +159,16 @@ class LOBDataBuilder:
 
         # self.__plot_dataset()
 
+    def __data_init(self):
+        """ This method serializes and deserializes data."""
 
-
+        if self.is_data_preload:
+            data = self.__deserialize_dataset()
+            if data is not None:
+                print("Reloaded, not recomputed, nice!")
+                self.data, self.samples_x, self.samples_y = data
+            else:
+                self.__prepare_dataset()  # KEY call, generates the dataset
+                self.__serialize_dataset()
+        else:
+            self.__prepare_dataset()
