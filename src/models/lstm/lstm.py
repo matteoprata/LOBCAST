@@ -24,7 +24,7 @@ class LSTM(nn.Module):
         x = x.float()
         output, (hn, cn) = self.lstm(x)          # lstm with input, hidden, and internal state (batch, time-step, features)
         hn = hn.view(-1, self.hidden_layer_dim)  # reshaping the data for Dense layer next
-        
+
         out = self.fc_1(hn)
         out = self.dropout(out)
         out = self.prelu(out) 

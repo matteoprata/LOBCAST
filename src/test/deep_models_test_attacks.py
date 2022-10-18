@@ -15,7 +15,7 @@ from src.models.model_executor import MLP
 from src.models.cnn1 import CNN
 from src.models.cnn2 import CNN2
 from src.models.lstm.lstm import LSTM
-from src.models.deeplob import DeepLob
+from src.models.deeplob.deeplob import DeepLob
 
 MODEL_LSTM = "results/LSTM_50_0.001_32_model.pt"
 MODEL_CNN = "results/CNN2_50_0.001_32_model.pt"
@@ -44,6 +44,7 @@ def load_data(batch_size, horizon, data_dir, type_model, F_IN, L, seed, cod) -> 
     test_loader = torch.utils.data.DataLoader(dataset=dataset_test, batch_size=batch_size, shuffle=False)
 
     return test_loader
+
 
 def run(wandb_instance, dir_data, dir_results, type_model, n_epochs, horizon, batch_size, learning_rate=1e-3):
     combinations = [(150.0, 5, 'F'), (75.0, 5, 'F'), (37.5, 5, 'F'), 

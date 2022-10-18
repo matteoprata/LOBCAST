@@ -4,9 +4,9 @@ import torch
 
 
 class DeepLob(pl.LightningModule):
-    def __init__(self, y_len):
+    def __init__(self, y_shape):
         super().__init__()
-        self.y_len = y_len
+        self.y_shape = y_shape
         
         # convolution blocks
         self.conv1 = nn.Sequential(
@@ -74,9 +74,11 @@ class DeepLob(pl.LightningModule):
         
         # lstm layers
         self.lstm = nn.LSTM(input_size=192, hidden_size=64, num_layers=1, batch_first=True)
-        self.fc1 = nn.Linear(64, self.y_len)
+        self.fc1 = nn.Linear(64, self.y_shape)
 
     def forward(self, x):
+        x = x[:, None, :, :].float()  # none stands for the channel
+
         # h0: (number of hidden layers, batch size, hidden size)
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         h0 = torch.zeros(1, x.size(0), 64).to(device)

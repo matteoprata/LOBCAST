@@ -10,6 +10,7 @@ from enum import Enum
 import tqdm
 import collections
 import numpy as np
+from datetime import datetime
 
 
 class LOBSTERDataBuilder:
@@ -18,7 +19,7 @@ class LOBSTERDataBuilder:
             lobster_data_dir,
             dataset_type,
             n_lob_levels=co.N_LOB_LEVELS,
-            normalization_type=co.NormalizationType.STATIC,
+            normalization_type=co.NormalizationType.Z_SCORE,
             normalization_mean=None,
             normalization_std=None,
             start_end_trading_day=("1990-01-01", "2100-01-01"),
@@ -39,8 +40,8 @@ class LOBSTERDataBuilder:
         self.start_end_trading_day = start_end_trading_day
         self.crop_trading_day_by = crop_trading_day_by
 
-        self.normalization_mean = normalization_mean
-        self.normalization_std = normalization_std
+        self.normalization_means = normalization_mean
+        self.normalization_stds = normalization_std
 
         self.window_size_forward = window_size_forward
         self.window_size_backward = window_size_backward
@@ -48,14 +49,15 @@ class LOBSTERDataBuilder:
         self.label_threshold = label_threshold
 
         # to store the datasets
+        self.NOW = datetime.now().strftime("%d%m%Y%H%M%S")
         self.STOCK_NAME    = self.lobster_dataset_name.split("_")[0]  # AVXL_2022-03-01_2022-03-31_10
         self.F_NAME_PICKLE = "{}_{}_{}_{}_data.pickle".format(self.STOCK_NAME,
                                                               self.start_end_trading_day[0],
                                                               self.start_end_trading_day[1],
                                                               self.dataset_type.value,
-                                                              co.EXECUTION_ID)
+                                                              self.NOW)
 
-        self.data, self.samples_x, self.samples_y = None, None, None
+        self.__data, self.__samples_x, self.__samples_y = None, None, None
         self.__data_init()
 
     def __read_dataset(self):
@@ -70,50 +72,57 @@ class LOBSTERDataBuilder:
             boundaries_purge=self.crop_trading_day_by)
 
         out_df = out_df.fillna(method="ffill")
-        self.data = out_df
+        self.__data = out_df
 
     def __normalize_dataset(self):
         """ Does normalization. """
-        if self.normalization_type == co.NormalizationType.STATIC:
-            self.data = ppu.stationary_normalize_data(self.data, self.normalization_mean, self.normalization_std)
+        if self.normalization_type == co.NormalizationType.Z_SCORE:
+            # returns the mean and std, both for the price and for the volume
+            self.__data, means_dicts, stds_dicts = ppu.stationary_normalize_data(self.__data, self.normalization_means, self.normalization_stds)
+
+            # the training dataset shares its normalization with the others
+            if self.dataset_type == co.DatasetType.TRAIN:
+                self.normalization_means = means_dicts
+                self.normalization_stds = stds_dicts
+
         elif self.normalization_type == co.NormalizationType.NONE:
             pass
 
         # needed to update the mid-prices columns, after the normalization, mainly for visualization purposes
-        self.data = ppu.add_midprices_columns(self.data, self.window_size_forward, self.window_size_backward)
+        self.__data = ppu.add_midprices_columns(self.__data, self.window_size_forward, self.window_size_backward)
 
     def __label_dataset(self):
-        self.data, self.label_threshold = ppu.add_lob_labels(self.data, self.window_size_forward, self.window_size_backward, self.label_threshold, self.label_dynamic_scaler)
+        self.__data, self.label_threshold = ppu.add_lob_labels(self.__data, self.window_size_forward, self.window_size_backward, self.label_threshold, self.label_dynamic_scaler)
 
     def __snapshotting(self, do_shuffle=False):
         """ This creates 4 X n_levels X window_size_backward -> prediction. """
-        relevant_columns = [c for c in self.data.columns if "sell" in c or "buy" in c]
+        relevant_columns = [c for c in self.__data.columns if "sell" in c or "buy" in c]
 
         X, Y = [], []
-        print("Snapshotting... (data has", self.data.shape[0], "rows)")
-        for st in tqdm.tqdm(range(0, self.data.shape[0]-self.window_size_backward)):
-            x_snap = self.data.iloc[st:st+self.window_size_backward, :].loc[:, relevant_columns]
-            y_snap = self.data.iloc[st+self.window_size_backward, :][ppu.DataCols.PREDICTION.value]
+        print("Snapshotting... (__data has", self.__data.shape[0], "rows)")
+        for st in tqdm.tqdm(range(0, self.__data.shape[0] - self.window_size_backward)):
+            x_snap = self.__data.iloc[st:st + self.window_size_backward, :].loc[:, relevant_columns]
+            y_snap = self.__data.iloc[st + self.window_size_backward, :][ppu.DataCols.PREDICTION.value]
             X.append(x_snap)
             Y.append(y_snap)
 
-        self.samples_x, self.samples_y = np.asarray(X), np.asarray(Y)
+        self.__samples_x, self.__samples_y = np.asarray(X), np.asarray(Y)
 
         if do_shuffle:
-            index = co.RANDOM_GEN_DATASET.randint(0, self.samples_x.shape[0], size=self.samples_x.shape[0])
-            self.samples_x = self.samples_x[index]
-            self.samples_y = self.samples_y[index]
+            index = co.RANDOM_GEN_DATASET.randint(0, self.__samples_x.shape[0], size=self.__samples_x.shape[0])
+            self.__samples_x = self.__samples_x[index]
+            self.__samples_y = self.__samples_y[index]
 
     def __under_sampling(self):
         """ Discard instances of the majority class. """
         print("Doing under-sampling...")
-        occurrences = collections.Counter(self.samples_y)
+        occurrences = collections.Counter(self.__samples_y)
         i_min_occ = min(occurrences, key=occurrences.get)  # index of the class with the least instances
         n_min_occ = occurrences[i_min_occ]                 # number of occurrences of the minority class
 
         indexes_chosen = []
         for i in [co.Predictions.UPWARD.value, co.Predictions.STATIONARY.value, co.Predictions.DOWNWARD.value]:
-            indexes = np.where(self.samples_y == i)[0]
+            indexes = np.where(self.__samples_y == i)[0]
             if len(indexes) < co.INSTANCES_LOWERBOUND:
                 print("The instance is not well formed, there are less than {} instances fo the class {} ({})."
                       .format(co.INSTANCES_LOWERBOUND, i, len(indexes)))
@@ -123,19 +132,19 @@ class LOBSTERDataBuilder:
             indexes_chosen += list(co.RANDOM_GEN_DATASET.choice(indexes, n_min_occ, replace=False))
 
         indexes_chosen = np.sort(indexes_chosen)
-        self.samples_x = self.samples_x[indexes_chosen]
-        self.samples_y = self.samples_y[indexes_chosen]
+        self.__samples_x = self.__samples_x[indexes_chosen]
+        self.__samples_y = self.__samples_y[indexes_chosen]
 
     def __plot_dataset(self):
-        ppu.plot_dataframe_stats(self.data, self.label_threshold)
+        ppu.plot_dataframe_stats(self.__data, self.label_threshold)
 
     def __abort_generation(self):
-        self.data, self.samples_x, self.samples_y = None, None, None
+        self.__data, self.__samples_x, self.__samples_y = None, None, None
 
     def __serialize_dataset(self):
         if not os.path.exists(co.DATA_PICKLES + self.F_NAME_PICKLE):
             print("Serialization...", self.F_NAME_PICKLE)
-            util.write_data((self.data, self.samples_x, self.samples_y), co.DATA_PICKLES, self.F_NAME_PICKLE)
+            util.write_data((self.__data, self.__samples_x, self.__samples_y), co.DATA_PICKLES, self.F_NAME_PICKLE)
 
     def __deserialize_dataset(self):
         if os.path.exists(co.DATA_PICKLES + self.F_NAME_PICKLE):
@@ -160,15 +169,25 @@ class LOBSTERDataBuilder:
         # self.__plot_dataset()
 
     def __data_init(self):
-        """ This method serializes and deserializes data."""
+        """ This method serializes and deserializes __data."""
 
         if self.is_data_preload:
+            # TODO serialize based on the hash of the values of the parameters that this class uses
             data = self.__deserialize_dataset()
             if data is not None:
                 print("Reloaded, not recomputed, nice!")
-                self.data, self.samples_x, self.samples_y = data
+                self.__data, self.__samples_x, self.__samples_y = data
             else:
                 self.__prepare_dataset()  # KEY call, generates the dataset
                 self.__serialize_dataset()
         else:
             self.__prepare_dataset()
+
+    def get_data(self, first_half_split=1):
+        return self.__data
+
+    def get_samples_x(self, first_half_split=1):
+        return self.__samples_x
+
+    def get_samples_y(self, first_half_split=1):
+        return self.__samples_y

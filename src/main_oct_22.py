@@ -3,15 +3,19 @@ from src.data_preprocessing.LOBDataModule import LOBDataModule
 from src.data_preprocessing.LOBDataset import LOBDataset
 import src.models.model_callbacks as cbk
 import numpy as np
-from datetime import datetime
 from pytorch_lightning import Trainer
 from src.models.model_executor import NNEngine
+
 from src.models.mlp.mlp_param_search import sweep_configuration_mlp
+from src.models.lstm.lstm_param_search import sweep_configuration_lstm
+from src.models.deeplob.dlb_param_search import sweep_configuration_dlb
+
 import src.config as co
 import wandb
 
 from src.models.mlp.mlp import MLP
 from src.models.lstm.lstm import LSTM
+from src.models.deeplob.deeplob import DeepLob
 
 # def parser_cl_arguments():
 #     """ Parses the arguments for the command line. """
@@ -28,29 +32,30 @@ from src.models.lstm.lstm import LSTM
 
 
 SWEEP_CONF_DICT = {co.Models.MLP:  sweep_configuration_mlp,
-                   co.Models.LSTM: sweep_configuration_mlp}
+                   co.Models.LSTM: sweep_configuration_lstm,
+                   co.Models.DEEPLOB: sweep_configuration_dlb}
 
 
 def prepare_data():
 
-    # train & validation
+    # train
     lo_train = LOBSTERDataBuilder(
         co.DATASET,
         co.DatasetType.TRAIN,
-        start_end_trading_day=("2022-03-01", "2022-03-11"),  # ("2022-03-01", "2022-03-07")  5 days
-        is_data_preload=True,
+        start_end_trading_day=("2021-08-05", "2021-08-13"),  # ("2022-03-01", "2022-03-07")  5 days
+        is_data_preload=False,
         crop_trading_day_by=60 * 30
     )
 
     # use the same
-    mu, sigma, train_lab_threshold = lo_train.normalization_mean, lo_train.normalization_std, lo_train.label_threshold
+    mu, sigma, train_lab_threshold = lo_train.normalization_means, lo_train.normalization_stds, lo_train.label_threshold
 
-    # test
-    lo_test = LOBSTERDataBuilder(
+    # validation
+    lo_val = LOBSTERDataBuilder(
         co.DATASET,
-        co.DatasetType.TEST,
-        start_end_trading_day=("2022-03-14", "2022-03-16"),  # ("2022-03-02", "2022-03-03") 3 test
-        is_data_preload=True,
+        co.DatasetType.VALIDATION,
+        start_end_trading_day=("2021-08-16", "2021-08-18"),  # ("2022-03-01", "2022-03-07")  5 days
+        is_data_preload=False,
         crop_trading_day_by=60 * 30,
         normalization_mean=mu,
         normalization_std=sigma,
@@ -58,11 +63,22 @@ def prepare_data():
         label_threshold=train_lab_threshold,  # to fix the label to the
     )
 
-    n_inst_train = int(len(lo_train.samples_x) * co.TRAIN_SPLIT_VAL)
+    # test
+    lo_test = LOBSTERDataBuilder(
+        co.DATASET,
+        co.DatasetType.TEST,
+        start_end_trading_day=("2021-08-19", "2021-08-23"),  # ("2022-03-02", "2022-03-03") 3 test
+        is_data_preload=False,
+        crop_trading_day_by=60 * 30,
+        normalization_mean=mu,
+        normalization_std=sigma,
+        label_dynamic_scaler=None,
+        label_threshold=train_lab_threshold,  # to fix the label to the
+    )
 
-    train_set = LOBDataset(x=lo_train.samples_x[:n_inst_train], y=lo_train.samples_y[:n_inst_train])
-    val_set   = LOBDataset(x=lo_train.samples_x[n_inst_train:], y=lo_train.samples_y[n_inst_train:])
-    test_set  = LOBDataset(x=lo_test.samples_x, y=lo_test.samples_y)
+    train_set = LOBDataset(x=lo_train.get_samples_x(), y=lo_train.get_samples_y())
+    val_set   = LOBDataset(x=lo_val.get_samples_x(),   y=lo_val.get_samples_y())
+    test_set  = LOBDataset(x=lo_test.get_samples_x(),  y=lo_test.get_samples_y())
 
     print()
     print("Samples in the splits:")
@@ -98,10 +114,11 @@ def lunch_training():
                       check_val_every_n_epoch=co.VALIDATE_EVERY,  # val_check_interval
                       max_epochs=co.EPOCHS,
                       callbacks=[cbk.callback_save_model(co.CHOSEN_MODEL.value),
-                                 cbk.early_stopping()])
+                                 # cbk.early_stopping()
+                                 ])
 
     trainer. fit(model, data_module)
-    trainer.test(model, data_module)
+    trainer.test(model, data_module, ckpt_path="best")
 
 
 def lunch_training_sweep():
@@ -123,6 +140,9 @@ def pick_model(chosen_model, data_module, remote_log):
                                 y_shape=data_module.y_shape,
                                 hidden_layer_dim=co.LSTM_HIDDEN,
                                 num_layers=co.LSTM_N_HIDDEN)
+
+    elif chosen_model == co.Models.DEEPLOB:
+        net_architecture = DeepLob(y_shape=data_module.y_shape)
 
     return NNEngine(net_architecture, lr=co.LEARNING_RATE, remote_log=remote_log)
 

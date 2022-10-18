@@ -34,7 +34,7 @@ class ModelSteps(Enum):
 
 
 class NormalizationType(Enum):
-    STATIC = 0
+    Z_SCORE = 0
     DYNAMIC = 1
     NONE = 2
 
@@ -105,6 +105,7 @@ class OrderEvent(Enum):
 class DatasetType(Enum):
     TRAIN = "train"
     TEST = "test"
+    VALIDATION = "val"
 
 
 CLASS_NAMES = ["DOWN", "STATIONARY", "UP"]
@@ -115,7 +116,7 @@ DEVICE = 1 if torch.cuda.is_available() else 0
 MODEL_GAN = "data/GAN_models/"
 
 
-EPOCHS = 500
+EPOCHS = 300
 
 SEED = 0
 RANDOM_GEN_DATASET = np.random.RandomState(SEED)
@@ -138,14 +139,12 @@ SAVED_MODEL_DIR = "data/saved_models"
 TRAIN_SPLIT_VAL = .7
 
 DATA_SOURCE = "data/"
-DATASET = "AVXL_2022-03-01_2022-03-31_10"
+DATASET = "AVXL_2021-08-01_2021-08-31_10"
 DATA_PICKLES = "data/pickles/"
 
 PROJECT_NAME = "lob-adversarial-attacks-22"
-IS_WANDB = False
+IS_WANDB = True
 
-CHOSEN_MODEL = Models.MLP
+CHOSEN_MODEL = Models.LSTM
 IS_SHUFFLE_INPUT = True
 INSTANCES_LOWERBOUND = 1000
-
-EXECUTION_ID = "18102022135745"  # datetime.now().strftime("%d%m%Y%H%M%S")

@@ -1,6 +1,7 @@
 
 import pytorch_lightning as pl
 import src.config as co
+from datetime import datetime
 
 
 def callback_save_model(ml_model_name):
@@ -11,7 +12,7 @@ def callback_save_model(ml_model_name):
                            save_top_k=3,
                            mode='max',
                            dirpath=co.SAVED_MODEL_DIR,
-                           filename=ml_model_name + '-{epoch}-{' + monitor_var + ':.2f}' + co.EXECUTION_ID
+                           filename=ml_model_name + '-{epoch}-{' + monitor_var + ':.2f}' + datetime.now().strftime("%d%m%Y%H%M%S")
     )
     return check_point_callback
 
