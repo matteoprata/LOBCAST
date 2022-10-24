@@ -183,11 +183,8 @@ class LOBSTERDataBuilder:
         else:
             self.__prepare_dataset()
 
-    def get_data(self, first_half_split=1):
-        return self.__data
+    def get_samples_x(self, split=None):
+        return self.__samples_x if split is None else np.split(self.__samples_x, split)
 
-    def get_samples_x(self, first_half_split=1):
-        return self.__samples_x
-
-    def get_samples_y(self, first_half_split=1):
-        return self.__samples_y
+    def get_samples_y(self, split=None):
+        return self.__samples_y if split is None else np.split(self.__samples_y, split)

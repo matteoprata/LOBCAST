@@ -142,9 +142,9 @@ DATA_SOURCE = "data/"
 DATASET = "AVXL_2021-08-01_2021-08-31_10"
 DATA_PICKLES = "data/pickles/"
 
-PROJECT_NAME = "lob-adversarial-attacks-22"
+PROJECT_NAME = "lob-trend-classification"
 IS_WANDB = True
 
-CHOSEN_MODEL = Models.LSTM
+CHOSEN_MODEL = Models.MLP
 IS_SHUFFLE_INPUT = True
 INSTANCES_LOWERBOUND = 1000

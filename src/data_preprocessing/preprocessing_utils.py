@@ -68,12 +68,13 @@ def add_lob_labels(data, window_size_forward, window_size_backward, label_thresh
     # pd.DataFrame(data[DataCols.PERCENTAGE_CHANGE.value]).hist(bins=100)
     # plt.show()
 
-    label_threshold = (ratio_mu + ratio_si * sigma_fraction) if sigma_fraction is not None else label_threshold
+    label_threshold_1 = (ratio_mu + ratio_si * sigma_fraction) if sigma_fraction is not None else label_threshold
+    label_threshold_2 = (ratio_mu - ratio_si * sigma_fraction) if sigma_fraction is not None else label_threshold
 
     # labels 0 (down), 1 (stable), 2 (down)
     data[DataCols.PREDICTION.value] = np.ones(data.shape[0])
-    data[DataCols.PREDICTION.value] = np.where(data[DataCols.PERCENTAGE_CHANGE.value] > label_threshold, 2, data[DataCols.PREDICTION.value])
-    data[DataCols.PREDICTION.value] = np.where(data[DataCols.PERCENTAGE_CHANGE.value] < -label_threshold, 0, data[DataCols.PREDICTION.value])
+    data[DataCols.PREDICTION.value] = np.where(data[DataCols.PERCENTAGE_CHANGE.value] > label_threshold_1, 2, data[DataCols.PREDICTION.value])
+    data[DataCols.PREDICTION.value] = np.where(data[DataCols.PERCENTAGE_CHANGE.value] < label_threshold_2, 0, data[DataCols.PREDICTION.value])
     return data, label_threshold
 
 

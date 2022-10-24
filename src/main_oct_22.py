@@ -95,7 +95,7 @@ def lunch_training():
     remote_log = None
     if co.IS_WANDB:
 
-        wandb.init()
+        wandb.init(project=co.PROJECT_NAME, entity="fin-di-sapienza")
         remote_log = wandb
 
         co.MLP_HIDDEN = wandb.config.hidden_mlp
@@ -119,6 +119,7 @@ def lunch_training():
 
     trainer. fit(model, data_module)
     trainer.test(model, data_module, ckpt_path="best")
+    wandb.finish()
 
 
 def lunch_training_sweep():
