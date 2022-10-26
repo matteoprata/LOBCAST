@@ -26,10 +26,12 @@ class LOBSTERDataBuilder:
             crop_trading_day_by=0,
             window_size_forward=co.FORWARD_WINDOW,
             window_size_backward=co.BACKWARD_WINDOW,
-            label_threshold=co.LABELING_THRESHOLD,
-            label_dynamic_scaler=co.LABELING_SIGMA_SCALER,
+            label_threshold_pos=None,
+            label_threshold_neg=None,
+            label_dynamic_scaler=None,
             data_granularity=co.Granularity.Sec1,
-            is_data_preload=True):
+            is_shuffle=co.IS_SHUFFLE_INPUT,
+            is_data_preload=False):
 
         self.dataset_type = dataset_type
         self.lobster_dataset_name = lobster_data_dir
@@ -46,16 +48,20 @@ class LOBSTERDataBuilder:
         self.window_size_forward = window_size_forward
         self.window_size_backward = window_size_backward
         self.label_dynamic_scaler = label_dynamic_scaler
-        self.label_threshold = label_threshold
+        self.label_threshold_pos = label_threshold_pos
+        self.label_threshold_neg = label_threshold_neg
+
+        self.is_shuffle = is_shuffle
 
         # to store the datasets
         self.NOW = datetime.now().strftime("%d%m%Y%H%M%S")
-        self.STOCK_NAME    = self.lobster_dataset_name.split("_")[0]  # AVXL_2022-03-01_2022-03-31_10
-        self.F_NAME_PICKLE = "{}_{}_{}_{}_data.pickle".format(self.STOCK_NAME,
-                                                              self.start_end_trading_day[0],
-                                                              self.start_end_trading_day[1],
-                                                              self.dataset_type.value,
-                                                              self.NOW)
+        self.STOCK_NAME = self.lobster_dataset_name.split("_")[0]  # AVXL_2022-03-01_2022-03-31_10
+        self.F_NAME_PICKLE = "{}_{}_{}_{}_data.pickle".format(
+            self.STOCK_NAME,
+            self.start_end_trading_day[0],
+            self.start_end_trading_day[1],
+            self.dataset_type.value,
+            self.NOW)
 
         self.__data, self.__samples_x, self.__samples_y = None, None, None
         self.__data_init()
@@ -92,9 +98,16 @@ class LOBSTERDataBuilder:
         self.__data = ppu.add_midprices_columns(self.__data, self.window_size_forward, self.window_size_backward)
 
     def __label_dataset(self):
-        self.__data, self.label_threshold = ppu.add_lob_labels(self.__data, self.window_size_forward, self.window_size_backward, self.label_threshold, self.label_dynamic_scaler)
+        self.__data, self.label_threshold_pos, self.label_threshold_neg = ppu.add_lob_labels(
+            self.__data,
+            self.window_size_forward,
+            self.window_size_backward,
+            self.label_threshold_pos,
+            self.label_threshold_neg,
+            self.label_dynamic_scaler
+        )
 
-    def __snapshotting(self, do_shuffle=False):
+    def __snapshotting(self):
         """ This creates 4 X n_levels X window_size_backward -> prediction. """
         relevant_columns = [c for c in self.__data.columns if "sell" in c or "buy" in c]
 
@@ -108,7 +121,7 @@ class LOBSTERDataBuilder:
 
         self.__samples_x, self.__samples_y = np.asarray(X), np.asarray(Y)
 
-        if do_shuffle:
+        if self.is_shuffle:
             index = co.RANDOM_GEN_DATASET.randint(0, self.__samples_x.shape[0], size=self.__samples_x.shape[0])
             self.__samples_x = self.__samples_x[index]
             self.__samples_y = self.__samples_y[index]
@@ -116,6 +129,7 @@ class LOBSTERDataBuilder:
     def __under_sampling(self):
         """ Discard instances of the majority class. """
         print("Doing under-sampling...")
+
         occurrences = collections.Counter(self.__samples_y)
         i_min_occ = min(occurrences, key=occurrences.get)  # index of the class with the least instances
         n_min_occ = occurrences[i_min_occ]                 # number of occurrences of the minority class
@@ -136,7 +150,7 @@ class LOBSTERDataBuilder:
         self.__samples_y = self.__samples_y[indexes_chosen]
 
     def __plot_dataset(self):
-        ppu.plot_dataframe_stats(self.__data, self.label_threshold)
+        ppu.plot_dataframe_stats(self.__data, self.label_threshold_pos, self.label_threshold_neg)
 
     def __abort_generation(self):
         self.__data, self.__samples_x, self.__samples_y = None, None, None
@@ -161,7 +175,8 @@ class LOBSTERDataBuilder:
         self.__read_dataset()
         self.__label_dataset()
         self.__normalize_dataset()
-        self.__snapshotting(do_shuffle=co.IS_SHUFFLE_INPUT)
+        self.__snapshotting()
+
 
         if not self.dataset_type == co.DatasetType.TEST:
             self.__under_sampling()

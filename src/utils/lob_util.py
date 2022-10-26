@@ -286,14 +286,15 @@ def orderbook_columns(level: int):
     return orderbook_columns
 
 
-def from_folder_to_unique_df(file_7z: str,
-                             first_date: str = "1990-01-01",
-                             last_date:  str = "2100-01-01",
-                             plot: bool = False, level: int = 10,
-                             path: str = "",
-                             granularity: config.Granularity = config.Granularity.Sec1,
-                             add_messages=False,
-                             boundaries_purge=0):
+def from_folder_to_unique_df(
+        file_7z: str,
+        first_date: str = "1990-01-01",
+        last_date:  str = "2100-01-01",
+        plot: bool = False, level: int = 10,
+        path: str = "",
+        granularity: config.Granularity = config.Granularity.Sec1,
+        add_messages=False,
+        boundaries_purge=0):
     """ return a unique df with also the label
 
         add_messages : if True keep messages along the orderbook data. It does not work with granularity != None
@@ -306,8 +307,16 @@ def from_folder_to_unique_df(file_7z: str,
     assert list(message_dfs.keys()) == list(orderbook_dfs.keys()), "the messages and orderbooks have different days!!"
     print("Iterating over trading days...")
     for d in tqdm.tqdm(message_dfs.keys()):
-        tmp_df = lobster_to_gran_df(message_dfs[d], orderbook_dfs[d], d, granularity=granularity, level=level,
-                                    add_messages=add_messages, boundaries_purge=boundaries_purge)
+
+        tmp_df = lobster_to_gran_df(
+            message_dfs[d],
+            orderbook_dfs[d],
+            d,
+            granularity=granularity,
+            level=level,
+            add_messages=add_messages,
+            boundaries_purge=boundaries_purge)
+
         frames.append(tmp_df)
 
     # stacks all the days one on top of the other

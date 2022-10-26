@@ -55,7 +55,7 @@ class DataCols(Enum):
     L1_SELL_PRICE = 'psell1'
 
 
-def add_lob_labels(data, window_size_forward, window_size_backward, label_threshold, sigma_fraction):
+def add_lob_labels(data, window_size_forward, window_size_backward, label_threshold_pos, label_threshold_neg, sigma_fraction):
     """ Labels the data in [0, 1, 2], labels 0 (down), 1 (stable), 2 (down). """
     data = add_midprices_columns(data, window_size_forward, window_size_backward)
 
@@ -65,17 +65,18 @@ def add_lob_labels(data, window_size_forward, window_size_backward, label_thresh
     data[DataCols.PERCENTAGE_CHANGE.value] = get_percentage_change(data, DataCols.MID_PRICE_PAST.value, DataCols.MID_PRICE_FUTURE.value)
     ratio_mu, ratio_si = data[DataCols.PERCENTAGE_CHANGE.value].mean(), data[DataCols.PERCENTAGE_CHANGE.value].std()
 
-    # pd.DataFrame(data[DataCols.PERCENTAGE_CHANGE.value]).hist(bins=100)
-    # plt.show()
+    #pd.DataFrame(data[DataCols.PERCENTAGE_CHANGE.value]).hist(bins=100)
+    #plt.show()
 
-    label_threshold_1 = (ratio_mu + ratio_si * sigma_fraction) if sigma_fraction is not None else label_threshold
-    label_threshold_2 = (ratio_mu - ratio_si * sigma_fraction) if sigma_fraction is not None else label_threshold
+    label_threshold_pos = (ratio_mu + ratio_si * sigma_fraction) if sigma_fraction is not None else label_threshold_pos
+    label_threshold_neg = (ratio_mu - ratio_si * sigma_fraction) if sigma_fraction is not None else label_threshold_neg
 
     # labels 0 (down), 1 (stable), 2 (down)
     data[DataCols.PREDICTION.value] = np.ones(data.shape[0])
-    data[DataCols.PREDICTION.value] = np.where(data[DataCols.PERCENTAGE_CHANGE.value] > label_threshold_1, 2, data[DataCols.PREDICTION.value])
-    data[DataCols.PREDICTION.value] = np.where(data[DataCols.PERCENTAGE_CHANGE.value] < label_threshold_2, 0, data[DataCols.PREDICTION.value])
-    return data, label_threshold
+    data[DataCols.PREDICTION.value] = np.where(data[DataCols.PERCENTAGE_CHANGE.value] > label_threshold_pos, 2, data[DataCols.PREDICTION.value])
+    data[DataCols.PREDICTION.value] = np.where(data[DataCols.PERCENTAGE_CHANGE.value] < label_threshold_neg, 0, data[DataCols.PREDICTION.value])
+
+    return data, label_threshold_pos, label_threshold_neg
 
 
 def add_midprices_columns(data, window_size_forward, window_size_backward):

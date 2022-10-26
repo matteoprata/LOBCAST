@@ -13,6 +13,9 @@ class TuningVars(Enum):
     IS_SHUFFLE = "is_shuffle"
 
     MLP_HIDDEN = "hidden_mlp"
+    LSTM_HIDDEN = "lstm_hidden"
+    LSTM_N_HIDDEN = "lstm_n_hidden"
+
     BACKWARD_WINDOW = "window_size_backward"
     FORWARD_WINDOW = "window_size_forward"
     LABELING_THRESHOLD = "labeling_threshold"
@@ -42,6 +45,7 @@ class NormalizationType(Enum):
 class WinSize(Enum):
     SEC10 = 10
     SEC20 = 20
+    SEC30 = 30
     SEC50 = 50
     SEC100 = 100
 
@@ -116,7 +120,7 @@ DEVICE = 1 if torch.cuda.is_available() else 0
 MODEL_GAN = "data/GAN_models/"
 
 
-EPOCHS = 300
+EPOCHS = 200
 
 SEED = 0
 RANDOM_GEN_DATASET = np.random.RandomState(SEED)
@@ -130,10 +134,9 @@ LSTM_HIDDEN = 32
 LSTM_N_HIDDEN = 1
 
 N_LOB_LEVELS = 10
-LABELING_THRESHOLD = None
 LABELING_SIGMA_SCALER = .5  # dynamic threshold
-BACKWARD_WINDOW = WinSize.SEC20.value
-FORWARD_WINDOW  = WinSize.SEC20.value
+BACKWARD_WINDOW = WinSize.SEC10.value
+FORWARD_WINDOW  = WinSize.SEC10.value
 SAVED_MODEL_DIR = "data/saved_models"
 
 TRAIN_SPLIT_VAL = .7
@@ -142,9 +145,9 @@ DATA_SOURCE = "data/"
 DATASET = "AVXL_2021-08-01_2021-08-31_10"
 DATA_PICKLES = "data/pickles/"
 
-PROJECT_NAME = "lob-trend-classification"
+PROJECT_NAME = "lob-adversarial-attacks-22"
 IS_WANDB = True
 
-CHOSEN_MODEL = Models.MLP
+CHOSEN_MODEL = Models.LSTM
 IS_SHUFFLE_INPUT = True
 INSTANCES_LOWERBOUND = 1000

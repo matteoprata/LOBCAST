@@ -13,7 +13,12 @@ class LSTM(nn.Module):
         self.num_layers = num_layers              # 1
         # self.seq_length = seq_length            # horizon
 
-        self.lstm = nn.LSTM(input_size=x_shape, hidden_size=hidden_layer_dim, num_layers=num_layers, batch_first=True)  # lstm
+        self.lstm = nn.LSTM(
+            input_size=x_shape,
+            hidden_size=hidden_layer_dim,
+            num_layers=num_layers,
+            batch_first=True
+        )  # lstm
         
         self.fc_1 = nn.Linear(hidden_layer_dim, 64)   # fully connected 64 neurons
         self.dropout = nn.Dropout(p=0.2)              # not specified
