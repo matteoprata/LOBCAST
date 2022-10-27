@@ -24,16 +24,21 @@ class LSTM(nn.Module):
         self.dropout = nn.Dropout(p=0.2)              # not specified
         self.prelu = nn.PReLU()
         self.fc = nn.Linear(64, y_shape)              # out layer
+
+        self.softmax = nn.Softmax(dim=1)
     
     def forward(self, x):
         x = x.float()
-        output, (hn, cn) = self.lstm(x)          # lstm with input, hidden, and internal state (batch, time-step, features)
+
+        output, (hn, _) = self.lstm(x)          # lstm with input, hidden, and internal state (batch, time-step, features)
         hn = hn.view(-1, self.hidden_layer_dim)  # reshaping the data for Dense layer next
 
         out = self.fc_1(hn)
         out = self.dropout(out)
         out = self.prelu(out) 
         out = self.fc(out)
+
+        logits = self.softmax(out)
         
-        return out
+        return logits
  

@@ -147,7 +147,7 @@ DATASET = "AVXL_2021-08-01_2021-08-31_10"
 DATA_PICKLES = "data/pickles/"
 
 PROJECT_NAME = "lob-adversarial-attacks-22"
-IS_WANDB = False
+IS_WANDB = True
 
 CHOSEN_MODEL = Models.LSTM
 IS_SHUFFLE_INPUT = True

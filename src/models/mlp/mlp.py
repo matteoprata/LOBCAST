@@ -23,6 +23,7 @@ class MLP(nn.Module):
         out = self.linear1(x)
         out = self.leakyReLU(out)
         out = self.linear2(out)
+
         logits = self.softmax(out)
 
         return logits

@@ -3,7 +3,7 @@ import src.config as co
 
 sweep_configuration_lstm = {
     'method': 'bayes',
-    'name': 'LSTM_noSnapshots',
+    'name': 'LSTM_FixedWithSoftmax',
 
     'metric': {
         'goal': 'maximize',
@@ -36,8 +36,8 @@ sweep_configuration_lstm = {
 
         # co.TuningVars.EPOCHS.value: {'values': [5, 10, 15]},
         co.TuningVars.LEARNING_RATE.value: {'max': 0.001, 'min': 0.0001},  # 'max': 0.001, 'min': 0.0001
-        co.TuningVars.BATCH_SIZE.value: {'values': [32, 48, 64]}, # [32, 64, 128]
-        co.TuningVars.IS_SHUFFLE.value: {'values': [False]},
+        co.TuningVars.BATCH_SIZE.value: {'values': [32]}, # [32, 64, 128]
+        co.TuningVars.IS_SHUFFLE.value: {'values': [False, True]},
 
         co.TuningVars.LSTM_HIDDEN.value: {'values': [32, 40, 48]},
         co.TuningVars.LSTM_N_HIDDEN.value: {'values': [1]},
