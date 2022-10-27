@@ -116,6 +116,7 @@ CLASS_NAMES = ["DOWN", "STATIONARY", "UP"]
 
 OHLC_DATA = "old_data/ohlc_data/"
 DEVICE = 1 if torch.cuda.is_available() else 0
+DEVICE_TYPE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 MODEL_GAN = "data/GAN_models/"
 
@@ -146,7 +147,7 @@ DATASET = "AVXL_2021-08-01_2021-08-31_10"
 DATA_PICKLES = "data/pickles/"
 
 PROJECT_NAME = "lob-adversarial-attacks-22"
-IS_WANDB = True
+IS_WANDB = False
 
 CHOSEN_MODEL = Models.LSTM
 IS_SHUFFLE_INPUT = True

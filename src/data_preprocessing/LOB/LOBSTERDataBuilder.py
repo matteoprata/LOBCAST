@@ -177,7 +177,6 @@ class LOBSTERDataBuilder:
         self.__normalize_dataset()
         self.__snapshotting()
 
-
         if not self.dataset_type == co.DatasetType.TEST:
             self.__under_sampling()
 

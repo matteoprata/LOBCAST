@@ -150,8 +150,8 @@ def lunch_training():
         if co.CHOSEN_MODEL == co.Models.MLP:
             co.MLP_HIDDEN = wandb.config.hidden_mlp
         elif co.CHOSEN_MODEL == co.Models.LSTM:
-            co.MLP_HIDDEN = wandb.config.lstm_hidden
-            co.MLP_HIDDEN = wandb.config.lstm_n_hidden
+            co.LSTM_HIDDEN = wandb.config.lstm_hidden
+            co.LSTM_N_HIDDEN = wandb.config.lstm_n_hidden
 
     data_module = prepare_data()
 
@@ -200,7 +200,7 @@ def pick_model(chosen_model, data_module, remote_log):
     elif chosen_model == co.Models.DEEPLOB:
         net_architecture = DeepLob(y_shape=data_module.y_shape)
 
-    return NNEngine(net_architecture, lr=co.LEARNING_RATE, remote_log=remote_log)
+    return NNEngine(net_architecture, lr=co.LEARNING_RATE, remote_log=remote_log).to(co.DEVICE_TYPE)
 
 
 if __name__ == "__main__":
