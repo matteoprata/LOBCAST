@@ -1,3 +1,5 @@
+import collections
+
 import src.config as co
 import numpy as np
 import tqdm
@@ -11,6 +13,7 @@ class FIDataBuilder:
             auction=False,
             normalization_type=co.NormalizationType.Z_SCORE,
             horizon=10,
+            window=100,
     ):
 
         assert horizon in (1, 2, 3, 5, 10)
@@ -20,7 +23,7 @@ class FIDataBuilder:
         self.auction = auction
         self.normalization_type = normalization_type
         self.horizon = horizon
-        self.window = 100
+        self.window = window
 
         # KEY call, generates the dataset
         self.data, self.samples_x, self.samples_y = None, None, None
@@ -89,7 +92,7 @@ class FIDataBuilder:
             10: -1
         }
 
-        self.samples_y = self.data[T[self.horizon]:, :].transpose()
+        self.samples_y = self.data[T[self.horizon], :].transpose()
         self.samples_y -= 1
 
     def __snapshotting(self, do_shuffle=False):
@@ -117,6 +120,9 @@ class FIDataBuilder:
         self.__prepareX()
         self.__prepareY()
         self.__snapshotting()
+
+        occurrences = collections.Counter(self.samples_y)
+        print("occurrences:", occurrences)
 
     def get_data(self, first_half_split=1):
         return self.data
