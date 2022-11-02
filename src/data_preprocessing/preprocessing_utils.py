@@ -86,7 +86,7 @@ def add_midprices_columns(data, window_size_forward, window_size_backward):
     return data
 
 
-def plot_dataframe_stats(data, label_threshold):
+def plot_dataframe_stats(data, label_threshold_pos, label_threshold_neg, dataset_type):
     """ Plots the predictions Y and histogram. Plots mid-price and shifted averages. """
     data = data.reset_index()
 
@@ -99,10 +99,11 @@ def plot_dataframe_stats(data, label_threshold):
     ax2 = ax.twinx()
     ax2 = data[[DataCols.PERCENTAGE_CHANGE.value]].plot(ax=ax)
     ax2.set_ylim([-1, max(yticks)])
-    ax2.axhline(y= label_threshold, color='r', linestyle=':')
-    ax2.axhline(y=-label_threshold, color='r', linestyle=':')
-    data[[DataCols.PREDICTION.value]].plot()
+    ax2.axhline(y=label_threshold_pos, color='red', linestyle=':')
+    ax2.axhline(y=label_threshold_neg, color='blue', linestyle=':')
+    #data[[DataCols.PREDICTION.value]].plot()
     data[[DataCols.PREDICTION.value]].hist()
+    plt.title(dataset_type)
     plt.show()
 
 
