@@ -109,10 +109,11 @@ class LOBSTERDataBuilder:
 
     def __snapshotting(self):
         """ This creates 4 X n_levels X window_size_backward -> prediction. """
+        print("Snapshotting... (__data has", self.__data.shape[0], "rows)")
+
         relevant_columns = [c for c in self.__data.columns if "sell" in c or "buy" in c]
 
         X, Y = [], []
-        print("Snapshotting... (__data has", self.__data.shape[0], "rows)")
         for st in tqdm.tqdm(range(0, self.__data.shape[0] - self.window_size_backward)):
             x_snap = self.__data.iloc[st:st + self.window_size_backward, :].loc[:, relevant_columns]
             y_snap = self.__data.iloc[st + self.window_size_backward, :][ppu.DataCols.PREDICTION.value]
@@ -149,8 +150,13 @@ class LOBSTERDataBuilder:
         self.__samples_x = self.__samples_x[indexes_chosen]
         self.__samples_y = self.__samples_y[indexes_chosen]
 
-    def __plot_dataset(self):
-        ppu.plot_dataframe_stats(self.__data, self.label_threshold_pos, self.label_threshold_neg)
+    def plot_dataset(self):
+        ppu.plot_dataframe_stats(
+            self.__data,
+            self.label_threshold_pos,
+            self.label_threshold_neg,
+            self.dataset_type
+        )
 
     def __abort_generation(self):
         self.__data, self.__samples_x, self.__samples_y = None, None, None
@@ -170,17 +176,23 @@ class LOBSTERDataBuilder:
 
     def __prepare_dataset(self):
         """ Crucial call! """
-        print("Generating dataset", self.F_NAME_PICKLE)
+        print("Generating dataset", self.dataset_type)
 
         self.__read_dataset()
         self.__label_dataset()
         self.__normalize_dataset()
         self.__snapshotting()
 
+        occurrences = collections.Counter(self.__samples_y)
+        print("Before undersampling:", self.dataset_type, occurrences)
+
         if not self.dataset_type == co.DatasetType.TEST:
             self.__under_sampling()
 
-        # self.__plot_dataset()
+        occurrences = collections.Counter(self.__samples_y)
+        print("After undersampling:", self.dataset_type, occurrences)
+
+        #self.plot_dataset()
 
     def __data_init(self):
         """ This method serializes and deserializes __data."""
