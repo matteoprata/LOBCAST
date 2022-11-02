@@ -1,5 +1,9 @@
 import torch.cuda
 
+from pprint import pprint
+from collections import Counter
+
+
 from src.data_preprocessing.FI.FIDataBuilder import FIDataBuilder
 from src.data_preprocessing.FI.FIDataset import FIDataset
 from src.data_preprocessing.FI.FIDataModule import FIDataModule
@@ -9,11 +13,13 @@ from src.data_preprocessing.LOB.LOBDataset import LOBDataset
 import src.models.model_callbacks as cbk
 import numpy as np
 from pytorch_lightning import Trainer
+
 from src.models.model_executor import NNEngine
 
 from src.models.mlp.mlp_param_search import sweep_configuration_mlp
 from src.models.lstm.lstm_param_search import sweep_configuration_lstm
 from src.models.deeplob.dlb_param_search import sweep_configuration_dlb
+from src.models.mlp.mlp_fi_param_search import sweep_configuration_mlpFI
 
 import src.config as co
 import wandb
@@ -39,20 +45,26 @@ from src.models.deeplob.deeplob import DeepLob
 SWEEP_CONF_DICT = {
     co.Models.MLP:  sweep_configuration_mlp,
     co.Models.LSTM: sweep_configuration_lstm,
-    co.Models.DEEPLOB: sweep_configuration_dlb
+    co.Models.DEEPLOB: sweep_configuration_dlb,
+
+    co.Models.MLP_FI:  sweep_configuration_mlpFI,
 }
 
 
 def prepare_data_FI():
 
     fi_train = FIDataBuilder(
-        co.DATA_SOURCE + co.DATASET,
-        dataset_type=co.DatasetType.TRAIN
+        co.DATA_SOURCE + co.DATASET_FI,
+        dataset_type=co.DatasetType.TRAIN,
+        horizon=co.HORIZON,
+        window=co.BACKWARD_WINDOW
     )
 
     fi_val = FIDataBuilder(
-        co.DATA_SOURCE + co.DATASET,
-        dataset_type=co.DatasetType.TEST
+        co.DATA_SOURCE + co.DATASET_FI,
+        dataset_type=co.DatasetType.TEST,
+        horizon=co.HORIZON,
+        window=co.BACKWARD_WINDOW
     )
 
     train_set = FIDataset(x=fi_train.get_samples_x(), y=fi_train.get_samples_y())
@@ -68,19 +80,19 @@ def prepare_data_FI():
 
 
 
-def prepare_data():
+def prepare_data_LOBSTER():
 
     # train
     lo_train = LOBSTERDataBuilder(
-        co.DATASET,
+        co.DATASET_LOBSTER,
         co.DatasetType.TRAIN,
         start_end_trading_day=("2021-08-11", "2021-08-17"),  # ("2022-03-01", "2022-03-07")  5 days
-        is_data_preload=False,
         crop_trading_day_by=60 * 30,
         window_size_forward=co.FORWARD_WINDOW,
         window_size_backward=co.BACKWARD_WINDOW,
         label_dynamic_scaler=co.LABELING_SIGMA_SCALER,
-        is_shuffle=co.IS_SHUFFLE_INPUT
+        is_shuffle=co.IS_SHUFFLE_INPUT,
+        is_data_preload=co.IS_DATA_PRELOAD
     )
 
     # use the same
@@ -88,34 +100,36 @@ def prepare_data():
 
     # validation
     lo_val = LOBSTERDataBuilder(
-        co.DATASET,
+        co.DATASET_LOBSTER,
         co.DatasetType.VALIDATION,
         start_end_trading_day=("2021-08-18", "2021-08-24"),  # ("2022-03-01", "2022-03-07")  5 days
-        is_data_preload=False,
         crop_trading_day_by=60 * 30,
         window_size_forward=co.FORWARD_WINDOW,
         window_size_backward=co.BACKWARD_WINDOW,
         normalization_mean=mu,
         normalization_std=sigma,
-        label_threshold_pos=train_lab_threshold_pos,
-        label_threshold_neg=train_lab_threshold_neg,
-        is_shuffle=co.IS_SHUFFLE_INPUT
+        label_dynamic_scaler=co.LABELING_SIGMA_SCALER,
+        #label_threshold_pos=train_lab_threshold_pos,
+        #label_threshold_neg=train_lab_threshold_neg,
+        is_shuffle=co.IS_SHUFFLE_INPUT,
+        is_data_preload=co.IS_DATA_PRELOAD
     )
 
     # test
     lo_test = LOBSTERDataBuilder(
-        co.DATASET,
+        co.DATASET_LOBSTER,
         co.DatasetType.TEST,
         start_end_trading_day=("2021-08-25", "2021-08-27"),  # ("2022-03-02", "2022-03-03") 3 test
-        is_data_preload=False,
         crop_trading_day_by=60 * 30,
         window_size_forward=co.FORWARD_WINDOW,
         window_size_backward=co.BACKWARD_WINDOW,
         normalization_mean=mu,
         normalization_std=sigma,
-        label_threshold_pos=train_lab_threshold_pos,
-        label_threshold_neg=train_lab_threshold_neg,
-        is_shuffle=co.IS_SHUFFLE_INPUT
+        label_dynamic_scaler=co.LABELING_SIGMA_SCALER,
+        #label_threshold_pos=train_lab_threshold_pos,
+        #label_threshold_neg=train_lab_threshold_neg,
+        is_shuffle=co.IS_SHUFFLE_INPUT,
+        is_data_preload=co.IS_DATA_PRELOAD
     )
 
     train_set = LOBDataset(x=lo_train.get_samples_x(), y=lo_train.get_samples_y())
@@ -131,6 +145,7 @@ def prepare_data():
     return lob_dm
 
 
+
 def lunch_training():
     print("Lunching the execution of {}.".format(co.CHOSEN_MODEL))
 
@@ -143,17 +158,22 @@ def lunch_training():
         co.BATCH_SIZE = wandb.config.batch_size
         co.LEARNING_RATE = wandb.config.lr
         co.IS_SHUFFLE_INPUT = wandb.config.is_shuffle
-        co.BACKWARD_WINDOW = wandb.config.window_size_backward
-        co.FORWARD_WINDOW = wandb.config.window_size_forward
-        co.LABELING_SIGMA_SCALER = wandb.config.labeling_sigma_scaler
 
-        if co.CHOSEN_MODEL == co.Models.MLP:
+        if co.DATASET_FAMILY == co.DatasetFamily.LOBSTER:
+            co.BACKWARD_WINDOW = wandb.config.window_size_backward
+            co.FORWARD_WINDOW = wandb.config.window_size_forward
+            co.LABELING_SIGMA_SCALER = wandb.config.labeling_sigma_scaler
+        elif co.DATASET_FAMILY == co.DatasetFamily.FI:
+            co.BACKWARD_WINDOW = wandb.config.window_size_backward
+            co.HORIZON = wandb.config.fi_horizon_k
+
+        if co.CHOSEN_MODEL == co.Models.MLP or co.CHOSEN_MODEL == co.Models.MLP_FI:
             co.MLP_HIDDEN = wandb.config.hidden_mlp
         elif co.CHOSEN_MODEL == co.Models.LSTM:
             co.LSTM_HIDDEN = wandb.config.lstm_hidden
             co.LSTM_N_HIDDEN = wandb.config.lstm_n_hidden
 
-    data_module = prepare_data()
+    data_module = pick_dataset(co.DATASET_FAMILY)
 
     model = pick_model(co.CHOSEN_MODEL, data_module, remote_log)
 
@@ -163,7 +183,7 @@ def lunch_training():
         max_epochs=co.EPOCHS,
         callbacks=[
             cbk.callback_save_model(co.CHOSEN_MODEL.value),
-            # cbk.early_stopping()
+            cbk.early_stopping()
         ]
     )
 
@@ -179,10 +199,16 @@ def lunch_training_sweep():
     wandb.agent(sweep_id, function=lunch_training)  # count=4 max trials
     # wandb agent -p lob-adversarial-attacks-22 -e matteoprata rygxo9ti  to run sweeps in parallel
 
+def pick_dataset(datasetFamily):
+    if datasetFamily == co.DatasetFamily.LOBSTER:
+        return prepare_data_LOBSTER()
+    elif datasetFamily == co.DatasetFamily.FI:
+        return prepare_data_FI()
+
 
 def pick_model(chosen_model, data_module, remote_log):
     net_architecture = None
-    if chosen_model == co.Models.MLP:
+    if chosen_model == co.Models.MLP or chosen_model == co.Models.MLP_FI:
         net_architecture = MLP(
             x_shape=np.prod(data_module.x_shape),  # 40 * wind
             y_shape=data_module.y_shape,
@@ -204,6 +230,15 @@ def pick_model(chosen_model, data_module, remote_log):
 
 
 if __name__ == "__main__":
+
+    # test set: Counter({1: 47392, 0: 6347, 2: 5633})
+    # y_pred = [1]*59372 # hp: the model predicts always 1
+    # y_true = [0]*6347 + [1]*47392 + [2]*5633
+    # print(f1(y_true, y_pred, average='micro')) # = 0.798
+    # print(f1(y_true, y_pred, average='macro')) # = 0.295
+    # print(f1(y_true, y_pred, average='weighted')) # = 0.709
+    # exit()
+
     if co.IS_WANDB:
         lunch_training_sweep()
     else:
