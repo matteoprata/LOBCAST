@@ -21,6 +21,7 @@ class TuningVars(Enum):
     LABELING_THRESHOLD = "labeling_threshold"
     LABELING_SIGMA_SCALER = "labeling_sigma_scaler"
 
+    FI_HORIZON = 'fi_horizon_k'
 
 class Metrics(Enum):
     LOSS = 'loss'
@@ -67,12 +68,19 @@ class Models(Enum):
     MLP = "MLP"
     CNN = "CNN"
     LSTM = "LSTM"
+    MLP_FI = "MLP_FI"
 
 
 class DatasetFamily(Enum):
     FI = "Fi"
     LOBSTER = "Lobster"
 
+class Horizons(Enum):
+    K1 = 1
+    K2 = 2
+    K3 = 3
+    K5 = 5
+    K10 = 10
 
 class Granularity(Enum):
     """ The possible Granularity to build the OHLC old_data from lob """
@@ -121,7 +129,7 @@ DEVICE_TYPE = 'cuda' if torch.cuda.is_available() else 'cpu'
 MODEL_GAN = "data/GAN_models/"
 
 
-EPOCHS = 200
+EPOCHS = 150
 
 SEED = 0
 RANDOM_GEN_DATASET = np.random.RandomState(SEED)
@@ -135,20 +143,27 @@ LSTM_HIDDEN = 32
 LSTM_N_HIDDEN = 1
 
 N_LOB_LEVELS = 10
-LABELING_SIGMA_SCALER = .5  # dynamic threshold
+LABELING_SIGMA_SCALER = .3  # dynamic threshold
 BACKWARD_WINDOW = WinSize.SEC10.value
 FORWARD_WINDOW  = WinSize.SEC10.value
 SAVED_MODEL_DIR = "data/saved_models"
 
+HORIZON = 5
+
 TRAIN_SPLIT_VAL = .7
 
 DATA_SOURCE = "data/"
-DATASET = "AVXL_2021-08-01_2021-08-31_10"
+DATASET_LOBSTER = "AVXL_2021-08-01_2021-08-31_10"
+DATASET_FI = "FI-2010/BenchmarkDatasets"
 DATA_PICKLES = "data/pickles/"
+
+DATASET_FAMILY = DatasetFamily.LOBSTER
 
 PROJECT_NAME = "lob-adversarial-attacks-22"
 IS_WANDB = True
 
-CHOSEN_MODEL = Models.LSTM
+IS_DATA_PRELOAD = False
+
+CHOSEN_MODEL = Models.MLP
 IS_SHUFFLE_INPUT = True
 INSTANCES_LOWERBOUND = 1000
