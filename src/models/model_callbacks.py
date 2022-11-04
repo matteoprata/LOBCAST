@@ -23,7 +23,7 @@ def early_stopping():
     return pl.callbacks.EarlyStopping(
         monitor=monitor_var,
         min_delta=0.00,
-        patience=20,
+        patience=25,
         verbose=True,
         mode='max'
     )
