@@ -16,11 +16,11 @@ from pytorch_lightning import Trainer
 
 from src.models.model_executor import NNEngine
 
-from src.models.mlp.mlp_param_search import sweep_configuration_mlp
-from src.models.lstm.lstm_param_search import sweep_configuration_lstm
-from src.models.deeplob.dlb_param_search import sweep_configuration_dlb
-from src.data_preprocessing.FI.fi_param_search import sweep_configuration_fi
-from src.data_preprocessing.LOB.lobster_param_search import sweep_configuration_lobster
+from src.models.mlp.mlp_param_search import hyperparameters_mlp
+from src.models.lstm.lstm_param_search import hyperparameters_lstm
+from src.models.deeplob.dlb_param_search import hyperparameters_dlb
+from src.data_preprocessing.FI.fi_param_search import hyperparameters_fi
+from src.data_preprocessing.LOB.lobster_param_search import hyperparameters_lobster
 
 import src.config as co
 import wandb
@@ -44,14 +44,14 @@ from src.models.deeplob.deeplob import DeepLob
 
 
 SWEEP_CONF_DICT_MODEL = {
-    co.Models.MLP:  sweep_configuration_mlp,
-    co.Models.LSTM: sweep_configuration_lstm,
-    co.Models.DEEPLOB: sweep_configuration_dlb,
+    co.Models.MLP:  hyperparameters_mlp,
+    co.Models.LSTM: hyperparameters_lstm,
+    co.Models.DEEPLOB: hyperparameters_dlb,
 }
 
 SWEEP_CONF_DICT_DATA = {
-    co.DatasetFamily.FI:  sweep_configuration_fi,
-    co.DatasetFamily.LOBSTER:  sweep_configuration_lobster,
+    co.DatasetFamily.FI:  hyperparameters_fi,
+    co.DatasetFamily.LOBSTER:  hyperparameters_lobster,
 }
 
 
@@ -206,8 +206,8 @@ def lunch_training_sweep():
             'method': co.SWEEP_METHOD,
             'metric': co.SWEEP_METRIC,
             'parameters': {
-                **SWEEP_CONF_DICT_DATA[co.CHOSEN_DATASET]['parameters'],
-                **SWEEP_CONF_DICT_MODEL[co.CHOSEN_MODEL]['parameters']
+                **SWEEP_CONF_DICT_DATA[co.CHOSEN_DATASET],
+                **SWEEP_CONF_DICT_MODEL[co.CHOSEN_MODEL]
             }
         },
         project=co.PROJECT_NAME
