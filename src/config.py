@@ -22,6 +22,8 @@ class TuningVars(Enum):
     LABELING_THRESHOLD = "labeling_threshold"
     LABELING_SIGMA_SCALER = "labeling_sigma_scaler"
 
+    FI_HORIZON = 'fi_horizon_k'
+
 
 class Metrics(Enum):
     LOSS = 'loss'
@@ -55,6 +57,12 @@ class WinSize(Enum):
     MIN10 = 60 * 10
     MIN20 = 60 * 20
 
+class Horizons(Enum):
+    K1 = 1
+    K2 = 2
+    K3 = 3
+    K5 = 5
+    K10 = 10
 
 class Predictions(Enum):
     UPWARD = 2
@@ -148,13 +156,15 @@ BACKWARD_WINDOW = WinSize.SEC10.value
 FORWARD_WINDOW  = WinSize.SEC10.value
 INSTANCES_LOWERBOUND = 1000
 
+HORIZON = 10
+
 TRAIN_SPLIT_VAL = .7
 
 CHOSEN_DATASET = DatasetFamily.FI
-CHOSEN_MODEL = Models.LSTM
+CHOSEN_MODEL = Models.MLP
 
-IS_WANDB = True
-SWEEP_NAME = CHOSEN_DATASET + '_' + CHOSEN_MODEL + '_'
+IS_WANDB = False
+SWEEP_NAME = CHOSEN_DATASET.value + '_' + CHOSEN_MODEL.value + '_'
 SWEEP_METHOD = 'bayes'
 SWEEP_METRIC = {
     'goal': 'maximize',
