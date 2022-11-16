@@ -5,8 +5,8 @@ from collections import Counter
 
 
 from src.data_preprocessing.FI.FIDataBuilder import FIDataBuilder
-from src.data_preprocessing.FI.FIDataset import FIDataset
-from src.data_preprocessing.FI.FIDataModule import FIDataModule
+#from src.data_preprocessing.FI.FIDataset import FIDataset
+#from src.data_preprocessing.FI.FIDataModule import FIDataModule
 from src.data_preprocessing.LOB.LOBSTERDataBuilder import LOBSTERDataBuilder
 from src.data_preprocessing.LOB.LOBDataModule import LOBDataModule
 from src.data_preprocessing.LOB.LOBDataset import LOBDataset
@@ -19,7 +19,8 @@ from src.models.model_executor import NNEngine
 from src.models.mlp.mlp_param_search import sweep_configuration_mlp
 from src.models.lstm.lstm_param_search import sweep_configuration_lstm
 from src.models.deeplob.dlb_param_search import sweep_configuration_dlb
-from src.models.mlp.mlp_fi_param_search import sweep_configuration_mlpFI
+from src.data_preprocessing.FI.fi_param_search import sweep_configuration_fi
+from src.data_preprocessing.LOB.lobster_param_search import sweep_configuration_lobster
 
 import src.config as co
 import wandb
@@ -42,12 +43,15 @@ from src.models.deeplob.deeplob import DeepLob
 #     return parser
 
 
-SWEEP_CONF_DICT = {
+SWEEP_CONF_DICT_MODEL = {
     co.Models.MLP:  sweep_configuration_mlp,
     co.Models.LSTM: sweep_configuration_lstm,
     co.Models.DEEPLOB: sweep_configuration_dlb,
+}
 
-    co.Models.MLP_FI:  sweep_configuration_mlpFI,
+SWEEP_CONF_DICT_DATA = {
+    co.DatasetFamily.FI:  sweep_configuration_fi,
+    co.DatasetFamily.LOBSTER:  sweep_configuration_lobster,
 }
 
 
@@ -195,7 +199,16 @@ def lunch_training():
 
 def lunch_training_sweep():
     # 🐝 STEP: initialize sweep by passing in config
-    sweep_id = wandb.sweep(sweep=SWEEP_CONF_DICT[co.CHOSEN_MODEL], project=co.PROJECT_NAME)
+    sweep_id = wandb.sweep(
+        sweep={
+            'name': co.SWEEP_NAME,
+            'method': co.SWEEP_METHOD,
+            'metric': co.SWEEP_METRIC,
+            **SWEEP_CONF_DICT_DATA[co.CHOSEN_DATASET],
+            **SWEEP_CONF_DICT_MODEL[co.CHOSEN_MODEL]
+        },
+        project=co.PROJECT_NAME
+    )
     wandb.agent(sweep_id, function=lunch_training)  # count=4 max trials
     # wandb agent -p lob-adversarial-attacks-22 -e matteoprata rygxo9ti  to run sweeps in parallel
 
