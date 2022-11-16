@@ -5,8 +5,8 @@ from collections import Counter
 
 
 from src.data_preprocessing.FI.FIDataBuilder import FIDataBuilder
-#from src.data_preprocessing.FI.FIDataset import FIDataset
-#from src.data_preprocessing.FI.FIDataModule import FIDataModule
+from src.data_preprocessing.FI.FIDataset import FIDataset
+from src.data_preprocessing.FI.FIDataModule import FIDataModule
 from src.data_preprocessing.LOB.LOBSTERDataBuilder import LOBSTERDataBuilder
 from src.data_preprocessing.LOB.LOBDataModule import LOBDataModule
 from src.data_preprocessing.LOB.LOBDataset import LOBDataset
@@ -70,6 +70,9 @@ def prepare_data_FI():
         horizon=co.HORIZON,
         window=co.BACKWARD_WINDOW
     )
+
+
+    exit()
 
     train_set = FIDataset(x=fi_train.get_samples_x(), y=fi_train.get_samples_y())
     val_set = FIDataset(x=fi_val.get_samples_x(), y=fi_val.get_samples_y())
@@ -177,7 +180,7 @@ def lunch_training():
             co.LSTM_HIDDEN = wandb.config.lstm_hidden
             co.LSTM_N_HIDDEN = wandb.config.lstm_n_hidden
 
-    data_module = pick_dataset(co.DATASET_FAMILY)
+    data_module = pick_dataset(co.CHOSEN_DATASET)
 
     model = pick_model(co.CHOSEN_MODEL, data_module, remote_log)
 
