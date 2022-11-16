@@ -71,9 +71,6 @@ def prepare_data_FI():
         window=co.BACKWARD_WINDOW
     )
 
-
-    exit()
-
     train_set = FIDataset(x=fi_train.get_samples_x(), y=fi_train.get_samples_y())
     val_set = FIDataset(x=fi_val.get_samples_x(), y=fi_val.get_samples_y())
 
@@ -202,13 +199,16 @@ def lunch_training():
 
 def lunch_training_sweep():
     # 🐝 STEP: initialize sweep by passing in config
+
     sweep_id = wandb.sweep(
         sweep={
             'name': co.SWEEP_NAME,
             'method': co.SWEEP_METHOD,
             'metric': co.SWEEP_METRIC,
-            **SWEEP_CONF_DICT_DATA[co.CHOSEN_DATASET],
-            **SWEEP_CONF_DICT_MODEL[co.CHOSEN_MODEL]
+            'parameters': {
+                **SWEEP_CONF_DICT_DATA[co.CHOSEN_DATASET]['parameters'],
+                **SWEEP_CONF_DICT_MODEL[co.CHOSEN_MODEL]['parameters']
+            }
         },
         project=co.PROJECT_NAME
     )

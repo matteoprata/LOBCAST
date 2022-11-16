@@ -84,7 +84,10 @@ class LOBSTERDataBuilder:
         """ Does normalization. """
         if self.normalization_type == co.NormalizationType.Z_SCORE:
             # returns the mean and std, both for the price and for the volume
-            self.__data, means_dicts, stds_dicts = ppu.stationary_normalize_data(self.__data, self.normalization_means, self.normalization_stds)
+            self.__data, means_dicts, stds_dicts = ppu.stationary_normalize_data(
+                self.__data,
+                self.normalization_means,
+                self.normalization_stds)
 
             # the training dataset shares its normalization with the others
             if self.dataset_type == co.DatasetType.TRAIN:

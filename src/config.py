@@ -79,7 +79,7 @@ class Models(Enum):
 
 
 class DatasetFamily(Enum):
-    FI = "Fi"
+    FI = "FI"
     LOBSTER = "Lobster"
 
 
