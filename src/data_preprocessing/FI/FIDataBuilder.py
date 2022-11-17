@@ -122,7 +122,7 @@ class FIDataBuilder:
         self.__snapshotting()
 
         occurrences = collections.Counter(self.samples_y)
-        print("occurrences:", occurrences)
+        print("dataset type:", self.dataset_type, "- occurrences:", occurrences)
 
     def get_data(self, first_half_split=1):
         return self.data

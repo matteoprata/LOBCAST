@@ -17,6 +17,8 @@ class TuningVars(Enum):
     LSTM_HIDDEN = "lstm_hidden"
     LSTM_N_HIDDEN = "lstm_n_hidden"
 
+    P_DROPOUT = "p_dropout"
+
     BACKWARD_WINDOW = "window_size_backward"
     FORWARD_WINDOW = "window_size_forward"
     LABELING_THRESHOLD = "labeling_threshold"
@@ -146,6 +148,7 @@ VALIDATE_EVERY = 1
 IS_SHUFFLE_INPUT = True
 
 MLP_HIDDEN = 128
+P_DROPOUT = .1
 
 LSTM_HIDDEN = 32
 LSTM_N_HIDDEN = 1
@@ -163,7 +166,7 @@ TRAIN_SPLIT_VAL = .7
 CHOSEN_DATASET = DatasetFamily.FI
 CHOSEN_MODEL = Models.MLP
 
-IS_WANDB = False
+IS_WANDB = True
 SWEEP_NAME = CHOSEN_DATASET.value + '_' + CHOSEN_MODEL.value + '_'
 SWEEP_METHOD = 'bayes'
 SWEEP_METRIC = {

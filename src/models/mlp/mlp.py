@@ -7,14 +7,16 @@ class MLP(nn.Module):
             self,
             x_shape,
             y_shape,
-            hidden_layer_dim=128
+            hidden_layer_dim=128,
+            p_dropout=.1
     ):
         super(MLP, self).__init__()
 
-        self.linear1   = nn.Linear(x_shape, hidden_layer_dim)
+        self.linear1 = nn.Linear(x_shape, hidden_layer_dim)
         self.leakyReLU = nn.LeakyReLU()
-        self.linear2   = nn.Linear(hidden_layer_dim, y_shape)
-        self.softmax   = nn.Softmax(dim=1)
+        self.dropout = nn.Dropout(p=p_dropout)
+        self.linear2 = nn.Linear(hidden_layer_dim, y_shape)
+        self.softmax = nn.Softmax(dim=1)
 
     def forward(self, x):
         # [batch_size x 40 x window]
@@ -22,6 +24,8 @@ class MLP(nn.Module):
 
         out = self.linear1(x)
         out = self.leakyReLU(out)
+        out = self.dropout(out)
+
         out = self.linear2(out)
 
         logits = self.softmax(out)

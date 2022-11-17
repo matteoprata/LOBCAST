@@ -151,7 +151,7 @@ def prepare_data_LOBSTER():
 
 
 def lunch_training():
-    print("Lunching the execution of {}.".format(co.CHOSEN_MODEL))
+    print("Lunching the execution of {} on {} dataset.".format(co.CHOSEN_MODEL, co.CHOSEN_DATASET))
 
     remote_log = None
     if co.IS_WANDB:
@@ -173,6 +173,7 @@ def lunch_training():
 
         if co.CHOSEN_MODEL == co.Models.MLP or co.CHOSEN_MODEL == co.Models.MLP_FI:
             co.MLP_HIDDEN = wandb.config.hidden_mlp
+            co.P_DROPOUT = wandb.config.p_dropout
         elif co.CHOSEN_MODEL == co.Models.LSTM:
             co.LSTM_HIDDEN = wandb.config.lstm_hidden
             co.LSTM_N_HIDDEN = wandb.config.lstm_n_hidden
@@ -228,7 +229,8 @@ def pick_model(chosen_model, data_module, remote_log):
         net_architecture = MLP(
             x_shape=np.prod(data_module.x_shape),  # 40 * wind
             y_shape=data_module.y_shape,
-            hidden_layer_dim=co.MLP_HIDDEN
+            hidden_layer_dim=co.MLP_HIDDEN,
+            p_dropout=co.P_DROPOUT
         )
 
     elif chosen_model == co.Models.LSTM:
