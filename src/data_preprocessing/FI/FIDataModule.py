@@ -1,6 +1,10 @@
-
+import torch
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
+import src.config as co
+
+from pprint import pprint
+
 
 
 class FIDataModule(pl.LightningDataModule):
@@ -22,10 +26,10 @@ class FIDataModule(pl.LightningDataModule):
         pass
 
     def train_dataloader(self):
-        return DataLoader(self.train_set, batch_size=self.batch_size, num_workers=1)
+        return DataLoader(self.train_set, batch_size=self.batch_size)
 
     def val_dataloader(self):
-        return DataLoader(self.val_set, batch_size=self.batch_size, num_workers=1)
+        return DataLoader(self.val_set, batch_size=self.batch_size)
 
     def test_dataloader(self):
         return DataLoader(self.test_set, batch_size=self.batch_size)

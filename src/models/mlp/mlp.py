@@ -21,8 +21,7 @@ class MLP(nn.Module):
     def forward(self, x):
         # [batch_size x 40 x window]
         x = x.view(x.size(0), -1).float()
-        print(x.device)
-        exit()
+
         out = self.linear1(x)
         out = self.leakyReLU(out)
         out = self.dropout(out)
