@@ -6,25 +6,26 @@ from torch.utils.data import DataLoader
 class FIDataModule(pl.LightningDataModule):
     """ Splits the datasets in TRAIN, VALIDATION, TEST. """
 
-    def __init__(self, train_set, val_set, batch_size):
+    def __init__(self, train_set, val_set, test_set, batch_size):
         super().__init__()
 
         self.train_set = train_set
         self.val_set = val_set
+        self.test_set = test_set
 
         self.batch_size = batch_size
 
         self.x_shape = self.train_set.x_shape
-        self.y_shape = self.train_set.y_shape
+        self.num_classes = self.train_set.num_classes
 
     def setup(self, stage=None):
         pass
 
     def train_dataloader(self):
-        return DataLoader(self.train_set, batch_size=self.batch_size)
+        return DataLoader(self.train_set, batch_size=self.batch_size, num_workers=1)
 
     def val_dataloader(self):
-        return DataLoader(self.val_set, batch_size=self.batch_size)
+        return DataLoader(self.val_set, batch_size=self.batch_size, num_workers=1)
 
     def test_dataloader(self):
-        return DataLoader(self.val_set, batch_size=self.batch_size)
+        return DataLoader(self.test_set, batch_size=self.batch_size)

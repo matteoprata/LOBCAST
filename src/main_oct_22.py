@@ -66,6 +66,13 @@ def prepare_data_FI():
 
     fi_val = FIDataBuilder(
         co.DATA_SOURCE + co.DATASET_FI,
+        dataset_type=co.DatasetType.VALIDATION,
+        horizon=co.HORIZON,
+        window=co.BACKWARD_WINDOW
+    )
+
+    fi_test = FIDataBuilder(
+        co.DATA_SOURCE + co.DATASET_FI,
         dataset_type=co.DatasetType.TEST,
         horizon=co.HORIZON,
         window=co.BACKWARD_WINDOW
@@ -73,13 +80,14 @@ def prepare_data_FI():
 
     train_set = FIDataset(x=fi_train.get_samples_x(), y=fi_train.get_samples_y())
     val_set = FIDataset(x=fi_val.get_samples_x(), y=fi_val.get_samples_y())
+    test_set = FIDataset(x=fi_test.get_samples_x(), y=fi_test.get_samples_y())
 
     print()
     print("Samples in the splits:")
-    print(len(train_set), len(val_set))
+    print(len(train_set), len(val_set), len(test_set))
     print()
 
-    fi_dm = FIDataModule(train_set, val_set, co.BATCH_SIZE)
+    fi_dm = FIDataModule(train_set, val_set, test_set, co.BATCH_SIZE)
     return fi_dm
 
 
@@ -163,32 +171,34 @@ def lunch_training():
         co.LEARNING_RATE = wandb.config.lr
         co.IS_SHUFFLE_INPUT = wandb.config.is_shuffle
 
-        if co.DATASET_FAMILY == co.DatasetFamily.LOBSTER:
+        if co.CHOSEN_DATASET == co.DatasetFamily.LOBSTER:
             co.BACKWARD_WINDOW = wandb.config.window_size_backward
             co.FORWARD_WINDOW = wandb.config.window_size_forward
             co.LABELING_SIGMA_SCALER = wandb.config.labeling_sigma_scaler
-        elif co.DATASET_FAMILY == co.DatasetFamily.FI:
+        elif co.CHOSEN_DATASET == co.DatasetFamily.FI:
             co.BACKWARD_WINDOW = wandb.config.window_size_backward
             co.HORIZON = wandb.config.fi_horizon_k
 
-        if co.CHOSEN_MODEL == co.Models.MLP or co.CHOSEN_MODEL == co.Models.MLP_FI:
+        if co.CHOSEN_MODEL == co.Models.MLP:
             co.MLP_HIDDEN = wandb.config.hidden_mlp
             co.P_DROPOUT = wandb.config.p_dropout
         elif co.CHOSEN_MODEL == co.Models.LSTM:
             co.LSTM_HIDDEN = wandb.config.lstm_hidden
             co.LSTM_N_HIDDEN = wandb.config.lstm_n_hidden
+            co.P_DROPOUT = wandb.config.p_dropout
 
     data_module = pick_dataset(co.CHOSEN_DATASET)
 
     model = pick_model(co.CHOSEN_MODEL, data_module, remote_log)
 
     trainer = Trainer(
-        gpus=co.DEVICE,
+        accelerator=co.DEVICE_TYPE,
+        devices=co.NUM_GPUS,
         check_val_every_n_epoch=co.VALIDATE_EVERY,  # val_check_interval
         max_epochs=co.EPOCHS,
         callbacks=[
             cbk.callback_save_model(co.CHOSEN_MODEL.value),
-            cbk.early_stopping()
+            #cbk.early_stopping()
         ]
     )
 
@@ -225,10 +235,10 @@ def pick_dataset(datasetFamily):
 
 def pick_model(chosen_model, data_module, remote_log):
     net_architecture = None
-    if chosen_model == co.Models.MLP or chosen_model == co.Models.MLP_FI:
+    if chosen_model == co.Models.MLP:
         net_architecture = MLP(
             x_shape=np.prod(data_module.x_shape),  # 40 * wind
-            y_shape=data_module.y_shape,
+            num_classes=data_module.num_classes,
             hidden_layer_dim=co.MLP_HIDDEN,
             p_dropout=co.P_DROPOUT
         )
@@ -236,13 +246,14 @@ def pick_model(chosen_model, data_module, remote_log):
     elif chosen_model == co.Models.LSTM:
         net_architecture = LSTM(
             x_shape=data_module.x_shape[1],  # 40, wind is the time
-            y_shape=data_module.y_shape,
+            num_classes=data_module.num_classes,
             hidden_layer_dim=co.LSTM_HIDDEN,
-            num_layers=co.LSTM_N_HIDDEN
+            num_layers=co.LSTM_N_HIDDEN,
+            p_dropout=co.P_DROPOUT
         )
 
     elif chosen_model == co.Models.DEEPLOB:
-        net_architecture = DeepLob(y_shape=data_module.y_shape)
+        net_architecture = DeepLob(num_classes=data_module.num_classes)
 
     return NNEngine(net_architecture, lr=co.LEARNING_RATE, remote_log=remote_log).to(co.DEVICE_TYPE)
 

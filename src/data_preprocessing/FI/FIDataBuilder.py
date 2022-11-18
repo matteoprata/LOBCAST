@@ -4,12 +4,15 @@ import src.config as co
 import numpy as np
 import tqdm
 
+from pprint import pprint
+
 
 class FIDataBuilder:
     def __init__(
             self,
             fi_data_dir,
             dataset_type,
+            train_val_split=co.TRAIN_SPLIT_VAL,
             auction=False,
             normalization_type=co.NormalizationType.Z_SCORE,
             horizon=10,
@@ -19,6 +22,7 @@ class FIDataBuilder:
         assert horizon in (1, 2, 3, 5, 10)
 
         self.dataset_type = dataset_type
+        self.train_val_split = train_val_split
         self.fi_data_dir = fi_data_dir
         self.auction = auction
         self.normalization_type = normalization_type
@@ -49,7 +53,7 @@ class FIDataBuilder:
 
         # if it is training time, we open the 7-days training file
         # if it is testing time, we open the 3 test files
-        if self.dataset_type == co.DatasetType.TRAIN:
+        if self.dataset_type == co.DatasetType.TRAIN or self.dataset_type == co.DatasetType.VALIDATION:
 
             F_NAME = DIR + \
                      '/{}_Dst_{}_{}_CF_7'.format(DATASET_TYPE, AUCTION, NORMALIZATION) + \
@@ -58,6 +62,11 @@ class FIDataBuilder:
             #print('Opening:', F_NAME)
 
             out_df = np.loadtxt(F_NAME)
+
+            if self.dataset_type == co.DatasetType.TRAIN:
+                out_df = out_df[:, :int(np.floor(out_df.shape[1] * self.train_val_split))]
+            elif self.dataset_type == co.DatasetType.VALIDATION:
+                out_df = out_df[:, :int(np.floor(out_df.shape[1] * (1-self.train_val_split)))]
 
         else:
 
@@ -102,13 +111,14 @@ class FIDataBuilder:
         print("Snapshotting... (__data has", self.data.shape[0], "rows)")
         for st in tqdm.tqdm(range(0, self.samples_x.shape[0] - self.window)):
             x_snap = self.samples_x[st: st + self.window]
-            y_snap = self.samples_y[st + self.window]
+            y_snap = self.samples_y[st + self.window - 1]
             X.append(x_snap)
             Y.append(y_snap)
 
         self.samples_x, self.samples_y = np.asarray(X), np.asarray(Y)
 
         if do_shuffle:
+            print('I am shuffling')
             index = co.RANDOM_GEN_DATASET.randint(0, self.samples_x.shape[0], size=self.samples_x.shape[0])
             self.samples_x = self.samples_x[index]
             self.samples_y = self.samples_y[index]
@@ -117,12 +127,20 @@ class FIDataBuilder:
         """ Crucial call! """
 
         self.__read_dataset()
+
         self.__prepareX()
         self.__prepareY()
         self.__snapshotting()
 
+        #occurrences = collections.Counter(self.samples_y)
+        #print("dataset type:", self.dataset_type, "- occurrences:", occurrences)
+        #if not self.dataset_type == co.DatasetType.TEST:
+            #self.__under_sampling()
+
+        print("dataset type:", self.dataset_type, " - normalization:", self.normalization_type)
         occurrences = collections.Counter(self.samples_y)
-        print("dataset type:", self.dataset_type, "- occurrences:", occurrences)
+        print("occurrences:", occurrences)
+        print()
 
     def get_data(self, first_half_split=1):
         return self.data

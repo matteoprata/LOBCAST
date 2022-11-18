@@ -45,6 +45,8 @@ class NormalizationType(Enum):
     Z_SCORE = 0
     DYNAMIC = 1
     NONE = 2
+    MINMAX = 3
+    DECPRE = 4
 
 
 class WinSize(Enum):
@@ -126,12 +128,12 @@ class DatasetType(Enum):
 CLASS_NAMES = ["DOWN", "STATIONARY", "UP"]
 
 OHLC_DATA = "old_data/ohlc_data/"
-DEVICE = 1 if torch.cuda.is_available() else 0
+NUM_GPUS = 1 if torch.cuda.is_available() else 0
 DEVICE_TYPE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 MODEL_GAN = "data/GAN_models/"
 
-SAVED_MODEL_DIR = "data/saved_models"
+SAVED_MODEL_DIR = "data/saved_models/"
 
 SEED = 0
 RANDOM_GEN_DATASET = np.random.RandomState(SEED)
@@ -141,33 +143,33 @@ DATASET_FI = "FI-2010/BenchmarkDatasets"
 
 DATA_PICKLES = "data/pickles/"
 
-EPOCHS = 200
-BATCH_SIZE = 32
+EPOCHS = 50
+BATCH_SIZE = 64
 LEARNING_RATE = 0.001
 VALIDATE_EVERY = 1
-IS_SHUFFLE_INPUT = True
+IS_SHUFFLE_INPUT = False
 
 MLP_HIDDEN = 128
 P_DROPOUT = .1
 
-LSTM_HIDDEN = 32
+LSTM_HIDDEN = 40
 LSTM_N_HIDDEN = 1
 
 N_LOB_LEVELS = 10
 LABELING_SIGMA_SCALER = .5  # dynamic threshold
-BACKWARD_WINDOW = WinSize.SEC10.value
-FORWARD_WINDOW  = WinSize.SEC10.value
+BACKWARD_WINDOW = WinSize.SEC100.value
+FORWARD_WINDOW = WinSize.SEC10.value
 INSTANCES_LOWERBOUND = 1000
 
 HORIZON = 10
 
-TRAIN_SPLIT_VAL = .7
+TRAIN_SPLIT_VAL = .8
 
 CHOSEN_DATASET = DatasetFamily.FI
 CHOSEN_MODEL = Models.MLP
 
-IS_WANDB = True
-SWEEP_NAME = CHOSEN_DATASET.value + '_' + CHOSEN_MODEL.value + '_'
+IS_WANDB = False
+SWEEP_NAME = CHOSEN_DATASET.value + '_' + CHOSEN_MODEL.value + ''
 SWEEP_METHOD = 'bayes'
 SWEEP_METRIC = {
     'goal': 'maximize',

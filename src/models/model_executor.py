@@ -1,7 +1,7 @@
 import pytorch_lightning as pl
 
 import torch
-import torch.nn.functional as F
+import torch.nn as nn
 from sklearn.metrics import precision_recall_fscore_support as prfs
 from sklearn.metrics import accuracy_score
 import numpy as np
@@ -10,11 +10,13 @@ import wandb
 from collections import Counter
 
 class NNEngine(pl.LightningModule):
-    """ Multi layer perceptron. """
 
     def __init__(self,  neural_architecture, lr, remote_log=None ):
 
         super().__init__()
+
+        self.loss_fn = nn.CrossEntropyLoss()
+
         self.lr = lr
         self.remote_log = remote_log
         self.neural_architecture = neural_architecture
@@ -25,19 +27,19 @@ class NNEngine(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         x, y = batch
         prediction = self(x)
-        loss = F.cross_entropy(prediction, y.float())
+        loss = self.loss_fn(prediction, y)
         return loss
 
     def validation_step(self, batch, batch_idx):
-        prediction_ind, y_ind, loss_val = self.__validation_and_testing(batch)
-        return prediction_ind, y_ind, loss_val
+        prediction_ind, y, loss_val = self.__validation_and_testing(batch)
+        return prediction_ind, y, loss_val
 
     def test_step(self, batch, batch_idx):
-        prediction_ind, y_ind, loss_val = self.__validation_and_testing(batch)
-        return prediction_ind, y_ind, loss_val
+        prediction_ind, y, loss_val = self.__validation_and_testing(batch)
+        return prediction_ind, y, loss_val
 
     def training_epoch_end(self, validation_step_outputs):
-        losses   = [el["loss"].item() for el in validation_step_outputs]
+        losses = [el["loss"].item() for el in validation_step_outputs]
         sum_losses = float(np.sum(losses))
         self.log(co.ModelSteps.TRAINING.value + co.Metrics.LOSS.value, sum_losses, prog_bar=True)
 
@@ -54,13 +56,12 @@ class NNEngine(pl.LightningModule):
     def __validation_and_testing(self, batch):
         x, y = batch
         prediction = self(x)
-        loss_val = F.cross_entropy(prediction, y.float())
+        loss_val = self.loss_fn(prediction, y)
 
         # deriving prediction from softmax probs
         prediction_ind = torch.argmax(prediction, dim=1)
-        y_ind = torch.argmax(y, dim=1)
 
-        return prediction_ind, y_ind, loss_val
+        return prediction_ind, y, loss_val
 
     def __validation_and_testing_end(self, validation_step_outputs, model_step):
 
@@ -74,7 +75,10 @@ class NNEngine(pl.LightningModule):
         counts_class = {k: 1/v for k, v in Counter(ys).items()}
         yweights = np.ones(shape=len(ys)) * counts_class[0]
         yweights[ys == 2] = counts_class[2]
-        yweights[ys == 1] = counts_class[1]
+        try:
+            yweights[ys == 1] = counts_class[1]
+        except:
+            pass
 
         precision, recall, f1score, _ = prfs(predictions, ys, average="weighted", sample_weight=yweights, zero_division=0)
         accuracy = accuracy_score(predictions, ys)
@@ -85,7 +89,7 @@ class NNEngine(pl.LightningModule):
             model_step.value + co.Metrics.PRECISION.value: float(precision),
             model_step.value + co.Metrics.RECALL.value:    float(recall),
             model_step.value + co.Metrics.ACCURACY.value:  float(accuracy)
-            }
+        }
 
         # for saving best model
         self.log(model_step.value + co.Metrics.F1.value, f1score, prog_bar=True)

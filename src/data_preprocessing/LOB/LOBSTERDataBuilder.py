@@ -119,7 +119,7 @@ class LOBSTERDataBuilder:
         X, Y = [], []
         for st in tqdm.tqdm(range(0, self.__data.shape[0] - self.window_size_backward)):
             x_snap = self.__data.iloc[st:st + self.window_size_backward, :].loc[:, relevant_columns]
-            y_snap = self.__data.iloc[st + self.window_size_backward, :][ppu.DataCols.PREDICTION.value]
+            y_snap = self.__data.iloc[st + self.window_size_backward - 1, :][ppu.DataCols.PREDICTION.value]
             X.append(x_snap)
             Y.append(y_snap)
 

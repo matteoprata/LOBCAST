@@ -11,7 +11,7 @@ def callback_save_model(ml_model_name):
         verbose=True,
         save_top_k=3,
         mode='max',
-        dirpath=co.SAVED_MODEL_DIR,
+        dirpath=co.SAVED_MODEL_DIR+co.SWEEP_NAME,
         filename=ml_model_name + '-{epoch}-{' + monitor_var + ':.2f}' + '_' + datetime.now().strftime("%d%m%Y%H%M%S")
     )
     return check_point_callback

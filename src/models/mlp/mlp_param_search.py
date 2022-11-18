@@ -8,8 +8,8 @@ hyperparameters_mlp = {
     co.TuningVars.BATCH_SIZE.value: {'values': [16, 32, 48]},       # [32, 64, 128]
     co.TuningVars.IS_SHUFFLE.value: {'values': [False, True]},
 
-    co.TuningVars.MLP_HIDDEN.value: {'values': [128, 192, 256]}, # [150, 175, 200]
+    co.TuningVars.MLP_HIDDEN.value: {'values': [128]}, # [128, 192, 256]
 
-    co.TuningVars.P_DROPOUT.value: {'values': [0.1, 0.25, 0.5]},
+    co.TuningVars.P_DROPOUT.value: {'values': [0]}, # [0.1, 0.25, 0.5]
 
 }

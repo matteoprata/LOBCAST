@@ -4,9 +4,9 @@ import torch
 
 
 class DeepLob(pl.LightningModule):
-    def __init__(self, y_shape):
+    def __init__(self, num_classes):
         super().__init__()
-        self.y_shape = y_shape
+        self.num_classes = num_classes
 
         # convolution blocks
         self.conv1 = nn.Sequential(
@@ -74,7 +74,7 @@ class DeepLob(pl.LightningModule):
 
         # lstm layers
         self.lstm = nn.LSTM(input_size=192, hidden_size=64, num_layers=1, batch_first=True)
-        self.fc1 = nn.Linear(64, self.y_shape)
+        self.fc1 = nn.Linear(64, self.num_classes)
 
         self.softmax = nn.Softmax(dim=1)
 
@@ -97,14 +97,10 @@ class DeepLob(pl.LightningModule):
         x = torch.reshape(x, (-1, x.shape[1], x.shape[2]))
 
         out, _ = self.lstm(x)
-        print('before out.shape:', out.shape)
+
         out = out[:, -1, :]
         out = self.fc1(out)
-        print('after out.shape:', out.shape)
 
         logits = self.softmax(out)
 
         return logits
-
-        #forecast_y = x  # we return the three classes, not just a value
-        #return forecast_y
