@@ -104,7 +104,7 @@ class FIDataBuilder:
         self.samples_y = self.data[T[self.horizon], :].transpose()
         self.samples_y -= 1
 
-    def __snapshotting(self, do_shuffle=False):
+    def __snapshotting(self):
         """ This creates 4 X n_levels X window_size_backward -> prediction. """
 
         X, Y = [], []
@@ -116,12 +116,6 @@ class FIDataBuilder:
             Y.append(y_snap)
 
         self.samples_x, self.samples_y = np.asarray(X), np.asarray(Y)
-
-        if do_shuffle:
-            print('I am shuffling')
-            index = co.RANDOM_GEN_DATASET.randint(0, self.samples_x.shape[0], size=self.samples_x.shape[0])
-            self.samples_x = self.samples_x[index]
-            self.samples_y = self.samples_y[index]
 
     def __prepare_dataset(self):
         """ Crucial call! """

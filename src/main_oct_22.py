@@ -29,6 +29,7 @@ from src.models.mlp.mlp import MLP
 from src.models.lstm.lstm import LSTM
 from src.models.deeplob.deeplob import DeepLob
 
+
 # def parser_cl_arguments():
 #     """ Parses the arguments for the command line. """
 #

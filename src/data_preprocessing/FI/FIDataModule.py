@@ -26,10 +26,10 @@ class FIDataModule(pl.LightningDataModule):
         pass
 
     def train_dataloader(self):
-        return DataLoader(self.train_set, batch_size=self.batch_size)
+        return DataLoader(self.train_set, batch_size=self.batch_size, shuffle=True)
 
     def val_dataloader(self):
-        return DataLoader(self.val_set, batch_size=self.batch_size)
+        return DataLoader(self.val_set, batch_size=self.batch_size, shuffle=False)
 
     def test_dataloader(self):
-        return DataLoader(self.test_set, batch_size=self.batch_size)
+        return DataLoader(self.test_set, batch_size=self.batch_size, shuffle=False)

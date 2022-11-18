@@ -1,8 +1,11 @@
+from pprint import pprint
+
 import pytorch_lightning as pl
 
 import torch
 import torch.nn as nn
 from sklearn.metrics import precision_recall_fscore_support as prfs
+from sklearn.metrics import classification_report
 from sklearn.metrics import accuracy_score
 import numpy as np
 import src.config as co
@@ -71,17 +74,11 @@ class NNEngine(pl.LightningModule):
             ys += y.tolist()
             loss_vals += [loss_val.item()]
 
-        # TODO: recode
-        counts_class = {k: 1/v for k, v in Counter(ys).items()}
-        yweights = np.ones(shape=len(ys)) * counts_class[0]
-        yweights[ys == 2] = counts_class[2]
-        try:
-            yweights[ys == 1] = counts_class[1]
-        except:
-            pass
-
-        precision, recall, f1score, _ = prfs(predictions, ys, average="weighted", sample_weight=yweights, zero_division=0)
-        accuracy = accuracy_score(predictions, ys)
+        cr = classification_report(ys, predictions, output_dict=True, zero_division=0)
+        accuracy = cr['accuracy']  # MICRO-F1
+        f1score = cr['macro avg']['f1-score'] #MACRO-F1
+        precision = cr['macro avg']['precision'] #MACRO-PRECISION
+        recall = cr['macro avg']['recall'] #MACRO-RECALL
 
         val_dict = {
             model_step.value + co.Metrics.LOSS.value:      float(np.sum(loss_vals)),
