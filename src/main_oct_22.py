@@ -252,7 +252,7 @@ def pick_model(chosen_model, data_module, remote_log):
 
     elif chosen_model == co.Models.CNN1:
         net_architecture = CNN1(
-            num_features=np.prod(data_module.x_shape),
+            num_features=data_module.x_shape[1],
             num_classes=data_module.num_classes,
         )
 

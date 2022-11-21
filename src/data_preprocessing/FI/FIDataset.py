@@ -12,7 +12,7 @@ class FIDataset(data.Dataset):
     def __init__(self, x, y, num_classes=3, one_hot_encoding=False):
         self.num_classes = num_classes
 
-        self.x = torch.from_numpy(x)
+        self.x = torch.from_numpy(x).type(torch.FloatTensor)
         self.y = torch.from_numpy(y).type(torch.LongTensor)
 
         if one_hot_encoding:

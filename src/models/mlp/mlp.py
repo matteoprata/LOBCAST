@@ -1,9 +1,10 @@
 # Using Deep Learning to Detect Price Change Indications in Financial Markets
 # Source: https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8081663
 
+import pytorch_lightning as pl
 from torch import nn
 
-class MLP(nn.Module):
+class MLP(pl.LightningModule):
 
     def __init__(
             self,

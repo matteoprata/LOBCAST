@@ -1,10 +1,11 @@
 # Using Deep Learning to Detect Price Change Indications in Financial Markets
 # Source: https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8081663
 
+import pytorch_lightning as pl
 from torch import nn
 
 
-class LSTM(nn.Module):
+class LSTM(pl.LightningModule):
     def __init__(self, num_classes, x_shape, hidden_layer_dim, num_layers, p_dropout):
         super().__init__()
 
