@@ -188,7 +188,7 @@ def lunch_training():
         if co.CHOSEN_MODEL == co.Models.MLP:
             co.MLP_HIDDEN = wandb.config.hidden_mlp
             co.P_DROPOUT = wandb.config.p_dropout
-        elif co.CHOSEN_MODEL == co.Models.LSTM:
+        elif co.CHOSEN_MODEL == co.Models.LSTM or co.CHOSEN_MODEL == co.Models.CNNLSTM:
             co.LSTM_HIDDEN = wandb.config.lstm_hidden
             co.LSTM_N_HIDDEN = wandb.config.lstm_n_hidden
             co.P_DROPOUT = wandb.config.p_dropout
@@ -275,6 +275,7 @@ def pick_model(chosen_model, data_module, remote_log):
         net_architecture = CNNLSTM(
             num_features=data_module.x_shape[1],
             num_classes=data_module.num_classes,
+            batch_size=co.BATCH_SIZE,
             seq_len=data_module.x_shape[0],
             hidden_size=co.LSTM_HIDDEN,
             num_layers=co.LSTM_N_HIDDEN,
