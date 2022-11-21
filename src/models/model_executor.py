@@ -112,7 +112,7 @@ class NNEngine(pl.LightningModule):
                 title=model_step.value + "_conf_mat")})
 
     def configure_optimizers(self):
-        if self.model_type == co.Models.CNN2 or self.model_type == co.Models.CNN2:
+        if self.model_type == co.Models.CNN2 or self.model_type == co.Models.CNNLSTM:
             return torch.optim.RMSprop(self.parameters(), lr=self.lr)
         else:
             return torch.optim.Adam(self.parameters(), lr=self.lr)
