@@ -76,10 +76,12 @@ class Predictions(Enum):
 
 # to use in the future
 class Models(Enum):
-    DEEPLOB = "DeepLob"
     MLP = "MLP"
-    CNN = "CNN"
+    CNN1D = "CNN1D"
+    CNN2D = "CNN2D"
     LSTM = "LSTM"
+    CNNLSTM = "CNNLSTM"
+    DEEPLOB = "DeepLob"
 
 
 class DatasetFamily(Enum):
@@ -166,10 +168,10 @@ HORIZON = 10
 TRAIN_SPLIT_VAL = .8
 
 CHOSEN_DATASET = DatasetFamily.FI
-CHOSEN_MODEL = Models.DEEPLOB
+CHOSEN_MODEL = Models.LSTM
 
 IS_WANDB = True
-SWEEP_NAME = CHOSEN_DATASET.value + '_' + CHOSEN_MODEL.value + '_earlyStopping25_newMetrics'
+SWEEP_NAME = CHOSEN_DATASET.value + '_' + CHOSEN_MODEL.value + ''
 SWEEP_METHOD = 'bayes'
 SWEEP_METRIC = {
     'goal': 'maximize',

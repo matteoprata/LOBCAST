@@ -1,13 +1,16 @@
+# Forecasting Stock Prices from the Limit Order Book using Convolutional Neural Networks
+# Source: https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8010701
+
 import pytorch_lightning as pl
 from torch import nn
 
 
-class CNN(pl.LightningModule):
-    def __init__(self, horizon, n_feat, outshape, temp):
+class CNN1D(pl.LightningModule):
+    def __init__(self, num_features, num_classes, temp=1):
         super().__init__()
 
         # Convolution 1
-        self.cnn1 = nn.Conv2d(in_channels=1, out_channels=16, kernel_size=(4, n_feat), padding=(3, 0), dilation=(2, 1))
+        self.cnn1 = nn.Conv2d(in_channels=1, out_channels=16, kernel_size=(4, num_features), padding=(3, 0), dilation=(2, 1))
         self.relu1 = nn.LeakyReLU()
 
         # Convolution 2
@@ -33,7 +36,7 @@ class CNN(pl.LightningModule):
         self.relu5 = nn.LeakyReLU()
 
         # Fully connected 2
-        self.fc2 = nn.Linear(32, outshape)
+        self.fc2 = nn.Linear(32, num_classes)
 
     def forward(self, x):
         # Convolution 1

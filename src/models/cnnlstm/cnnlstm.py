@@ -1,8 +1,11 @@
+# Using Deep Learning for price prediction by exploiting stationary limit order book features
+# Source: https://www.sciencedirect.com/science/article/pii/S1568494620303410
+
 import pytorch_lightning as pl
 import torch
 from torch import nn
 
-class CNN_LSTM(pl.LightningModule):
+class CNNLSTM(pl.LightningModule):
     def __init__(self, horizon, input_size, outshape, hidden_size, num_layers):
         super().__init__()
 

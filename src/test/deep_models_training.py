@@ -13,11 +13,11 @@ from collections import Counter
 import torch.nn.functional as F
 
 from src.models.model_executor import MLP
-from src.models.cnn1 import CNN
-from src.models.cnn2 import CNN2
+from src.models.cnn1d.cnn1d import CNN1D
+from src.models.cnn2d.cnn2d import CNN2D
 from src.models.lstm.lstm import LSTM
 from src.models.deeplob.deeplob import DeepLob
-from src.models.cnn_lstm import CNN_LSTM
+from src.models.cnnlstm.cnnlstm import CNNLSTM
 from src.utils.lobdataset import LOBDataset, DEEPDataset
 
 
@@ -130,7 +130,7 @@ def run(wandb_instance, dir_data, base_lob_dts, dir_results, type_model, n_epoch
             temp = 6
         elif horizon == 50:
             temp = 13
-        model = CNN(horizon, n_feat, n_classes, temp)
+        model = CNN1D(horizon, n_feat, n_classes, temp)
         model.to(device)
     elif type_model == "CNN2":
         temp = 249 # 271
@@ -140,7 +140,7 @@ def run(wandb_instance, dir_data, base_lob_dts, dir_results, type_model, n_epoch
             temp = 9 # 31
         elif horizon == 50:
             temp = 121
-        model = CNN2(horizon, n_feat, n_classes, temp)
+        model = CNN2D(horizon, n_feat, n_classes, temp)
         model.to(device)
     elif type_model == "DeepLob":
         model = DeepLob(n_classes)
@@ -152,7 +152,7 @@ def run(wandb_instance, dir_data, base_lob_dts, dir_results, type_model, n_epoch
         model = LSTM(n_classes, n_feat, 32, 1)
         model.to(device)
     elif type_model == "CNN_LSTM":
-        model = CNN_LSTM(horizon, n_feat, n_classes, 64, 1)
+        model = CNNLSTM(horizon, n_feat, n_classes, 64, 1)
         model.to(device)
     else:
         print("Model not recognized:", type_model)

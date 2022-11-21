@@ -12,8 +12,8 @@ from torch.utils import data
 import torch.nn.functional as F
 
 from src.models.model_executor import MLP
-from src.models.cnn1 import CNN
-from src.models.cnn2 import CNN2
+from src.models.cnn1d.cnn1d import CNN1D
+from src.models.cnn2d.cnn2d import CNN2D
 from src.models.lstm.lstm import LSTM
 from src.models.deeplob.deeplob import DeepLob
 
@@ -72,7 +72,7 @@ def run(wandb_instance, dir_data, dir_results, type_model, n_epochs, horizon, ba
                         temp = 6
                     elif horizon == 50:
                         temp = 13
-                    model = CNN(horizon, n_feat, n_classes, temp)
+                    model = CNN1D(horizon, n_feat, n_classes, temp)
                     model.to(device)
                 elif type_model == "CNN2":
                     temp = 1
@@ -80,7 +80,7 @@ def run(wandb_instance, dir_data, dir_results, type_model, n_epochs, horizon, ba
                         temp = 9
                     elif horizon == 50:
                         temp = 99
-                    model = CNN2(horizon, n_feat, n_classes, temp)
+                    model = CNN2D(horizon, n_feat, n_classes, temp)
                     model.load_state_dict(torch.load(MODEL_CNN))
                     model.eval()
                     model.to(device)

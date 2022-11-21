@@ -1,33 +1,34 @@
-import torch.cuda
-
+# UTILS
 from pprint import pprint
 from collections import Counter
-
-
-from src.data_preprocessing.FI.FIDataBuilder import FIDataBuilder
-from src.data_preprocessing.FI.FIDataset import FIDataset
-from src.data_preprocessing.FI.FIDataModule import FIDataModule
-from src.data_preprocessing.LOB.LOBSTERDataBuilder import LOBSTERDataBuilder
-from src.data_preprocessing.LOB.LOBDataModule import LOBDataModule
-from src.data_preprocessing.LOB.LOBDataset import LOBDataset
-import src.models.model_callbacks as cbk
 import numpy as np
-from pytorch_lightning import Trainer
-
-from src.models.model_executor import NNEngine
-
-from src.models.mlp.mlp_param_search import hyperparameters_mlp
-from src.models.lstm.lstm_param_search import hyperparameters_lstm
-from src.models.deeplob.dlb_param_search import hyperparameters_dlb
-from src.data_preprocessing.FI.fi_param_search import hyperparameters_fi
-from src.data_preprocessing.LOB.lobster_param_search import hyperparameters_lobster
-
 import src.config as co
 import wandb
 
+# TORCH
+from pytorch_lightning import Trainer
+import src.models.model_callbacks as cbk
+from src.models.model_executor import NNEngine
+
+# DATASETS
+from src.data_preprocessing.FI.FIDataBuilder import FIDataBuilder
+from src.data_preprocessing.FI.FIDataset import FIDataset
+from src.data_preprocessing.FI.FIDataModule import FIDataModule
+from src.data_preprocessing.FI.fi_param_search import hyperparameters_fi
+from src.data_preprocessing.LOB.LOBSTERDataBuilder import LOBSTERDataBuilder
+from src.data_preprocessing.LOB.LOBDataModule import LOBDataModule
+from src.data_preprocessing.LOB.LOBDataset import LOBDataset
+from src.data_preprocessing.LOB.lobster_param_search import hyperparameters_lobster
+
+# MODELS
 from src.models.mlp.mlp import MLP
+from src.models.mlp.mlp_param_search import hyperparameters_mlp
 from src.models.lstm.lstm import LSTM
+from src.models.lstm.lstm_param_search import hyperparameters_lstm
 from src.models.deeplob.deeplob import DeepLob
+from src.models.deeplob.dlb_param_search import hyperparameters_dlb
+from src.models.cnn1d.cnn1d import CNN1D
+from src.models.cnn1d.cnn1d_param_search import hyperparameters_cnn1d
 
 
 # def parser_cl_arguments():
@@ -46,6 +47,7 @@ from src.models.deeplob.deeplob import DeepLob
 
 SWEEP_CONF_DICT_MODEL = {
     co.Models.MLP:  hyperparameters_mlp,
+    co.Models.CNN1D: hyperparameters_cnn1d,
     co.Models.LSTM: hyperparameters_lstm,
     co.Models.DEEPLOB: hyperparameters_dlb,
 }
@@ -104,7 +106,6 @@ def prepare_data_LOBSTER():
         window_size_forward=co.FORWARD_WINDOW,
         window_size_backward=co.BACKWARD_WINDOW,
         label_dynamic_scaler=co.LABELING_SIGMA_SCALER,
-        is_shuffle=co.IS_SHUFFLE_INPUT,
         is_data_preload=co.IS_DATA_PRELOAD
     )
 
@@ -124,7 +125,6 @@ def prepare_data_LOBSTER():
         label_dynamic_scaler=co.LABELING_SIGMA_SCALER,
         #label_threshold_pos=train_lab_threshold_pos,
         #label_threshold_neg=train_lab_threshold_neg,
-        is_shuffle=co.IS_SHUFFLE_INPUT,
         is_data_preload=co.IS_DATA_PRELOAD
     )
 
@@ -141,7 +141,6 @@ def prepare_data_LOBSTER():
         label_dynamic_scaler=co.LABELING_SIGMA_SCALER,
         #label_threshold_pos=train_lab_threshold_pos,
         #label_threshold_neg=train_lab_threshold_neg,
-        is_shuffle=co.IS_SHUFFLE_INPUT,
         is_data_preload=co.IS_DATA_PRELOAD
     )
 
@@ -236,12 +235,19 @@ def pick_dataset(datasetFamily):
 
 def pick_model(chosen_model, data_module, remote_log):
     net_architecture = None
+
     if chosen_model == co.Models.MLP:
         net_architecture = MLP(
-            x_shape=np.prod(data_module.x_shape),  # 40 * wind
+            num_features=np.prod(data_module.x_shape),  # 40 * wind
             num_classes=data_module.num_classes,
             hidden_layer_dim=co.MLP_HIDDEN,
             p_dropout=co.P_DROPOUT
+        )
+
+    elif chosen_model == co.Models.CNN1D:
+        net_architecture = CNN1D(
+            num_features=np.prod(data_module.x_shape),
+            num_classes=data_module.num_classes,
         )
 
     elif chosen_model == co.Models.LSTM:
