@@ -31,7 +31,8 @@ from src.models.cnn1.cnn1 import CNN1
 from src.models.cnn1.cnn1_param_search import hyperparameters_cnn1
 from src.models.cnn2.cnn2 import CNN2
 from src.models.cnn2.cnn2_param_search import hyperparameters_cnn2
-
+from src.models.cnnlstm.cnnlstm import CNNLSTM
+from src.models.cnnlstm.cnnlstm_param_search import hyperparameters_cnnlstm
 
 
 # def parser_cl_arguments():
@@ -53,6 +54,7 @@ SWEEP_CONF_DICT_MODEL = {
     co.Models.CNN1: hyperparameters_cnn1,
     co.Models.CNN2: hyperparameters_cnn2,
     co.Models.LSTM: hyperparameters_lstm,
+    co.Models.CNNLSTM: hyperparameters_cnnlstm,
     co.Models.DEEPLOB: hyperparameters_dlb,
 }
 
@@ -269,10 +271,20 @@ def pick_model(chosen_model, data_module, remote_log):
             p_dropout=co.P_DROPOUT
         )
 
+    elif chosen_model == co.Models.CNNLSTM:
+        raise NotImplementedError
+        net_architecture = CNNLSTM(
+
+        )
+
     elif chosen_model == co.Models.DEEPLOB:
         net_architecture = DeepLob(num_classes=data_module.num_classes)
 
-    return NNEngine(net_architecture, lr=co.LEARNING_RATE, remote_log=remote_log).to(co.DEVICE_TYPE)
+    return NNEngine(
+        model_type=chosen_model,
+        neural_architecture=net_architecture,
+        lr=co.LEARNING_RATE,
+        remote_log=remote_log).to(co.DEVICE_TYPE)
 
 
 if __name__ == "__main__":

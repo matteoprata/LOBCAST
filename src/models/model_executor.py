@@ -4,22 +4,28 @@ import pytorch_lightning as pl
 
 import torch
 import torch.nn as nn
-from sklearn.metrics import precision_recall_fscore_support as prfs
+
 from sklearn.metrics import classification_report
-from sklearn.metrics import accuracy_score
+
 import numpy as np
 import src.config as co
 import wandb
-from collections import Counter
 
 class NNEngine(pl.LightningModule):
 
-    def __init__(self,  neural_architecture, lr, remote_log=None ):
+    def __init__(
+        self,
+        model_type,
+        neural_architecture,
+        lr,
+        remote_log=None
+    ):
 
         super().__init__()
 
         self.remote_log = remote_log
 
+        self.model_type = model_type
         self.neural_architecture = neural_architecture
 
         self.softmax = nn.Softmax(dim=1)
@@ -106,4 +112,7 @@ class NNEngine(pl.LightningModule):
                 title=model_step.value + "_conf_mat")})
 
     def configure_optimizers(self):
-        return torch.optim.Adam(self.parameters(), lr=self.lr)
+        if self.model_type == co.Models.CNN2 or self.model_type == co.Models.CNN2:
+            return torch.optim.RMSprop(self.parameters(), lr=self.lr)
+        else:
+            return torch.optim.Adam(self.parameters(), lr=self.lr)
