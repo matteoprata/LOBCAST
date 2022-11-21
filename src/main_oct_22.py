@@ -88,7 +88,7 @@ def prepare_data_FI():
     print(len(train_set), len(val_set), len(test_set))
     print()
 
-    fi_dm = FIDataModule(train_set, val_set, test_set, co.BATCH_SIZE)
+    fi_dm = FIDataModule(train_set, val_set, test_set, co.BATCH_SIZE, co.IS_SHUFFLE_INPUT)
     return fi_dm
 
 
@@ -154,7 +154,7 @@ def prepare_data_LOBSTER():
     print(len(train_set), len(val_set), len(test_set))
     print()
 
-    lob_dm = LOBDataModule(train_set, val_set, test_set, co.BATCH_SIZE)
+    lob_dm = LOBDataModule(train_set, val_set, test_set, co.BATCH_SIZE, co.IS_SHUFFLE_INPUT)
     return lob_dm
 
 
@@ -199,7 +199,7 @@ def lunch_training():
         max_epochs=co.EPOCHS,
         callbacks=[
             cbk.callback_save_model(co.CHOSEN_MODEL.value),
-            #cbk.early_stopping()
+            cbk.early_stopping()
         ]
     )
 

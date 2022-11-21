@@ -143,7 +143,7 @@ DATASET_FI = "FI-2010/BenchmarkDatasets"
 
 DATA_PICKLES = "data/pickles/"
 
-EPOCHS = 50
+EPOCHS = 200
 BATCH_SIZE = 64
 LEARNING_RATE = 0.001
 VALIDATE_EVERY = 1
@@ -166,10 +166,10 @@ HORIZON = 10
 TRAIN_SPLIT_VAL = .8
 
 CHOSEN_DATASET = DatasetFamily.FI
-CHOSEN_MODEL = Models.MLP
+CHOSEN_MODEL = Models.DEEPLOB
 
-IS_WANDB = False
-SWEEP_NAME = CHOSEN_DATASET.value + '_' + CHOSEN_MODEL.value + ''
+IS_WANDB = True
+SWEEP_NAME = CHOSEN_DATASET.value + '_' + CHOSEN_MODEL.value + '_earlyStopping25_newMetrics'
 SWEEP_METHOD = 'bayes'
 SWEEP_METRIC = {
     'goal': 'maximize',
