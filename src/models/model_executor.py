@@ -18,14 +18,20 @@ class NNEngine(pl.LightningModule):
 
         super().__init__()
 
+        self.remote_log = remote_log
+
+        self.neural_architecture = neural_architecture
+
+        self.softmax = nn.Softmax(dim=1)
+
         self.loss_fn = nn.CrossEntropyLoss()
 
         self.lr = lr
-        self.remote_log = remote_log
-        self.neural_architecture = neural_architecture
 
     def forward(self, x):
-        return self.neural_architecture(x)
+        out = self.neural_architecture(x)
+        logits = self.softmax(out)
+        return logits
 
     def training_step(self, batch, batch_idx):
         x, y = batch

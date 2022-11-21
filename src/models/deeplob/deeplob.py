@@ -1,3 +1,7 @@
+# DeepLOB: Deep Convolutional Neural Networks for Limit Order Books
+# Source: https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=8673598
+
+
 import pytorch_lightning as pl
 from torch import nn
 import torch
@@ -101,6 +105,4 @@ class DeepLob(pl.LightningModule):
         out = out[:, -1, :]
         out = self.fc1(out)
 
-        logits = self.softmax(out)
-
-        return logits
+        return out

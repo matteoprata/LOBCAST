@@ -30,7 +30,6 @@ class LOBSTERDataBuilder:
             label_threshold_neg=None,
             label_dynamic_scaler=None,
             data_granularity=co.Granularity.Sec1,
-            is_shuffle=co.IS_SHUFFLE_INPUT,
             is_data_preload=False):
 
         self.dataset_type = dataset_type
@@ -50,8 +49,6 @@ class LOBSTERDataBuilder:
         self.label_dynamic_scaler = label_dynamic_scaler
         self.label_threshold_pos = label_threshold_pos
         self.label_threshold_neg = label_threshold_neg
-
-        self.is_shuffle = is_shuffle
 
         # to store the datasets
         self.NOW = datetime.now().strftime("%d%m%Y%H%M%S")
@@ -124,11 +121,6 @@ class LOBSTERDataBuilder:
             Y.append(y_snap)
 
         self.__samples_x, self.__samples_y = np.asarray(X), np.asarray(Y)
-
-        if self.is_shuffle:
-            index = co.RANDOM_GEN_DATASET.randint(0, self.__samples_x.shape[0], size=self.__samples_x.shape[0])
-            self.__samples_x = self.__samples_x[index]
-            self.__samples_y = self.__samples_y[index]
 
     def __under_sampling(self):
         """ Discard instances of the majority class. """

@@ -1,5 +1,6 @@
-import pytorch_lightning as pl
-import torch
+# Using Deep Learning to Detect Price Change Indications in Financial Markets
+# Source: https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8081663
+
 from torch import nn
 
 
@@ -25,29 +26,19 @@ class LSTM(nn.Module):
         self.dropout = nn.Dropout(p=p_dropout)              # not specified
         self.fc = nn.Linear(64, num_classes)              # out layer
 
-        self.softmax = nn.Softmax(dim=1)
-    
     def forward(self, x):
         x = x.float()
 
-        #print('x.shape:', x.shape)
-
         output, (hn, _) = self.lstm(x)          # lstm with input, hidden, and internal state (batch, time-step, features)
-        #print('output.shape:', output.shape)
-        #print('hn.shape:', hn.shape)
 
         # before hn.shape = [1, batch_size, features]
         hn = hn.view(-1, self.hidden_layer_dim)  # reshaping the data for Dense layer next
         # after hn.shape = [batch_size, features]
 
-        #print('hn.shape:', hn.shape)
-
         out = self.fc_1(hn)
         out = self.leakyReLU(out)
         out = self.dropout(out)
         out = self.fc(out)
-
-        logits = self.softmax(out)
         
         return out
  
