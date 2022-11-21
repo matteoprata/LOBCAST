@@ -6,13 +6,13 @@ import torch
 from torch import nn
 
 class CNNLSTM(pl.LightningModule):
-    def __init__(self, horizon, input_size, outshape, hidden_size, num_layers):
+    def __init__(self, num_features, num_classes, seq_len, hidden_size, num_layers, p_dropout):
         super().__init__()
 
-        self.input_size = input_size 
-        self.num_layers = num_layers # 1
-        self.hidden_size = hidden_size # 32
-        self.horizon = horizon # horizon
+        self.num_features = num_features
+        self.num_layers = num_layers  # 1
+        self.hidden_size = hidden_size  # 32
+        self.seq_len = seq_len  # number of snapshots (100)
 
         # Convolution 1
         self.cnn1 = nn.Conv1d(in_channels=1, out_channels=16, kernel_size=(5, 42), padding=(0, 2))
@@ -34,21 +34,21 @@ class CNNLSTM(pl.LightningModule):
         self.bn4 = nn.BatchNorm1d(32)
         self.prelu4 = nn.PReLU()
 
-        lstm_input = self.get_lstm_input_size(input_size, horizon)
+        self.lstm_input = self.get_lstm_input_size(num_features, seq_len)
         
         # lstm layers
-        self.lstm = nn.LSTM(input_size=lstm_input, hidden_size=hidden_size, num_layers=num_layers, batch_first=True)
+        self.lstm = nn.LSTM(input_size=self.lstm_input, hidden_size=hidden_size, num_layers=num_layers, batch_first=True)
         
         # fully connected
-        self.fc1 = nn.Linear(64, 32) # fully connected 64 neurons
-        self.dropout = nn.Dropout(p=0.2) # not specified 
+        self.fc1 = nn.Linear(64, 32)  # fully connected 64 neurons
+        self.dropout = nn.Dropout(p=p_dropout)  # not specified
         self.prelu = nn.PReLU()
         
-        self.fc2 = nn.Linear(32, outshape) # out layer
+        self.fc2 = nn.Linear(32, num_classes)  # out layer
 
-    def get_lstm_input_size(self, input_size, horizon):
+    def get_lstm_input_size(self, num_features, seq_len):
         with torch.no_grad():
-            sample_in = torch.ones(32, 1, horizon, input_size) # batch_size, 1, horizon, input_size
+            sample_in = torch.ones(32, 1, seq_len, num_features) # batch_size, 1, seq_len, num_features
             sample_out = self.convolution_forward(sample_in)
         
         return sample_out.shape[-1]

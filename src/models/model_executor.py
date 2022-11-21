@@ -88,9 +88,9 @@ class NNEngine(pl.LightningModule):
 
         cr = classification_report(ys, predictions, output_dict=True, zero_division=0)
         accuracy = cr['accuracy']  # MICRO-F1
-        f1score = cr['macro avg']['f1-score'] #MACRO-F1
-        precision = cr['macro avg']['precision'] #MACRO-PRECISION
-        recall = cr['macro avg']['recall'] #MACRO-RECALL
+        f1score = cr['macro avg']['f1-score']  # MACRO-F1
+        precision = cr['macro avg']['precision']  # MACRO-PRECISION
+        recall = cr['macro avg']['recall']  # MACRO-RECALL
 
         val_dict = {
             model_step.value + co.Metrics.LOSS.value:      float(np.sum(loss_vals)),
@@ -109,7 +109,8 @@ class NNEngine(pl.LightningModule):
                 probs=None,
                 y_true=ys, preds=predictions,
                 class_names=co.CLASS_NAMES,
-                title=model_step.value + "_conf_mat")})
+                title=model_step.value + "_conf_mat")}
+            )
 
     def configure_optimizers(self):
         if self.model_type == co.Models.CNN2 or self.model_type == co.Models.CNNLSTM:

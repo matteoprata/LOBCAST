@@ -272,9 +272,13 @@ def pick_model(chosen_model, data_module, remote_log):
         )
 
     elif chosen_model == co.Models.CNNLSTM:
-        raise NotImplementedError
         net_architecture = CNNLSTM(
-
+            num_features=data_module.x_shape[1],
+            num_classes=data_module.num_classes,
+            seq_len=data_module.x_shape[0],
+            hidden_size=co.LSTM_HIDDEN,
+            num_layers=co.LSTM_N_HIDDEN,
+            p_dropout=co.P_DROPOUT
         )
 
     elif chosen_model == co.Models.DEEPLOB:

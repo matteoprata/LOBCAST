@@ -9,17 +9,17 @@ class LSTM(nn.Module):
         super().__init__()
 
         self.x_shape = x_shape                    # nfeat
-        self.num_classes = num_classes                    # 3
+        self.num_classes = num_classes            # 3
         self.hidden_layer_dim = hidden_layer_dim  # 32 - 64
         self.num_layers = num_layers              # 1
-        # self.seq_length = seq_length            # horizon
+        # self.seq_length = seq_length            # number of snapshots
 
         self.lstm = nn.LSTM(
             input_size=x_shape,
             hidden_size=hidden_layer_dim,
             num_layers=num_layers,
             batch_first=True
-        )  # lstm
+        )
         
         self.fc_1 = nn.Linear(hidden_layer_dim, 64)   # fully connected 64 neurons
         self.leakyReLU = nn.LeakyReLU()
