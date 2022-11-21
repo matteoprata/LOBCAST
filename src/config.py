@@ -77,8 +77,8 @@ class Predictions(Enum):
 # to use in the future
 class Models(Enum):
     MLP = "MLP"
-    CNN1D = "CNN1D"
-    CNN2D = "CNN2D"
+    CNN1 = "CNN1"
+    CNN2 = "CNN2"
     LSTM = "LSTM"
     CNNLSTM = "CNNLSTM"
     DEEPLOB = "DeepLob"

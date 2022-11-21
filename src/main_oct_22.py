@@ -27,8 +27,11 @@ from src.models.lstm.lstm import LSTM
 from src.models.lstm.lstm_param_search import hyperparameters_lstm
 from src.models.deeplob.deeplob import DeepLob
 from src.models.deeplob.dlb_param_search import hyperparameters_dlb
-from src.models.cnn1d.cnn1d import CNN1D
-from src.models.cnn1d.cnn1d_param_search import hyperparameters_cnn1d
+from src.models.cnn1.cnn1 import CNN1
+from src.models.cnn1.cnn1_param_search import hyperparameters_cnn1
+from src.models.cnn2.cnn2 import CNN2
+from src.models.cnn2.cnn2_param_search import hyperparameters_cnn2
+
 
 
 # def parser_cl_arguments():
@@ -47,7 +50,8 @@ from src.models.cnn1d.cnn1d_param_search import hyperparameters_cnn1d
 
 SWEEP_CONF_DICT_MODEL = {
     co.Models.MLP:  hyperparameters_mlp,
-    co.Models.CNN1D: hyperparameters_cnn1d,
+    co.Models.CNN1: hyperparameters_cnn1,
+    co.Models.CNN2: hyperparameters_cnn2,
     co.Models.LSTM: hyperparameters_lstm,
     co.Models.DEEPLOB: hyperparameters_dlb,
 }
@@ -244,8 +248,14 @@ def pick_model(chosen_model, data_module, remote_log):
             p_dropout=co.P_DROPOUT
         )
 
-    elif chosen_model == co.Models.CNN1D:
-        net_architecture = CNN1D(
+    elif chosen_model == co.Models.CNN1:
+        net_architecture = CNN1(
+            num_features=np.prod(data_module.x_shape),
+            num_classes=data_module.num_classes,
+        )
+
+    elif chosen_model == co.Models.CNN2:
+        net_architecture = CNN2(
             num_features=np.prod(data_module.x_shape),
             num_classes=data_module.num_classes,
         )

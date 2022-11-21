@@ -5,7 +5,7 @@ import pytorch_lightning as pl
 from torch import nn
 
 
-class CNN1D(pl.LightningModule):
+class CNN1(pl.LightningModule):
     def __init__(self, num_features, num_classes, temp=1):
         super().__init__()
 
@@ -32,7 +32,7 @@ class CNN1D(pl.LightningModule):
         self.maxpool2 = nn.MaxPool1d(kernel_size=2)
 
         # Fully connected 1
-        self.fc1 = nn.Linear(temp * 32, 32)
+        self.fc1 = nn.Linear(temp*32, 32)
         self.relu5 = nn.LeakyReLU()
 
         # Fully connected 2
@@ -51,7 +51,7 @@ class CNN1D(pl.LightningModule):
         out = self.relu2(out)
 
         # Max pool 1
-        #  print('max1', out.shape)
+        # print('max1', out.shape)
         out = self.maxpool1(out)
 
         # Convolution 3

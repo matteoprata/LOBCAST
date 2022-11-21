@@ -5,8 +5,8 @@ import pytorch_lightning as pl
 from torch import nn
 
 
-class CNN2D(pl.LightningModule):
-    def __init__(self, horizon, n_feat, outshape, temp):
+class CNN2(pl.LightningModule):
+    def __init__(self, num_features, num_classes, temp=1):
         super().__init__()
 
         # Convolution 1
@@ -39,7 +39,7 @@ class CNN2D(pl.LightningModule):
         self.prelu6 = nn.PReLU()
 
         # Fully connected 2
-        self.fc2 = nn.Linear(32, outshape)
+        self.fc2 = nn.Linear(32, num_classes)
 
     def forward(self, x):
         # Convolution 1
