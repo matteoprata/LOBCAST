@@ -17,11 +17,12 @@ class NNEngine(pl.LightningModule):
         self,
         model_type,
         neural_architecture,
+        optimizer,
         lr,
         remote_log=None
     ):
-
         super().__init__()
+        assert optimizer == co.Optimizers.ADAM or optimizer == co.Optimizers.RMSPROP
 
         self.remote_log = remote_log
 
@@ -32,6 +33,7 @@ class NNEngine(pl.LightningModule):
 
         self.loss_fn = nn.CrossEntropyLoss()
 
+        self.optimizer = optimizer
         self.lr = lr
 
     def forward(self, x):
@@ -113,7 +115,7 @@ class NNEngine(pl.LightningModule):
             )
 
     def configure_optimizers(self):
-        if self.model_type == co.Models.CNN2 or self.model_type == co.Models.CNNLSTM:
-            return torch.optim.RMSprop(self.parameters(), lr=self.lr)
-        else:
+        if self.optimizer == co.Optimizers.ADAM:
             return torch.optim.Adam(self.parameters(), lr=self.lr)
+        elif self.optimizer == co.Optimizers.RMSPROP:
+            return torch.optim.RMSprop(self.parameters(), lr=self.lr)

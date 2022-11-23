@@ -174,8 +174,9 @@ def lunch_training():
         remote_log = wandb
 
         co.BATCH_SIZE = wandb.config.batch_size
-        co.LEARNING_RATE = wandb.config.lr
         co.IS_SHUFFLE_INPUT = wandb.config.is_shuffle
+        co.OPTIMIZER = wandb.config.optimizer
+        co.LEARNING_RATE = wandb.config.lr
 
         if co.CHOSEN_DATASET == co.DatasetFamily.LOBSTER:
             co.BACKWARD_WINDOW = wandb.config.window_size_backward
@@ -188,6 +189,7 @@ def lunch_training():
         if co.CHOSEN_MODEL == co.Models.MLP:
             co.MLP_HIDDEN = wandb.config.hidden_mlp
             co.P_DROPOUT = wandb.config.p_dropout
+
         elif co.CHOSEN_MODEL == co.Models.LSTM or co.CHOSEN_MODEL == co.Models.CNNLSTM:
             co.LSTM_HIDDEN = wandb.config.lstm_hidden
             co.LSTM_N_HIDDEN = wandb.config.lstm_n_hidden
@@ -201,7 +203,7 @@ def lunch_training():
     trainer = Trainer(
         accelerator=co.DEVICE_TYPE,
         devices=co.NUM_GPUS,
-        check_val_every_n_epoch=co.VALIDATE_EVERY,  # val_check_interval
+        check_val_every_n_epoch=co.VALIDATE_EVERY,
         max_epochs=co.EPOCHS,
         callbacks=[
             cbk.callback_save_model(co.CHOSEN_MODEL.value),
@@ -291,6 +293,7 @@ def pick_model(chosen_model, data_module, remote_log):
     return NNEngine(
         model_type=chosen_model,
         neural_architecture=net_architecture,
+        optimizer=co.OPTIMIZER,
         lr=co.LEARNING_RATE,
         remote_log=remote_log).to(co.DEVICE_TYPE)
 

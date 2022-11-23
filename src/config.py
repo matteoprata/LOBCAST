@@ -8,10 +8,13 @@ np.set_printoptions(suppress=True)
 PROJECT_NAME = "lob-adversarial-attacks-22"
 
 class TuningVars(Enum):
-    BATCH_SIZE = "batch_size"
+
+    OPTIMIZER = "optimizer"
     LEARNING_RATE = "lr"
     EPOCHS = "epochs"
+
     IS_SHUFFLE = "is_shuffle"
+    BATCH_SIZE = "batch_size"
 
     MLP_HIDDEN = "hidden_mlp"
     LSTM_HIDDEN = "lstm_hidden"
@@ -25,6 +28,10 @@ class TuningVars(Enum):
     LABELING_SIGMA_SCALER = "labeling_sigma_scaler"
 
     FI_HORIZON = 'fi_horizon_k'
+
+class Optimizers(Enum):
+    ADAM = "Adam"
+    RMSPROP = "RMSprop"
 
 
 class Metrics(Enum):
@@ -147,6 +154,7 @@ DATA_PICKLES = "data/pickles/"
 
 EPOCHS = 200
 BATCH_SIZE = 16
+OPTIMIZER = Optimizers.ADAM
 LEARNING_RATE = 0.001
 VALIDATE_EVERY = 1
 IS_SHUFFLE_INPUT = True
