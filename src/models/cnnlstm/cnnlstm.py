@@ -6,14 +6,16 @@ import torch
 from torch import nn
 
 class CNNLSTM(pl.LightningModule):
-    def __init__(self, num_features, num_classes, batch_size, seq_len, hidden_size, num_layers, p_dropout):
+    def __init__(self, num_features, num_classes, batch_size, seq_len, hidden_size, num_layers, hidden_mlp, p_dropout):
         super().__init__()
 
         self.num_features = num_features
         self.num_classes = num_classes
         self.batch_size = batch_size
         self.num_layers = num_layers  # 1
-        self.hidden_size = hidden_size  # 64
+        self.hidden_size = hidden_size  # 32
+        self.hidden_mlp = hidden_mlp  # 32/64
+
         self.seq_len = seq_len  # number of snapshots (100)
 
         # Convolution 1
@@ -39,14 +41,19 @@ class CNNLSTM(pl.LightningModule):
         self.lstm_input = self.get_lstm_input_size(num_features, seq_len)
         
         # lstm layers
-        self.lstm = nn.LSTM(input_size=self.lstm_input, hidden_size=hidden_size, num_layers=num_layers, batch_first=True)
+        self.lstm = nn.LSTM(
+            input_size=self.lstm_input,
+            hidden_size=hidden_size,
+            num_layers=num_layers,
+            batch_first=True
+        )
         
         # fully connected
-        self.fc1 = nn.Linear(hidden_size, 32)  # fully connected
+        self.fc1 = nn.Linear(hidden_size, hidden_mlp)  # fully connected
         self.dropout = nn.Dropout(p=p_dropout)  # not specified
         self.prelu = nn.PReLU()
         
-        self.fc2 = nn.Linear(32, self.num_classes)  # out layer
+        self.fc2 = nn.Linear(hidden_mlp, self.num_classes)  # out layer
 
     def get_lstm_input_size(self, num_features, seq_len):
         with torch.no_grad():

@@ -10,6 +10,7 @@ hyperparameters_lstm = {
 
     co.TuningVars.LSTM_HIDDEN.value: {'values': [40]}, # [32, 40, 48]
     co.TuningVars.LSTM_N_HIDDEN.value: {'values': [1]},
+    co.TuningVars.MLP_HIDDEN.value: {'values': [64]},
 
     co.TuningVars.P_DROPOUT.value: {'values': [0]},
 

@@ -191,6 +191,7 @@ def lunch_training():
         elif co.CHOSEN_MODEL == co.Models.LSTM or co.CHOSEN_MODEL == co.Models.CNNLSTM:
             co.LSTM_HIDDEN = wandb.config.lstm_hidden
             co.LSTM_N_HIDDEN = wandb.config.lstm_n_hidden
+            co.MLP_HIDDEN = wandb.config.hidden_mlp
             co.P_DROPOUT = wandb.config.p_dropout
 
     data_module = pick_dataset(co.CHOSEN_DATASET)
@@ -267,6 +268,7 @@ def pick_model(chosen_model, data_module, remote_log):
             x_shape=data_module.x_shape[1],  # 40, wind is the time
             num_classes=data_module.num_classes,
             hidden_layer_dim=co.LSTM_HIDDEN,
+            hidden_mlp=co.MLP_HIDDEN,
             num_layers=co.LSTM_N_HIDDEN,
             p_dropout=co.P_DROPOUT
         )
@@ -279,6 +281,7 @@ def pick_model(chosen_model, data_module, remote_log):
             seq_len=data_module.x_shape[0],
             hidden_size=co.LSTM_HIDDEN,
             num_layers=co.LSTM_N_HIDDEN,
+            hidden_mlp=co.MLP_HIDDEN,
             p_dropout=co.P_DROPOUT
         )
 

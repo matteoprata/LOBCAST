@@ -6,7 +6,7 @@ from torch import nn
 
 
 class LSTM(pl.LightningModule):
-    def __init__(self, num_classes, x_shape, hidden_layer_dim, num_layers, p_dropout):
+    def __init__(self, num_classes, x_shape, hidden_layer_dim, hidden_mlp, num_layers, p_dropout):
         super().__init__()
 
         self.x_shape = x_shape                    # nfeat
@@ -22,10 +22,10 @@ class LSTM(pl.LightningModule):
             batch_first=True
         )
         
-        self.fc_1 = nn.Linear(hidden_layer_dim, 64)   # fully connected 64 neurons
+        self.fc_1 = nn.Linear(hidden_layer_dim, hidden_mlp)   # fully connected 64 neurons
         self.leakyReLU = nn.LeakyReLU()
         self.dropout = nn.Dropout(p=p_dropout)              # not specified
-        self.fc = nn.Linear(64, num_classes)              # out layer
+        self.fc = nn.Linear(hidden_mlp, num_classes)        # out layer
 
     def forward(self, x):
         x = x.float()
