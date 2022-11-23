@@ -23,14 +23,16 @@ class FIDataModule(pl.LightningDataModule):
         self.x_shape = self.train_set.x_shape
         self.num_classes = self.train_set.num_classes
 
+        self.pin_memory = True if co.DEVICE_TYPE == 'cuda' else False
+
     def setup(self, stage=None):
         pass
 
     def train_dataloader(self):
-        return DataLoader(self.train_set, batch_size=self.batch_size, shuffle=self.is_shuffle_train)
+        return DataLoader(self.train_set, batch_size=self.batch_size, shuffle=self.is_shuffle_train, pin_memory=self.pin_memory)
 
     def val_dataloader(self):
-        return DataLoader(self.val_set, batch_size=self.batch_size, shuffle=False)
+        return DataLoader(self.val_set, batch_size=self.batch_size, shuffle=False, pin_memory=self.pin_memory)
 
     def test_dataloader(self):
-        return DataLoader(self.test_set, batch_size=self.batch_size, shuffle=False)
+        return DataLoader(self.test_set, batch_size=self.batch_size, shuffle=False, pin_memory=self.pin_memory)
