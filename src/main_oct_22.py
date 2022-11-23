@@ -33,6 +33,8 @@ from src.models.cnn2.cnn2 import CNN2
 from src.models.cnn2.cnn2_param_search import hyperparameters_cnn2
 from src.models.cnnlstm.cnnlstm import CNNLSTM
 from src.models.cnnlstm.cnnlstm_param_search import hyperparameters_cnnlstm
+from src.models.dain.dain import DAIN
+from src.models.dain.dain_param_search import hyperparameters_dain
 
 
 # def parser_cl_arguments():
@@ -55,6 +57,7 @@ SWEEP_CONF_DICT_MODEL = {
     co.Models.CNN2: hyperparameters_cnn2,
     co.Models.LSTM: hyperparameters_lstm,
     co.Models.CNNLSTM: hyperparameters_cnnlstm,
+    co.Models.DAIN: hyperparameters_dain,
     co.Models.DEEPLOB: hyperparameters_dlb,
 }
 
@@ -196,6 +199,11 @@ def lunch_training():
             co.MLP_HIDDEN = wandb.config.hidden_mlp
             co.P_DROPOUT = wandb.config.p_dropout
 
+        elif co.CHOSEN_MODEL == co.Models.DAIN:
+            co.DAIN_LAYER_MODE = wandb.config.dain_layer_mode
+            co.MLP_HIDDEN = wandb.config.hidden_mlp
+            co.P_DROPOUT = wandb.config.p_dropout
+
     data_module = pick_dataset(co.CHOSEN_DATASET)
 
     model = pick_model(co.CHOSEN_MODEL, data_module, remote_log)
@@ -285,6 +293,19 @@ def pick_model(chosen_model, data_module, remote_log):
             num_layers=co.LSTM_N_HIDDEN,
             hidden_mlp=co.MLP_HIDDEN,
             p_dropout=co.P_DROPOUT
+        )
+
+    elif chosen_model == co.Models.DAIN:
+        net_architecture = DAIN(
+            backward_window=data_module.x_shape[0],
+            num_features=data_module.x_shape[1],
+            num_classes=data_module.num_classes,
+            mlp_hidden=co.MLP_HIDDEN,
+            p_dropout=co.P_DROPOUT,
+            mode='adaptive_avg',
+            mean_lr=1e-06,
+            gate_lr=1e-02,
+            scale_lr=1e-02
         )
 
     elif chosen_model == co.Models.DEEPLOB:

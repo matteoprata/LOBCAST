@@ -22,7 +22,7 @@ class NNEngine(pl.LightningModule):
         remote_log=None
     ):
         super().__init__()
-        assert optimizer == co.Optimizers.ADAM or optimizer == co.Optimizers.RMSPROP
+        assert optimizer == co.Optimizers.ADAM.value or optimizer == co.Optimizers.RMSPROP.value
 
         self.remote_log = remote_log
 
@@ -115,6 +115,15 @@ class NNEngine(pl.LightningModule):
             )
 
     def configure_optimizers(self):
+
+        if self.model_type == co.Models.DAIN:
+            return torch.optim.RMSprop([
+                {'params': self.neural_architecture.base.parameters()},
+                {'params': self.neural_architecture.dean.mean_layer.parameters(), 'lr': self.lr*self.neural_architecture.dean.mean_lr},
+                {'params': self.neural_architecture.dean.scaling_layer.parameters(), 'lr': self.lr*self.neural_architecture.dean.scale_lr},
+                {'params': self.neural_architecture.dean.gating_layer.parameters(), 'lr': self.lr*self.neural_architecture.dean.gate_lr},
+            ], lr=self.lr)
+
         if self.optimizer == co.Optimizers.ADAM:
             return torch.optim.Adam(self.parameters(), lr=self.lr)
         elif self.optimizer == co.Optimizers.RMSPROP:

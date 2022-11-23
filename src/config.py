@@ -20,6 +20,8 @@ class TuningVars(Enum):
     LSTM_HIDDEN = "lstm_hidden"
     LSTM_N_HIDDEN = "lstm_n_hidden"
 
+    DAIN_LAYER_MODE = "dain_layer_mode"
+
     P_DROPOUT = "p_dropout"
 
     BACKWARD_WINDOW = "window_size_backward"
@@ -89,6 +91,7 @@ class Models(Enum):
     LSTM = "LSTM"
     CNNLSTM = "CNNLSTM"
     DEEPLOB = "DeepLob"
+    DAIN = "DAIN"
 
 
 class DatasetFamily(Enum):
@@ -154,7 +157,7 @@ DATA_PICKLES = "data/pickles/"
 
 EPOCHS = 200
 BATCH_SIZE = 16
-OPTIMIZER = Optimizers.ADAM
+OPTIMIZER = Optimizers.ADAM.value
 LEARNING_RATE = 0.001
 VALIDATE_EVERY = 1
 IS_SHUFFLE_INPUT = True
@@ -164,6 +167,8 @@ P_DROPOUT = .1
 
 LSTM_HIDDEN = 32
 LSTM_N_HIDDEN = 1
+
+DAIN_LAYER_MODE = 'full'
 
 N_LOB_LEVELS = 10
 LABELING_SIGMA_SCALER = .5  # dynamic threshold
@@ -176,7 +181,7 @@ HORIZON = 10
 TRAIN_SPLIT_VAL = .8
 
 CHOSEN_DATASET = DatasetFamily.FI
-CHOSEN_MODEL = Models.CNNLSTM
+CHOSEN_MODEL = Models.DAIN
 
 IS_WANDB = True
 SWEEP_NAME = CHOSEN_DATASET.value + '_' + CHOSEN_MODEL.value + ''
