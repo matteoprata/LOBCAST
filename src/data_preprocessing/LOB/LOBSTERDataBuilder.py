@@ -113,15 +113,15 @@ class LOBSTERDataBuilder:
         )
 
     def __snapshotting(self):
-        """ This creates 4 X n_levels X window_size_backward -> prediction. """
+        """ This creates 4 X n_levels X NUM_SNAPSHOTS -> prediction. """
         print("Snapshotting... (__data has", self.__data.shape[0], "rows)")
 
         relevant_columns = [c for c in self.__data.columns if "sell" in c or "buy" in c]
 
         X, Y = [], []
-        for st in tqdm.tqdm(range(0, self.__data.shape[0] - self.window_size_backward)):
-            x_snap = self.__data.iloc[st:st + self.window_size_backward, :].loc[:, relevant_columns]
-            y_snap = self.__data.iloc[st + self.window_size_backward - 1, :][ppu.DataCols.PREDICTION.value]
+        for st in tqdm.tqdm(range(0, self.__data.shape[0] - co.NUM_SNAPSHOTS)):
+            x_snap = self.__data.iloc[st:st + co.NUM_SNAPSHOTS, :].loc[:, relevant_columns]
+            y_snap = self.__data.iloc[st + co.NUM_SNAPSHOTS - 1, :][ppu.DataCols.PREDICTION.value]
             X.append(x_snap)
             Y.append(y_snap)
 

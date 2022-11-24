@@ -6,6 +6,7 @@ from torch import nn
 
 
 class CNN1(pl.LightningModule):
+
     def __init__(self, num_features, num_classes, temp=26):
         super().__init__()
 
@@ -42,48 +43,48 @@ class CNN1(pl.LightningModule):
         # Adding the channel dimension
         x = x[:, None, :]  # x.shape = [batch_size, 1, 100, 40]
 
-        #print('x.shape:', x.shape)
+        # print('x.shape:', x.shape)
 
         # Convolution 1
         out = self.conv1(x)
         out = self.relu1(out)
         out = out.reshape(out.shape[0], out.shape[1], -1)
-        #print('After convolution1:', out.shape)
+        # print('After convolution1:', out.shape)
 
         # Convolution 2
         out = self.conv2(out)
         out = self.relu2(out)
-        #print('After convolution2:', out.shape)
+        # print('After convolution2:', out.shape)
 
         # Max pool 1
         out = self.maxpool1(out)
-        #print('After maxpool1:', out.shape)
+        # print('After maxpool1:', out.shape)
 
         # Convolution 3
         out = self.conv3(out)
         out = self.relu3(out)
-        #print('After convolution3:', out.shape)
+        # print('After convolution3:', out.shape)
 
         # Convolution 4
         out = self.conv4(out)
         out = self.relu4(out)
-        #print('After convolution4:', out.shape)
+        # print('After convolution4:', out.shape)
 
         # Max pool 2
         out = self.maxpool2(out)
-        #print('After maxcpool2:', out.shape)
+        # print('After maxcpool2:', out.shape)
 
         # flatten
         out = out.view(out.size(0), -1)
-        #print('After flatten:', out.shape)
+        # print('After flatten:', out.shape)
 
         # Linear function 1
         out = self.fc1(out)
         out = self.relu5(out)
-        #print('After linear1:', out.shape)
+        # print('After linear1:', out.shape)
 
         # Linear function (readout)
         out = self.fc2(out)
-        #print('After linear2:', out.shape)
+        # print('After linear2:', out.shape)
 
         return out
