@@ -119,7 +119,8 @@ def prepare_data_LOBSTER():
     )
 
     # use the same
-    mu, sigma, train_lab_threshold_pos, train_lab_threshold_neg = lo_train.normalization_means, lo_train.normalization_stds, lo_train.label_threshold_pos, lo_train.label_threshold_neg
+    mu, sigma = lo_train.normalization_means, lo_train.normalization_stds
+    # train_lab_threshold_pos, train_lab_threshold_neg = lo_train.label_threshold_pos, lo_train.label_threshold_neg
 
     # validation
     lo_val = LOBSTERDataBuilder(
@@ -132,8 +133,8 @@ def prepare_data_LOBSTER():
         normalization_mean=mu,
         normalization_std=sigma,
         label_dynamic_scaler=co.LABELING_SIGMA_SCALER,
-        #label_threshold_pos=train_lab_threshold_pos,
-        #label_threshold_neg=train_lab_threshold_neg,
+        # label_threshold_pos=train_lab_threshold_pos,
+        # label_threshold_neg=train_lab_threshold_neg,
         is_data_preload=co.IS_DATA_PRELOAD
     )
 
@@ -148,8 +149,8 @@ def prepare_data_LOBSTER():
         normalization_mean=mu,
         normalization_std=sigma,
         label_dynamic_scaler=co.LABELING_SIGMA_SCALER,
-        #label_threshold_pos=train_lab_threshold_pos,
-        #label_threshold_neg=train_lab_threshold_neg,
+        # label_threshold_pos=train_lab_threshold_pos,
+        # label_threshold_neg=train_lab_threshold_neg,
         is_data_preload=co.IS_DATA_PRELOAD
     )
 
