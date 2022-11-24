@@ -8,8 +8,8 @@ hyperparameters_lobster = {
             co.WinSize.SEC10.value,
             co.WinSize.SEC20.value,
             co.WinSize.SEC30.value,
-            #co.WinSize.SEC50.value,
-            #co.WinSize.SEC100.value
+            co.WinSize.SEC50.value,
+            co.WinSize.SEC100.value
             ]
     },
 
@@ -18,8 +18,8 @@ hyperparameters_lobster = {
             co.WinSize.SEC10.value,
             co.WinSize.SEC20.value,
             co.WinSize.SEC30.value,
-            #co.WinSize.SEC50.value,
-            #co.WinSize.SEC100.value
+            co.WinSize.SEC50.value,
+            co.WinSize.SEC100.value
         ]
     },
 

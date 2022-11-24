@@ -30,7 +30,8 @@ class LOBSTERDataBuilder:
             label_threshold_neg=None,
             label_dynamic_scaler=None,
             data_granularity=co.Granularity.Sec1,
-            is_data_preload=False):
+            is_data_preload=False
+    ):
 
         self.dataset_type = dataset_type
         self.lobster_dataset_name = lobster_data_dir
@@ -47,18 +48,21 @@ class LOBSTERDataBuilder:
         self.window_size_forward = window_size_forward
         self.window_size_backward = window_size_backward
         self.label_dynamic_scaler = label_dynamic_scaler
+
         self.label_threshold_pos = label_threshold_pos
         self.label_threshold_neg = label_threshold_neg
 
         # to store the datasets
-        self.NOW = datetime.now().strftime("%d%m%Y%H%M%S")
         self.STOCK_NAME = self.lobster_dataset_name.split("_")[0]  # AVXL_2022-03-01_2022-03-31_10
-        self.F_NAME_PICKLE = "{}_{}_{}_{}_data.pickle".format(
+        self.F_NAME_PICKLE = "{}_{}_{}_{}_{}_{}_{}.pickle".format(
             self.STOCK_NAME,
             self.start_end_trading_day[0],
             self.start_end_trading_day[1],
             self.dataset_type.value,
-            self.NOW)
+            self.window_size_backward,
+            self.window_size_forward,
+            self.label_dynamic_scaler
+        )
 
         self.__data, self.__samples_x, self.__samples_y = None, None, None
         self.__data_init()
@@ -72,7 +76,8 @@ class LOBSTERDataBuilder:
             granularity=self.data_granularity,
             first_date=self.start_end_trading_day[0],
             last_date=self.start_end_trading_day[1],
-            boundaries_purge=self.crop_trading_day_by)
+            boundaries_purge=self.crop_trading_day_by
+        )
 
         out_df = out_df.fillna(method="ffill")
         self.__data = out_df
@@ -179,15 +184,15 @@ class LOBSTERDataBuilder:
         self.__snapshotting()
 
         occurrences = collections.Counter(self.__samples_y)
-        print("Before undersampling:", self.dataset_type, occurrences)
+        # print("Before undersampling:", self.dataset_type, occurrences)
 
         if not self.dataset_type == co.DatasetType.TEST:
             self.__under_sampling()
 
-        occurrences = collections.Counter(self.__samples_y)
-        print("After undersampling:", self.dataset_type, occurrences)
+        # occurrences = collections.Counter(self.__samples_y)
+        # print("After undersampling:", self.dataset_type, occurrences)
 
-        #self.plot_dataset()
+        # self.plot_dataset()
 
     def __data_init(self):
         """ This method serializes and deserializes __data."""

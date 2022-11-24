@@ -18,7 +18,7 @@ class LOBDataModule(pl.LightningDataModule):
         self.is_shuffle_train = is_shuffle_train
 
         self.x_shape = self.train_set.x_shape
-        self.y_shape = self.train_set.y_shape
+        self.num_classes = self.train_set.num_classes
 
         self.pin_memory = True if co.DEVICE_TYPE == 'cuda' else False
 
