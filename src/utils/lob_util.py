@@ -393,12 +393,15 @@ def lobster_to_sec_df_from_files(message_file, orderbook_file,
     lobster_to_gran_df(message_df, order_df, datetime_start=start_date, granularity=granularity)
 
 
-def lobster_to_gran_df(message_df, orderbook_df,
-                       datetime_start: datetime,
-                       granularity: config.Granularity = config.Granularity.Sec1,
-                       level: int = 10,
-                       add_messages=False,
-                       boundaries_purge=0):
+def lobster_to_gran_df(
+        message_df,
+        orderbook_df,
+        datetime_start: datetime,
+        granularity: config.Granularity = config.Granularity.Sec1,
+        level: int = 10,
+        add_messages=False,
+        boundaries_purge=0
+    ):
     """ create a dataframe with midprices, sell and buy for each second
 
         message_df : a csv df with the messages (lobster old_data format) without initial start lob
@@ -418,20 +421,23 @@ def lobster_to_gran_df(message_df, orderbook_df,
 
     # convert the time to seconds and structure the df to the input granularity
     orderbook_df["seconds"] = message_df["time"]
+    orderbook_df["date"] = [start_date + timedelta(seconds=i) for i in orderbook_df["seconds"]]
 
-    if add_messages and granularity is None:
+    if 'Events' in granularity.name or (add_messages and granularity is None):
         orderbook_df[message_df.columns] = message_df[message_df.columns]
         accepted_orders = [o.value for o in (config.OrderEvent.EXECUTION, config.OrderEvent.SUBMISSION, config.OrderEvent.HIDDEN_EXECUTION)]
         orderbook_df = orderbook_df[orderbook_df["event_type"].isin(accepted_orders)]
 
-    orderbook_df["date"] = [start_date + timedelta(seconds=i) for i in orderbook_df["seconds"]]
+    if 'Events' in granularity.name:
+        orderbook_df = orderbook_df.drop(list(message_df.columns), axis=1)
+        orderbook_df = orderbook_df[::granularity.value]
+    else:
+        if granularity is not None:
+            orderbook_df.set_index("date", inplace=True)
+            orderbook_df = orderbook_df.resample(granularity.value).first()
+            orderbook_df.reset_index(inplace=True)
 
-    if granularity is not None:
-        orderbook_df.set_index("date", inplace=True)
-        orderbook_df = orderbook_df.resample(granularity.value).first()
-        orderbook_df.reset_index(inplace=True)
-
-    assert granularity == config.Granularity.Sec1 or not boundaries_purge > 0, "Unhandled boundaries_purge."
+    assert not boundaries_purge > 0 or granularity == config.Granularity.Sec1, "Unhandled boundaries_purge."
 
     orderbook_df = orderbook_df.sort_values(by="date").reset_index(drop=True).copy()
     orderbook_df.drop(columns=['seconds'], inplace=True)
