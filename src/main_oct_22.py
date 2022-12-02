@@ -172,10 +172,13 @@ def lunch_training():
     print("Lunching the execution of {} on {} dataset.".format(co.CHOSEN_MODEL, co.CHOSEN_DATASET))
 
     remote_log = None
+    run_name = ''
+
     if co.IS_WANDB:
 
         wandb.init(project=co.PROJECT_NAME, entity="fin-di-sapienza")
         remote_log = wandb
+        run_name = wandb.run.name
 
         co.BATCH_SIZE = wandb.config.batch_size
         co.IS_SHUFFLE_INPUT = wandb.config.is_shuffle
@@ -215,7 +218,7 @@ def lunch_training():
         check_val_every_n_epoch=co.VALIDATE_EVERY,
         max_epochs=co.EPOCHS,
         callbacks=[
-            cbk.callback_save_model(co.CHOSEN_MODEL.value),
+            cbk.callback_save_model(co.CHOSEN_MODEL.value, run_name),
             cbk.early_stopping()
         ]
     )
