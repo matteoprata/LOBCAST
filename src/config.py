@@ -98,6 +98,13 @@ class DatasetFamily(Enum):
     FI = "FI"
     LOBSTER = "Lobster"
 
+class Stocks(Enum):
+    ALL = "ALL"
+    AAPL = "AAPL"
+    AMAT = "AMAT"
+    ARVN = "ARVN"
+    LYFT = "LYFT"
+    NVDA = "NVDA"
 
 class Granularity(Enum):
     """ The possible Granularity to build the OHLC old_data from lob """
@@ -183,11 +190,13 @@ HORIZON = 10
 TRAIN_SPLIT_VAL = .8
 
 CHOSEN_DATASET = DatasetFamily.LOBSTER
+CHOSEN_STOCK_TRAIN = Stocks.ALL
+CHOSEN_STOCK_TEST = Stocks.ALL
 CHOSEN_MODEL = Models.MLP
 
-IS_WANDB = True
-SWEEP_NAME = CHOSEN_DATASET.value + '_' + CHOSEN_MODEL.value + ''
-SWEEP_METHOD = 'bayes'
+IS_WANDB = False
+SWEEP_NAME = CHOSEN_DATASET.value + '_' + CHOSEN_MODEL.value + '' if CHOSEN_DATASET == DatasetFamily.FI else \
+    CHOSEN_DATASET.value + '_' + CHOSEN_STOCK_TRAIN.value + '_' + CHOSEN_STOCK_TEST.value + '_' + CHOSEN_MODEL.value + ''
 SWEEP_METRIC = {
     'goal': 'maximize',
     'name': ModelSteps.VALIDATION.value + Metrics.F1.value
