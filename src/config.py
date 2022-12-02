@@ -99,12 +99,19 @@ class DatasetFamily(Enum):
     LOBSTER = "Lobster"
 
 class Stocks(Enum):
-    ALL = "ALL"
-    AAPL = "AAPL"
-    AMAT = "AMAT"
-    ARVN = "ARVN"
-    LYFT = "LYFT"
-    NVDA = "NVDA"
+    AAPL = ["AAPL"]
+    AMAT = ["AMAT"]
+    ARVN = ["ARVN"]
+    LYFT = ["LYFT"]
+    NVDA = ["NVDA"]
+    ALL = ["ARVN", "LYFT"]  #, "AAPL", "AMAT", "NVDA"]
+
+class Periods(Enum):
+    MARCH2020 = {
+        'train': ('2020-03-02', '2020-03-20'),
+        'val': ('2020-03-23', '2020-03-27'),
+        'test': ('2020-03-30', '2020-04-03'),
+    }
 
 class Granularity(Enum):
     """ The possible Granularity to build the OHLC old_data from lob """
@@ -157,11 +164,11 @@ SAVED_MODEL_DIR = "data/saved_models/"
 SEED = 0
 RANDOM_GEN_DATASET = np.random.RandomState(SEED)
 DATA_SOURCE = "data/"
-DATASET_LOBSTER = "AVXL_2021-08-01_2021-08-31_10"
+DATASET_LOBSTER = "LOBSTER_5/unzipped/"
 DATASET_FI = "FI-2010/BenchmarkDatasets"
 
 DATA_PICKLES = "data/pickles/"
-IS_DATA_PRELOAD = False
+IS_DATA_PRELOAD = True
 
 EPOCHS = 200
 BATCH_SIZE = 32
@@ -190,13 +197,16 @@ HORIZON = 10
 TRAIN_SPLIT_VAL = .8
 
 CHOSEN_DATASET = DatasetFamily.LOBSTER
-CHOSEN_STOCK_TRAIN = Stocks.ALL
-CHOSEN_STOCK_TEST = Stocks.ALL
+CHOSEN_STOCKS = {
+    'train': Stocks.LYFT,
+    'test': Stocks.NVDA
+}
+CHOSEN_PERIOD = Periods.MARCH2020
 CHOSEN_MODEL = Models.MLP
 
 IS_WANDB = False
 SWEEP_NAME = CHOSEN_DATASET.value + '_' + CHOSEN_MODEL.value + '' if CHOSEN_DATASET == DatasetFamily.FI else \
-    CHOSEN_DATASET.value + '_' + CHOSEN_STOCK_TRAIN.value + '_' + CHOSEN_STOCK_TEST.value + '_' + CHOSEN_MODEL.value + ''
+    CHOSEN_DATASET.value + '_' + CHOSEN_STOCKS['train'].name + '_' + CHOSEN_STOCKS['test'].name + '_' + CHOSEN_PERIOD.name + '_' + CHOSEN_MODEL.value + ''
 SWEEP_METRIC = {
     'goal': 'maximize',
     'name': ModelSteps.VALIDATION.value + Metrics.F1.value

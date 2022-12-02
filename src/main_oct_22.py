@@ -15,7 +15,6 @@ from src.data_preprocessing.FI.FIDataBuilder import FIDataBuilder
 from src.data_preprocessing.FI.FIDataset import FIDataset
 from src.data_preprocessing.FI.FIDataModule import FIDataModule
 from src.data_preprocessing.FI.fi_param_search import hyperparameters_fi
-from src.data_preprocessing.LOB.LOBSTERDataBuilder import LOBSTERDataBuilder
 from src.data_preprocessing.LOB.LOBDataModule import LOBDataModule
 from src.data_preprocessing.LOB.LOBDataset import LOBDataset
 from src.data_preprocessing.LOB.lobster_param_search import hyperparameters_lobster
@@ -106,57 +105,26 @@ def prepare_data_FI():
 
 def prepare_data_LOBSTER():
 
-    # train
-    lo_train = LOBSTERDataBuilder(
-        co.DATASET_LOBSTER,
-        co.DatasetType.TRAIN,
-        start_end_trading_day=("2021-08-11", "2021-08-17"),  # ("2022-03-01", "2022-03-07")  5 days
-        crop_trading_day_by=60 * 30,
-        window_size_forward=co.FORWARD_WINDOW,
-        window_size_backward=co.BACKWARD_WINDOW,
-        label_dynamic_scaler=co.LABELING_SIGMA_SCALER,
-        is_data_preload=co.IS_DATA_PRELOAD
+    train_set = LOBDataset(
+        dataset_type=co.DatasetType.TRAIN,
+        stocks=co.CHOSEN_STOCKS['train'].value,
+        start_end_trading_day=co.CHOSEN_PERIOD.value['train']
     )
+    stockName2mu, stockName2sigma = train_set.stockName2mu, train_set.stockName2sigma
 
-    # use the same
-    mu, sigma = lo_train.normalization_means, lo_train.normalization_stds
-    # train_lab_threshold_pos, train_lab_threshold_neg = lo_train.label_threshold_pos, lo_train.label_threshold_neg
 
-    # validation
-    lo_val = LOBSTERDataBuilder(
-        co.DATASET_LOBSTER,
-        co.DatasetType.VALIDATION,
-        start_end_trading_day=("2021-08-18", "2021-08-24"),  # ("2022-03-01", "2022-03-07")  5 days
-        crop_trading_day_by=60 * 30,
-        window_size_forward=co.FORWARD_WINDOW,
-        window_size_backward=co.BACKWARD_WINDOW,
-        normalization_mean=mu,
-        normalization_std=sigma,
-        label_dynamic_scaler=co.LABELING_SIGMA_SCALER,
-        # label_threshold_pos=train_lab_threshold_pos,
-        # label_threshold_neg=train_lab_threshold_neg,
-        is_data_preload=co.IS_DATA_PRELOAD
+    val_set = LOBDataset(
+        dataset_type=co.DatasetType.VALIDATION,
+        stocks=co.CHOSEN_STOCKS['train'].value,
+        start_end_trading_day=co.CHOSEN_PERIOD.value['val'],
+        stockName2mu=stockName2mu, stockName2sigma=stockName2sigma
     )
-
-    # test
-    lo_test = LOBSTERDataBuilder(
-        co.DATASET_LOBSTER,
-        co.DatasetType.TEST,
-        start_end_trading_day=("2021-08-25", "2021-08-27"),  # ("2022-03-02", "2022-03-03") 3 test
-        crop_trading_day_by=60 * 30,
-        window_size_forward=co.FORWARD_WINDOW,
-        window_size_backward=co.BACKWARD_WINDOW,
-        normalization_mean=mu,
-        normalization_std=sigma,
-        label_dynamic_scaler=co.LABELING_SIGMA_SCALER,
-        # label_threshold_pos=train_lab_threshold_pos,
-        # label_threshold_neg=train_lab_threshold_neg,
-        is_data_preload=co.IS_DATA_PRELOAD
+    test_set = LOBDataset(
+        dataset_type=co.DatasetType.TEST,
+        stocks=co.CHOSEN_STOCKS['test'].value,
+        start_end_trading_day=co.CHOSEN_PERIOD.value['test'],
+        stockName2mu=stockName2mu, stockName2sigma=stockName2sigma
     )
-
-    train_set = LOBDataset(x=lo_train.get_samples_x(), y=lo_train.get_samples_y())
-    val_set = LOBDataset(x=lo_val.get_samples_x(),   y=lo_val.get_samples_y())
-    test_set = LOBDataset(x=lo_test.get_samples_x(),  y=lo_test.get_samples_y())
 
     print()
     print("Samples in the splits:")
@@ -169,7 +137,11 @@ def prepare_data_LOBSTER():
 
 
 def lunch_training():
-    print("Lunching the execution of {} on {} dataset.".format(co.CHOSEN_MODEL, co.CHOSEN_DATASET))
+    lunch_string = "Lunching the execution of {} on {} dataset.".format(co.CHOSEN_MODEL, co.CHOSEN_DATASET)
+    if co.CHOSEN_DATASET == co.DatasetFamily.LOBSTER:
+        lunch_string += ' Period: {}, Train stock: {}, Test stock: {}.'.format(co.CHOSEN_PERIOD, co.CHOSEN_STOCKS['train'], co.CHOSEN_STOCKS['test'])
+    print(lunch_string)
+
 
     remote_log = None
     run_name = ''

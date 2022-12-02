@@ -16,6 +16,7 @@ from datetime import datetime
 class LOBSTERDataBuilder:
     def __init__(
             self,
+            stock_name,
             lobster_data_dir,
             dataset_type,
             n_lob_levels=co.N_LOB_LEVELS,
@@ -53,7 +54,7 @@ class LOBSTERDataBuilder:
         self.label_threshold_neg = label_threshold_neg
 
         # to store the datasets
-        self.STOCK_NAME = self.lobster_dataset_name.split("_")[0]  # AVXL_2022-03-01_2022-03-31_10
+        self.STOCK_NAME = stock_name
         self.F_NAME_PICKLE = "{}_{}_{}_{}_{}_{}_{}.pickle".format(
             self.STOCK_NAME,
             self.start_end_trading_day[0],
