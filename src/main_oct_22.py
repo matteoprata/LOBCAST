@@ -34,7 +34,8 @@ from src.models.cnnlstm.cnnlstm import CNNLSTM
 from src.models.cnnlstm.cnnlstm_param_search import hyperparameters_cnnlstm
 from src.models.dain.dain import DAIN
 from src.models.dain.dain_param_search import hyperparameters_dain
-
+from src.models.translob.translob import TransLob
+from src.models.translob.tlb_param_search import hyperparameters_tlb
 
 # def parser_cl_arguments():
 #     """ Parses the arguments for the command line. """
@@ -58,6 +59,7 @@ SWEEP_CONF_DICT_MODEL = {
     co.Models.CNNLSTM: hyperparameters_cnnlstm,
     co.Models.DAIN: hyperparameters_dain,
     co.Models.DEEPLOB: hyperparameters_dlb,
+    co.Models.TRANSLOB: hyperparameters_tlb,
 }
 
 SWEEP_CONF_DICT_DATA = {
@@ -110,8 +112,8 @@ def prepare_data_LOBSTER():
         stocks=co.CHOSEN_STOCKS['train'].value,
         start_end_trading_day=co.CHOSEN_PERIOD.value['train']
     )
-    stockName2mu, stockName2sigma = train_set.stockName2mu, train_set.stockName2sigma
 
+    stockName2mu, stockName2sigma = train_set.stockName2mu, train_set.stockName2sigma
 
     val_set = LOBDataset(
         dataset_type=co.DatasetType.VALIDATION,
@@ -179,6 +181,9 @@ def lunch_training():
             co.DAIN_LAYER_MODE = wandb.config.dain_layer_mode
             co.MLP_HIDDEN = wandb.config.hidden_mlp
             co.P_DROPOUT = wandb.config.p_dropout
+
+        elif co.CHOSEN_MODEL == co.Models.TRANSLOB:
+            co.WEIGHT_DECAY = wandb.config.weight_decay
 
     data_module = pick_dataset(co.CHOSEN_DATASET)
 
@@ -286,6 +291,9 @@ def pick_model(chosen_model, data_module, remote_log):
 
     elif chosen_model == co.Models.DEEPLOB:
         net_architecture = DeepLob(num_classes=data_module.num_classes)
+
+    elif chosen_model == co.Models.TRANSLOB:
+        net_architecture = TransLob()
 
     return NNEngine(
         model_type=chosen_model,

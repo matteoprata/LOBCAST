@@ -94,6 +94,7 @@ class Models(Enum):
     CNNLSTM = "CNNLSTM"
     DEEPLOB = "DeepLob"
     DAIN = "DAIN"
+    TRANSLOB = "TransLob"
 
 
 class DatasetFamily(Enum):
@@ -172,7 +173,7 @@ DATASET_FI = "FI-2010/BenchmarkDatasets"
 DATA_PICKLES = "data/pickles/"
 IS_DATA_PRELOAD = True
 
-EPOCHS = 200
+EPOCHS = 100
 BATCH_SIZE = 32
 OPTIMIZER = Optimizers.ADAM.value
 LEARNING_RATE = 0.001
@@ -199,13 +200,13 @@ HORIZON = 10
 
 TRAIN_SPLIT_VAL = .8
 
-CHOSEN_DATASET = DatasetFamily.LOBSTER
+CHOSEN_DATASET = DatasetFamily.FI
 CHOSEN_STOCKS = {
     'train': Stocks.LYFT,
     'test': Stocks.NVDA
 }
 CHOSEN_PERIOD = Periods.MARCH2020
-CHOSEN_MODEL = Models.MLP
+CHOSEN_MODEL = Models.TRANSLOB
 
 IS_WANDB = False
 SWEEP_NAME = CHOSEN_DATASET.value + '_' + CHOSEN_MODEL.value + '' if CHOSEN_DATASET == DatasetFamily.FI else \

@@ -82,7 +82,6 @@ class DeepLob(pl.LightningModule):
 
         self.softmax = nn.Softmax(dim=1)
 
-
     def forward(self, x):
         x = x[:, None, :, :].float()  # none stands for the channel
 
