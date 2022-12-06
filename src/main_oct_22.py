@@ -292,6 +292,7 @@ def pick_model(chosen_model, data_module, remote_log):
         neural_architecture=net_architecture,
         optimizer=co.OPTIMIZER,
         lr=co.LEARNING_RATE,
+        weight_decay=co.WEIGHT_DECAY,
         remote_log=remote_log).to(co.DEVICE_TYPE)
 
 

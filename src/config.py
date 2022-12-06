@@ -11,6 +11,8 @@ class TuningVars(Enum):
 
     OPTIMIZER = "optimizer"
     LEARNING_RATE = "lr"
+    WEIGHT_DECAY = "weight_decay"
+
     EPOCHS = "epochs"
 
     IS_SHUFFLE = "is_shuffle"
@@ -174,6 +176,7 @@ EPOCHS = 200
 BATCH_SIZE = 32
 OPTIMIZER = Optimizers.ADAM.value
 LEARNING_RATE = 0.001
+WEIGHT_DECAY = 0
 VALIDATE_EVERY = 1
 IS_SHUFFLE_INPUT = True
 

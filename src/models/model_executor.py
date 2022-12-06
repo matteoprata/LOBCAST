@@ -19,6 +19,7 @@ class NNEngine(pl.LightningModule):
         neural_architecture,
         optimizer,
         lr,
+        weight_decay=0,
         remote_log=None
     ):
         super().__init__()
@@ -35,6 +36,7 @@ class NNEngine(pl.LightningModule):
 
         self.optimizer = optimizer
         self.lr = lr
+        self.weight_decay = weight_decay
 
     def forward(self, x):
         out = self.neural_architecture(x)
@@ -125,6 +127,6 @@ class NNEngine(pl.LightningModule):
             ], lr=self.lr)
 
         if self.optimizer == co.Optimizers.ADAM.value:
-            return torch.optim.Adam(self.parameters(), lr=self.lr)
+            return torch.optim.Adam(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
         elif self.optimizer == co.Optimizers.RMSPROP.value:
             return torch.optim.RMSprop(self.parameters(), lr=self.lr)
