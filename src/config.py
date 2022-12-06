@@ -208,10 +208,11 @@ CHOSEN_STOCKS = {
 CHOSEN_PERIOD = Periods.MARCH2020
 CHOSEN_MODEL = Models.TRANSLOB
 
-IS_WANDB = False
+IS_WANDB = True
 SWEEP_NAME = CHOSEN_DATASET.value + '_' + CHOSEN_MODEL.value + '' if CHOSEN_DATASET == DatasetFamily.FI else \
     CHOSEN_DATASET.value + '_' + CHOSEN_STOCKS['train'].name + '_' + CHOSEN_STOCKS['test'].name + '_' + CHOSEN_PERIOD.name + '_' + CHOSEN_MODEL.value + ''
 SWEEP_METRIC = {
     'goal': 'maximize',
     'name': ModelSteps.VALIDATION.value + Metrics.F1.value
 }
+SWEEP_METHOD = 'bayes'
