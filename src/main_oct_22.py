@@ -233,6 +233,7 @@ def pick_dataset(datasetFamily):
 
 def pick_model(chosen_model, data_module, remote_log):
     net_architecture = None
+    loss_weights = None
 
     if chosen_model == co.Models.MLP:
         net_architecture = MLP(
@@ -301,6 +302,7 @@ def pick_model(chosen_model, data_module, remote_log):
         optimizer=co.OPTIMIZER,
         lr=co.LEARNING_RATE,
         weight_decay=co.WEIGHT_DECAY,
+        loss_weights=loss_weights,
         remote_log=remote_log).to(co.DEVICE_TYPE)
 
 

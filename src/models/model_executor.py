@@ -22,6 +22,7 @@ class NNEngine(pl.LightningModule):
         optimizer,
         lr,
         weight_decay=0,
+        loss_weights=None,
         remote_log=None
     ):
         super().__init__()
@@ -34,7 +35,7 @@ class NNEngine(pl.LightningModule):
 
         self.softmax = nn.Softmax(dim=1)
 
-        self.loss_fn = nn.CrossEntropyLoss()
+        self.loss_fn = nn.CrossEntropyLoss(weight=loss_weights)
 
         self.optimizer = optimizer
         self.lr = lr
