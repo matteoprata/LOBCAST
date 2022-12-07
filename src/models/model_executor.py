@@ -6,6 +6,8 @@ import torch
 import torch.nn as nn
 
 from sklearn.metrics import classification_report
+from sklearn.metrics import matthews_corrcoef
+
 
 import numpy as np
 import src.config as co
@@ -96,12 +98,15 @@ class NNEngine(pl.LightningModule):
         precision = cr['macro avg']['precision']  # MACRO-PRECISION
         recall = cr['macro avg']['recall']  # MACRO-RECALL
 
+        mcc = matthews_corrcoef(ys, predictions)
+
         val_dict = {
-            model_step.value + co.Metrics.LOSS.value:      float(np.sum(loss_vals)),
-            model_step.value + co.Metrics.F1.value:        float(f1score),
+            model_step.value + co.Metrics.LOSS.value: float(np.sum(loss_vals)),
+            model_step.value + co.Metrics.F1.value: float(f1score),
             model_step.value + co.Metrics.PRECISION.value: float(precision),
-            model_step.value + co.Metrics.RECALL.value:    float(recall),
-            model_step.value + co.Metrics.ACCURACY.value:  float(accuracy)
+            model_step.value + co.Metrics.RECALL.value: float(recall),
+            model_step.value + co.Metrics.ACCURACY.value: float(accuracy),
+            model_step.value + co.Metrics.MCC.value: float(mcc)
         }
 
         # for saving best model

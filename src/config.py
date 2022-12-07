@@ -44,6 +44,7 @@ class Metrics(Enum):
     PRECISION = 'precision'
     RECALL = 'recall'
     ACCURACY = 'accuracy'
+    MCC = 'mcc'
 
 
 class ModelSteps(Enum):
