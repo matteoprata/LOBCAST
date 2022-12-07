@@ -96,6 +96,7 @@ class Models(Enum):
     DEEPLOB = "DeepLob"
     DAIN = "DAIN"
     TRANSLOB = "TransLob"
+    CTABL = "CTABL"
 
 
 class DatasetFamily(Enum):

@@ -36,6 +36,9 @@ from src.models.dain.dain import DAIN
 from src.models.dain.dain_param_search import hyperparameters_dain
 from src.models.translob.translob import TransLob
 from src.models.translob.tlb_param_search import hyperparameters_tlb
+from src.models.tabl.ctabl import CTABL
+from src.models.tabl.weight_constraint import WeightConstraint
+from src.models.tabl.tabl_param_search import hyperparameters_tabl
 
 # def parser_cl_arguments():
 #     """ Parses the arguments for the command line. """
@@ -60,6 +63,7 @@ SWEEP_CONF_DICT_MODEL = {
     co.Models.DAIN: hyperparameters_dain,
     co.Models.DEEPLOB: hyperparameters_dlb,
     co.Models.TRANSLOB: hyperparameters_tlb,
+    co.Models.CTABL: hyperparameters_tabl,
 }
 
 SWEEP_CONF_DICT_DATA = {
@@ -185,6 +189,9 @@ def lunch_training():
         elif co.CHOSEN_MODEL == co.Models.TRANSLOB:
             co.WEIGHT_DECAY = wandb.config.weight_decay
 
+        elif co.CHOSEN_MODEL == co.Models.CTABL:
+            co.EPOCHS = wandb.config.epochs
+
     data_module = pick_dataset(co.CHOSEN_DATASET)
 
     model = pick_model(co.CHOSEN_MODEL, data_module, remote_log)
@@ -295,6 +302,13 @@ def pick_model(chosen_model, data_module, remote_log):
 
     elif chosen_model == co.Models.TRANSLOB:
         net_architecture = TransLob()
+
+    elif chosen_model == co.Models.CTABL:
+        raise NotImplementedError
+        net_architecture = CTABL(60, 40, 10, 10, 120, 5, 3, 1)
+        constraint = WeightConstraint()
+        net_architecture.apply(constraint)
+        # TODO: compute loss_weights
 
     return NNEngine(
         model_type=chosen_model,
