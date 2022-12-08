@@ -4,6 +4,7 @@ from collections import Counter
 import numpy as np
 import src.config as co
 import wandb
+import argparse
 
 # TORCH
 from pytorch_lightning import Trainer
@@ -40,18 +41,8 @@ from src.models.tabl.ctabl import CTABL
 from src.models.tabl.weight_constraint import WeightConstraint
 from src.models.tabl.tabl_param_search import hyperparameters_tabl
 
-# def parser_cl_arguments():
-#     """ Parses the arguments for the command line. """
-#
-#     parser = argparse.ArgumentParser(description='PyTorch Training')
-#
-#     parser.add_argument('--model',    default=co.Models.MLP.value)
-#     parser.add_argument('--data',     default=co.DatasetFamily.LOBSTER.value)
-#     parser.add_argument('--is_sweep', default=True)
-#     parser.add_argument('--back_win', default=co.BACKWARD_WINDOW)
-#     parser.add_argument('--forw_win', default=co.FORWARD_WINDOW)
-#
-#     return parser
+
+
 
 
 SWEEP_CONF_DICT_MODEL = {
@@ -113,7 +104,7 @@ def prepare_data_LOBSTER():
 
     train_set = LOBDataset(
         dataset_type=co.DatasetType.TRAIN,
-        stocks=co.CHOSEN_STOCKS['train'].value,
+        stocks=co.CHOSEN_STOCKS[co.STK_OPEN.TRAIN].value,
         start_end_trading_day=co.CHOSEN_PERIOD.value['train']
     )
 
@@ -121,13 +112,13 @@ def prepare_data_LOBSTER():
 
     val_set = LOBDataset(
         dataset_type=co.DatasetType.VALIDATION,
-        stocks=co.CHOSEN_STOCKS['train'].value,
+        stocks=co.CHOSEN_STOCKS[co.STK_OPEN.TRAIN].value,
         start_end_trading_day=co.CHOSEN_PERIOD.value['val'],
         stockName2mu=stockName2mu, stockName2sigma=stockName2sigma
     )
     test_set = LOBDataset(
         dataset_type=co.DatasetType.TEST,
-        stocks=co.CHOSEN_STOCKS['test'].value,
+        stocks=co.CHOSEN_STOCKS[co.STK_OPEN.TEST].value,
         start_end_trading_day=co.CHOSEN_PERIOD.value['test'],
         stockName2mu=stockName2mu, stockName2sigma=stockName2sigma
     )
@@ -144,7 +135,7 @@ def prepare_data_LOBSTER():
 def lunch_training():
     lunch_string = "Lunching the execution of {} on {} dataset.".format(co.CHOSEN_MODEL, co.CHOSEN_DATASET)
     if co.CHOSEN_DATASET == co.DatasetFamily.LOBSTER:
-        lunch_string += ' Period: {}, Train stock: {}, Test stock: {}.'.format(co.CHOSEN_PERIOD, co.CHOSEN_STOCKS['train'], co.CHOSEN_STOCKS['test'])
+        lunch_string += ' Period: {}, Train stock: {}, Test stock: {}.'.format(co.CHOSEN_PERIOD, co.CHOSEN_STOCKS[co.STK_OPEN.TRAIN], co.CHOSEN_STOCKS[co.STK_OPEN.TEST])
     print(lunch_string)
 
 
@@ -321,13 +312,18 @@ def pick_model(chosen_model, data_module, remote_log):
 
 if __name__ == "__main__":
 
-    # test set: Counter({1: 47392, 0: 6347, 2: 5633})
-    # y_pred = [1]*59372 # hp: the model predicts always 1
-    # y_true = [0]*6347 + [1]*47392 + [2]*5633
-    # print(f1(y_true, y_pred, average='micro')) # = 0.798
-    # print(f1(y_true, y_pred, average='macro')) # = 0.295
-    # print(f1(y_true, y_pred, average='weighted')) # = 0.709
-    # exit()
+    # Reproducibility stuff
+    seed_everything(co.SEED)
+    co.RANDOM_GEN_DATASET = np.random.RandomState(co.SEED)
+    np.random.seed(co.SEED)
+
+    parser_cl_arguments()
+
+    if co.CHOSEN_DATASET == co.DatasetFamily.FI:
+        co.SWEEP_NAME = co.CHOSEN_DATASET.value + '_' + co.CHOSEN_MODEL.value + ''
+    else:
+        co.SWEEP_NAME = co.CHOSEN_DATASET.value + '_' + co.CHOSEN_STOCKS[co.STK_OPEN.TRAIN].name + '_' + \
+                        co.CHOSEN_STOCKS[co.STK_OPEN.TEST].name + '_' + co.CHOSEN_PERIOD.name + '_' + co.CHOSEN_MODEL.value + ''
 
     if co.IS_WANDB:
         lunch_training_sweep()

@@ -55,7 +55,7 @@ class LOBSTERDataBuilder:
 
         # to store the datasets
         self.STOCK_NAME = stock_name
-        self.F_NAME_PICKLE = "{}_{}_{}_{}_{}_{}_{}.pickle".format(
+        self.F_NAME_PICKLE = "{}_{}_{}_{}.pickle".format(
             self.STOCK_NAME,
             self.start_end_trading_day[0],
             self.start_end_trading_day[1],
@@ -118,15 +118,15 @@ class LOBSTERDataBuilder:
         print("Snapshotting... (__data has", self.__data.shape[0], "rows)")
 
         relevant_columns = [c for c in self.__data.columns if "sell" in c or "buy" in c]
+        relevant_columns = [self.__data.columns.get_loc(rc) for rc in relevant_columns]
+        y_id = self.__data.columns.get_loc(ppu.DataCols.PREDICTION.value)
 
-        X, Y = [], []
-        for st in tqdm.tqdm(range(0, self.__data.shape[0] - co.NUM_SNAPSHOTS)):
-            x_snap = self.__data.iloc[st:st + co.NUM_SNAPSHOTS, :].loc[:, relevant_columns]
-            y_snap = self.__data.iloc[st + co.NUM_SNAPSHOTS - 1, :][ppu.DataCols.PREDICTION.value]
-            X.append(x_snap)
-            Y.append(y_snap)
+        n_tot = self.__data.shape[0] - self.num_snapshots
+        data_np = self.__data.to_numpy()
+        X = np.array([data_np[st:st + self.num_snapshots, relevant_columns] for st in tqdm.tqdm(range(0, n_tot))])
+        Y = np.array([data_np[st + self.num_snapshots - 1, y_id] for st in tqdm.tqdm(range(0, n_tot))])
 
-        self.__samples_x, self.__samples_y = np.asarray(X), np.asarray(Y)
+        self.__samples_x, self.__samples_y = X, Y
 
     def __under_sampling(self):
         """ Discard instances of the majority class. """
@@ -168,11 +168,8 @@ class LOBSTERDataBuilder:
             util.write_data((self.__data, self.__samples_x, self.__samples_y), co.DATA_PICKLES, self.F_NAME_PICKLE)
 
     def __deserialize_dataset(self):
-        if os.path.exists(co.DATA_PICKLES + self.F_NAME_PICKLE):
-            print("Deserialization...", self.F_NAME_PICKLE)
-            out = util.read_data(co.DATA_PICKLES + self.F_NAME_PICKLE)
-        else:
-            out = None
+        print("Deserialization...", self.F_NAME_PICKLE)
+        out = util.read_data(co.DATA_PICKLES + self.F_NAME_PICKLE)
         return out
 
     def __prepare_dataset(self):

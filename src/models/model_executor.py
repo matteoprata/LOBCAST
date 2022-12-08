@@ -54,12 +54,12 @@ class NNEngine(pl.LightningModule):
         return loss
 
     def validation_step(self, batch, batch_idx):
-        prediction_ind, y, loss_val = self.__validation_and_testing(batch)
-        return prediction_ind, y, loss_val
+        prediction_ind, y, loss_val, stock_names = self.__validation_and_testing(batch)
+        return prediction_ind, y, loss_val, stock_names
 
     def test_step(self, batch, batch_idx):
-        prediction_ind, y, loss_val = self.__validation_and_testing(batch)
-        return prediction_ind, y, loss_val
+        prediction_ind, y, loss_val, stock_names = self.__validation_and_testing(batch)
+        return prediction_ind, y, loss_val, stock_names
 
     def training_epoch_end(self, validation_step_outputs):
         losses = [el["loss"].item() for el in validation_step_outputs]

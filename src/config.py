@@ -7,6 +7,7 @@ np.set_printoptions(suppress=True)
 
 PROJECT_NAME = "lob-adversarial-attacks-22"
 
+
 class TuningVars(Enum):
 
     OPTIMIZER = "optimizer"
@@ -32,6 +33,14 @@ class TuningVars(Enum):
     LABELING_SIGMA_SCALER = "labeling_sigma_scaler"
 
     FI_HORIZON = 'fi_horizon_k'
+
+
+class STK_OPEN(Enum):
+    """ The modalities associated to a list of stocks. """
+    # TODO rename
+    TRAIN = "train_mod"
+    TEST = "test_mod"
+
 
 class Optimizers(Enum):
     ADAM = "Adam"
@@ -103,13 +112,15 @@ class DatasetFamily(Enum):
     FI = "FI"
     LOBSTER = "Lobster"
 
+
 class Stocks(Enum):
     AAPL = ["AAPL"]
     AMAT = ["AMAT"]
     ARVN = ["ARVN"]
     LYFT = ["LYFT"]
-    NVDA = ["NVDA"]
-    ALL = ["ARVN", "LYFT"]  #, "AAPL", "AMAT", "NVDA"]
+
+    ALL = ["AAPL", "TSLA", "ZM", "AAWW", "AGNC", "LYFT"]
+
 
 class Periods(Enum):
     MARCH2020 = {
@@ -117,6 +128,13 @@ class Periods(Enum):
         'val': ('2020-03-23', '2020-03-27'),
         'test': ('2020-03-30', '2020-04-03'),
     }
+
+    JULY2021 = {
+        'train': ('2021-07-01', '2021-07-22'),
+        'val': ('2021-07-23', '2021-07-29'),
+        'test': ('2021-07-30', '2021-08-06'),
+    }
+
 
 class Granularity(Enum):
     """ The possible Granularity to build the OHLC old_data from lob """
@@ -158,72 +176,75 @@ class DatasetType(Enum):
 
 CLASS_NAMES = ["DOWN", "STATIONARY", "UP"]
 
-OHLC_DATA = "old_data/ohlc_data/"
 NUM_GPUS = 1 if torch.cuda.is_available() else 0
 DEVICE_TYPE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-MODEL_GAN = "data/GAN_models/"
-
 SAVED_MODEL_DIR = "data/saved_models/"
+DATA_SOURCE = "data/"
+DATASET_LOBSTER = "LOBSTER_6/unzipped/"
+DATASET_FI = "FI-2010/BenchmarkDatasets"
+DATA_PICKLES = "data/pickles/"
 
 SEED = 0
-RANDOM_GEN_DATASET = np.random.RandomState(SEED)
-DATA_SOURCE = "data/"
-DATASET_LOBSTER = "LOBSTER_5/unzipped/"
-DATASET_FI = "FI-2010/BenchmarkDatasets"
 
-DATA_PICKLES = "data/pickles/"
-IS_DATA_PRELOAD = True
+VALIDATE_EVERY = 1
 
+# MODELS PARAMS
 EPOCHS = 100
 BATCH_SIZE = 32
 OPTIMIZER = Optimizers.ADAM.value
-LEARNING_RATE = 0.001
+LEARNING_RATE = 0.0001
 WEIGHT_DECAY = 0
-VALIDATE_EVERY = 1
-IS_SHUFFLE_INPUT = True
 
+# MLP
 MLP_HIDDEN = 128
 P_DROPOUT = .1
 
+# LSTM
 LSTM_HIDDEN = 32
 LSTM_N_HIDDEN = 1
 
+# DAIN
 DAIN_LAYER_MODE = 'full'
 
+
+IS_DATA_PRELOAD = True
+IS_SHUFFLE_INPUT = True  # ONLY TRAIN
 N_LOB_LEVELS = 10
-LABELING_SIGMA_SCALER = .9  # dynamic threshold
-BACKWARD_WINDOW = WinSize.SEC100.value
-FORWARD_WINDOW = WinSize.SEC50.value
 NUM_SNAPSHOTS = 100
-INSTANCES_LOWERBOUND = 1000
+INSTANCES_LOWERBOUND = 1000  # under-sampling must have at least INSTANCES_LOWERBOUND instances
 
-HORIZON = 10
+# LOBSTER way to label to measure percentage change
+BACKWARD_WINDOW = WinSize.SEC100.value
+FORWARD_WINDOW = WinSize.SEC50.value  # in LOBSTER = HORIZON
+LABELING_SIGMA_SCALER = .9   # dynamic threshold
 
-TRAIN_SPLIT_VAL = .8
+# K of the FI dataset
+HORIZON = 10  # in FI = FORWARD_WINDOW
 
-
-class STK_OPEN(Enum):
-    """ The modalities associated to a list of stocks. """
-    # TODO rename
-    TRAIN = "train_mod"
-    TEST = "test_mod"
-
+TRAIN_SPLIT_VAL = .8  # FI only
 
 CHOSEN_DATASET = DatasetFamily.FI
+
+CHOSEN_PERIOD = Periods.MARCH2020
+CHOSEN_MODEL = Models.TRANSLOB
 
 CHOSEN_STOCKS = {
     STK_OPEN.TRAIN: Stocks.LYFT,
     STK_OPEN.TEST: Stocks.NVDA
 }
-CHOSEN_PERIOD = Periods.MARCH2020
-CHOSEN_MODEL = Models.TRANSLOB
 
-IS_WANDB = True
-SWEEP_NAME = CHOSEN_DATASET.value + '_' + CHOSEN_MODEL.value + '' if CHOSEN_DATASET == DatasetFamily.FI else \
-    CHOSEN_DATASET.value + '_' + CHOSEN_STOCKS[STK_OPEN.TRAIN].name + '_' + CHOSEN_STOCKS[STK_OPEN.TEST].name + '_' + CHOSEN_PERIOD.name + '_' + CHOSEN_MODEL.value + ''
+IS_WANDB = None
+
+SWEEP_NAME = None
+
 SWEEP_METRIC = {
     'goal': 'maximize',
     'name': ModelSteps.VALIDATION.value + Metrics.F1.value
 }
 SWEEP_METHOD = 'bayes'
+
+
+#
+# python -m src.main -data FI -period MARCH -model TRANSLOB -stock_train ALL -stock_test ALL -is_wandb 0
+#
