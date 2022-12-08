@@ -8,6 +8,7 @@ import src.config as co
 
 from src.data_preprocessing.LOB.LOBSTERDataBuilder import LOBSTERDataBuilder
 
+
 class LOBDataset(data.Dataset):
     """ Characterizes a dataset for PyTorch. """
 

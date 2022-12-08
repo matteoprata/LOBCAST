@@ -1,5 +1,6 @@
 from pprint import pprint
 
+import pandas as pd
 import pytorch_lightning as pl
 
 import torch
@@ -93,22 +94,23 @@ class NNEngine(pl.LightningModule):
             ys += y.tolist()
             loss_vals += [loss_val.item()]
 
-        cr = classification_report(ys, predictions, output_dict=True, zero_division=0)
-        accuracy = cr['accuracy']  # MICRO-F1
-        f1score = cr['macro avg']['f1-score']  # MACRO-F1
-        precision = cr['macro avg']['precision']  # MACRO-PRECISION
-        recall = cr['macro avg']['recall']  # MACRO-RECALL
+        self.__compute_cm(ys, predictions, model_step, 'ALL')
 
-        mcc = matthews_corrcoef(ys, predictions)
+        val_dict = self.__compute_metrics(ys, predictions, model_step, loss_vals, 'ALL')
 
-        val_dict = {
-            model_step.value + co.Metrics.LOSS.value: float(np.sum(loss_vals)),
-            model_step.value + co.Metrics.F1.value: float(f1score),
-            model_step.value + co.Metrics.PRECISION.value: float(precision),
-            model_step.value + co.Metrics.RECALL.value: float(recall),
-            model_step.value + co.Metrics.ACCURACY.value: float(accuracy),
-            model_step.value + co.Metrics.MCC.value: float(mcc)
-        }
+        df = pd.DataFrame(
+            list(zip(stock_names, predictions, ys)),
+            columns=['stock_names', 'predictions', 'ys']
+        )
+
+        if co.CHOSEN_STOCKS[co.STK_OPEN.TEST] == co.Stocks.ALL:
+            # computing metrics per stock
+            for si in co.CHOSEN_STOCKS[co.STK_OPEN.TEST].value:
+                df_si = df[df['Name'] == si]
+                ys = df_si['ys'].to_numpy()
+                predictions = df_si['predictions'].to_numpy()
+                val_dict.update(self.__compute_metrics(ys, predictions, model_step, loss_vals, si))
+                self.__compute_cm(ys, predictions, model_step, si)
 
         # for saving best model
         self.log(model_step.value + co.Metrics.F1.value, f1score, prog_bar=True)

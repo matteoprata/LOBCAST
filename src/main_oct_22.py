@@ -141,7 +141,6 @@ def prepare_data_LOBSTER():
     return lob_dm
 
 
-
 def lunch_training():
     lunch_string = "Lunching the execution of {} on {} dataset.".format(co.CHOSEN_MODEL, co.CHOSEN_DATASET)
     if co.CHOSEN_DATASET == co.DatasetFamily.LOBSTER:

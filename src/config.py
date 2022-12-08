@@ -202,17 +202,26 @@ HORIZON = 10
 
 TRAIN_SPLIT_VAL = .8
 
+
+class STK_OPEN(Enum):
+    """ The modalities associated to a list of stocks. """
+    # TODO rename
+    TRAIN = "train_mod"
+    TEST = "test_mod"
+
+
 CHOSEN_DATASET = DatasetFamily.FI
+
 CHOSEN_STOCKS = {
-    'train': Stocks.LYFT,
-    'test': Stocks.NVDA
+    STK_OPEN.TRAIN: Stocks.LYFT,
+    STK_OPEN.TEST: Stocks.NVDA
 }
 CHOSEN_PERIOD = Periods.MARCH2020
 CHOSEN_MODEL = Models.TRANSLOB
 
 IS_WANDB = True
 SWEEP_NAME = CHOSEN_DATASET.value + '_' + CHOSEN_MODEL.value + '' if CHOSEN_DATASET == DatasetFamily.FI else \
-    CHOSEN_DATASET.value + '_' + CHOSEN_STOCKS['train'].name + '_' + CHOSEN_STOCKS['test'].name + '_' + CHOSEN_PERIOD.name + '_' + CHOSEN_MODEL.value + ''
+    CHOSEN_DATASET.value + '_' + CHOSEN_STOCKS[STK_OPEN.TRAIN].name + '_' + CHOSEN_STOCKS[STK_OPEN.TEST].name + '_' + CHOSEN_PERIOD.name + '_' + CHOSEN_MODEL.value + ''
 SWEEP_METRIC = {
     'goal': 'maximize',
     'name': ModelSteps.VALIDATION.value + Metrics.F1.value
