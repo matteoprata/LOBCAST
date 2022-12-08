@@ -8,8 +8,10 @@ import argparse
 
 # TORCH
 from pytorch_lightning import Trainer
+from pytorch_lightning import seed_everything
 import src.models.model_callbacks as cbk
 from src.models.model_executor import NNEngine
+
 
 # DATASETS
 from src.data_preprocessing.FI.FIDataBuilder import FIDataBuilder
@@ -69,21 +71,21 @@ def prepare_data_FI():
         co.DATA_SOURCE + co.DATASET_FI,
         dataset_type=co.DatasetType.TRAIN,
         horizon=co.HORIZON,
-        window=co.BACKWARD_WINDOW
+        window=co.NUM_SNAPSHOTS
     )
 
     fi_val = FIDataBuilder(
         co.DATA_SOURCE + co.DATASET_FI,
         dataset_type=co.DatasetType.VALIDATION,
         horizon=co.HORIZON,
-        window=co.BACKWARD_WINDOW
+        window=co.NUM_SNAPSHOTS
     )
 
     fi_test = FIDataBuilder(
         co.DATA_SOURCE + co.DATASET_FI,
         dataset_type=co.DatasetType.TEST,
         horizon=co.HORIZON,
-        window=co.BACKWARD_WINDOW
+        window=co.NUM_SNAPSHOTS
     )
 
     train_set = FIDataset(x=fi_train.get_samples_x(), y=fi_train.get_samples_y())
@@ -152,6 +154,8 @@ def lunch_training():
         co.IS_SHUFFLE_INPUT = wandb.config.is_shuffle
         co.OPTIMIZER = wandb.config.optimizer
         co.LEARNING_RATE = wandb.config.lr
+        co.EPOCHS = wandb.config.epochs
+        co.NUM_SNAPSHOTS = wandb.config.num_snapshots
 
         if co.CHOSEN_DATASET == co.DatasetFamily.LOBSTER:
             co.BACKWARD_WINDOW = wandb.config.window_size_backward
@@ -308,6 +312,32 @@ def pick_model(chosen_model, data_module, remote_log):
         weight_decay=co.WEIGHT_DECAY,
         loss_weights=loss_weights,
         remote_log=remote_log).to(co.DEVICE_TYPE)
+
+
+def parser_cl_arguments():
+    """ Parses the arguments for the command line. """
+
+    parser = argparse.ArgumentParser(description='Stock Price Trend Prediction arguments:')
+
+    # python -m src.main_oct_22 -iw 0 -d LOBSTER -m MLP -p JULY2021 -str ALL -ste ALL
+
+    parser.add_argument('-iw', '--is_wandb',     default=co.IS_WANDB, type=int)
+    parser.add_argument('-d', '--data',          default=co.CHOSEN_DATASET.value)
+    parser.add_argument('-m', '--model',         default=co.CHOSEN_MODEL.value)
+    parser.add_argument('-p', '--period',        default=co.CHOSEN_PERIOD.value)
+    parser.add_argument('-str', '--stock_train', default=co.CHOSEN_STOCKS[co.STK_OPEN.TRAIN].value)
+    parser.add_argument('-ste', '--stock_test',  default=co.CHOSEN_STOCKS[co.STK_OPEN.TEST].value)
+
+    # Parsing arguments from cli
+    args = parser.parse_args()
+
+    # Setting args from cli in the config
+    co.CHOSEN_DATASET = co.DatasetFamily[args.data]
+    co.CHOSEN_PERIOD = co.Periods[args.period]
+    co.CHOSEN_MODEL = co.Models[args.model]
+    co.CHOSEN_STOCKS[co.STK_OPEN.TRAIN] = co.Stocks[args.stock_train]
+    co.CHOSEN_STOCKS[co.STK_OPEN.TEST] = co.Stocks[args.stock_test]
+    co.IS_WANDB = bool(args.is_wandb)
 
 
 if __name__ == "__main__":

@@ -10,5 +10,6 @@ hyperparameters_tabl = {
 
     co.TuningVars.BATCH_SIZE.value: {'values': [256]}, # [32, 64, 128]
     co.TuningVars.IS_SHUFFLE.value: {'values': [True]},
+    co.TuningVars.NUM_SNAPSHOTS.value: {'values': [10]},
 
 }

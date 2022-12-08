@@ -11,12 +11,4 @@ hyperparameters_fi = {
         co.Horizons.K10.value
     ]},
 
-    co.TuningVars.BACKWARD_WINDOW.value: {'values': [
-        #co.WinSize.SEC10.value,
-        #co.WinSize.SEC20.value,
-        #co.WinSize.SEC30.value,
-        #co.WinSize.SEC50.value,
-        co.WinSize.SEC100.value,
-    ]}
-
 }

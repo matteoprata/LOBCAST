@@ -20,11 +20,13 @@ class LOBDataset(data.Dataset):
             stockName2mu=dict(),
             stockName2sigma=dict(),
             num_classes=3,
+            num_snapshots=100,
             one_hot_encoding=False
     ):
         self.dataset_type = dataset_type
         self.stocks = stocks
         self.start_end_trading_day = start_end_trading_day
+        self.num_snapshots = num_snapshots
         self.num_classes = num_classes
 
         self.stockName2mu, self.stockName2sigma = stockName2mu, stockName2sigma
@@ -62,6 +64,7 @@ class LOBDataset(data.Dataset):
                 window_size_backward=co.BACKWARD_WINDOW,
                 normalization_mean=normalization_mean,
                 normalization_std=normalization_std,
+                num_snapshots=num_snapshots,
                 label_dynamic_scaler=co.LABELING_SIGMA_SCALER,
                 is_data_preload=co.IS_DATA_PRELOAD
             )

@@ -34,6 +34,8 @@ class TuningVars(Enum):
 
     FI_HORIZON = 'fi_horizon_k'
 
+    NUM_SNAPSHOTS = 'num_snapshots'
+
 
 class STK_OPEN(Enum):
     """ The modalities associated to a list of stocks. """
@@ -115,8 +117,10 @@ class DatasetFamily(Enum):
 
 class Stocks(Enum):
     AAPL = ["AAPL"]
-    AMAT = ["AMAT"]
-    ARVN = ["ARVN"]
+    TSLA = ["TSLA"]
+    ZM = ["ZM"]
+    AAWW = ["AAWW"]
+    AGNC = ["AGNC"]
     LYFT = ["LYFT"]
 
     ALL = ["AAPL", "TSLA", "ZM", "AAWW", "AGNC", "LYFT"]
@@ -230,8 +234,8 @@ CHOSEN_PERIOD = Periods.MARCH2020
 CHOSEN_MODEL = Models.TRANSLOB
 
 CHOSEN_STOCKS = {
-    STK_OPEN.TRAIN: Stocks.LYFT,
-    STK_OPEN.TEST: Stocks.NVDA
+    STK_OPEN.TRAIN: Stocks.ALL,
+    STK_OPEN.TEST: Stocks.ALL
 }
 
 IS_WANDB = None

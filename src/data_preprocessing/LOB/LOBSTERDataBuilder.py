@@ -15,23 +15,24 @@ from datetime import datetime
 
 class LOBSTERDataBuilder:
     def __init__(
-            self,
-            stock_name,
-            lobster_data_dir,
-            dataset_type,
-            n_lob_levels=co.N_LOB_LEVELS,
-            normalization_type=co.NormalizationType.Z_SCORE,
-            normalization_mean=None,
-            normalization_std=None,
-            start_end_trading_day=("1990-01-01", "2100-01-01"),
-            crop_trading_day_by=0,
-            window_size_forward=co.FORWARD_WINDOW,
-            window_size_backward=co.BACKWARD_WINDOW,
-            label_threshold_pos=None,
-            label_threshold_neg=None,
-            label_dynamic_scaler=None,
-            data_granularity=co.Granularity.Sec1,
-            is_data_preload=False
+        self,
+        stock_name,
+        lobster_data_dir,
+        dataset_type,
+        n_lob_levels=co.N_LOB_LEVELS,
+        normalization_type=co.NormalizationType.Z_SCORE,
+        normalization_mean=None,
+        normalization_std=None,
+        start_end_trading_day=("1990-01-01", "2100-01-01"),
+        crop_trading_day_by=0,
+        window_size_forward=co.FORWARD_WINDOW,
+        window_size_backward=co.BACKWARD_WINDOW,
+        num_snapshots=100,
+        label_threshold_pos=None,
+        label_threshold_neg=None,
+        label_dynamic_scaler=None,
+        data_granularity=co.Granularity.Sec1,
+        is_data_preload=co.IS_DATA_PRELOAD,
     ):
 
         self.dataset_type = dataset_type
@@ -50,6 +51,8 @@ class LOBSTERDataBuilder:
         self.window_size_backward = window_size_backward
         self.label_dynamic_scaler = label_dynamic_scaler
 
+        self.num_snapshots = num_snapshots
+
         self.label_threshold_pos = label_threshold_pos
         self.label_threshold_neg = label_threshold_neg
 
@@ -59,29 +62,33 @@ class LOBSTERDataBuilder:
             self.STOCK_NAME,
             self.start_end_trading_day[0],
             self.start_end_trading_day[1],
-            self.dataset_type.value,
-            self.window_size_backward,
-            self.window_size_forward,
-            self.label_dynamic_scaler
+            self.dataset_type.value
         )
 
         self.__data, self.__samples_x, self.__samples_y = None, None, None
-        self.__data_init()
+        self.__prepare_dataset()  # KEY CALL
 
     def __read_dataset(self):
-        """ Reads the dataset from the pickle (generates it in case). """
+        """ Reads the dataset from the pickle if they exist (generates it in case). Otherwise, it opens the trading files."""
+        exists = os.path.exists(co.DATA_PICKLES + self.F_NAME_PICKLE)
 
-        out_df = lbu.from_folder_to_unique_df(
-            co.DATA_SOURCE + self.lobster_dataset_name,
-            level=self.n_lob_levels,
-            granularity=self.data_granularity,
-            first_date=self.start_end_trading_day[0],
-            last_date=self.start_end_trading_day[1],
-            boundaries_purge=self.crop_trading_day_by
-        )
+        if self.is_data_preload and exists:
+            print("Reloaded, not recomputed, nice!")
+            self.__data = self.__deserialize_dataset()
+        else:
+            out_df = lbu.from_folder_to_unique_df(
+                co.DATA_SOURCE + self.lobster_dataset_name,
+                level=self.n_lob_levels,
+                granularity=self.data_granularity,
+                first_date=self.start_end_trading_day[0],
+                last_date=self.start_end_trading_day[1],
+                boundaries_purge=self.crop_trading_day_by
+            )
+            out_df = out_df.fillna(method="ffill")
+            self.__data = out_df
 
-        out_df = out_df.fillna(method="ffill")
-        self.__data = out_df
+        if self.is_data_preload and not exists:
+            self.__serialize_dataset()
 
     def __normalize_dataset(self):
         """ Does normalization. """
@@ -165,7 +172,7 @@ class LOBSTERDataBuilder:
     def __serialize_dataset(self):
         if not os.path.exists(co.DATA_PICKLES + self.F_NAME_PICKLE):
             print("Serialization...", self.F_NAME_PICKLE)
-            util.write_data((self.__data, self.__samples_x, self.__samples_y), co.DATA_PICKLES, self.F_NAME_PICKLE)
+            util.write_data(self.__data, co.DATA_PICKLES, self.F_NAME_PICKLE)
 
     def __deserialize_dataset(self):
         print("Deserialization...", self.F_NAME_PICKLE)
@@ -195,17 +202,7 @@ class LOBSTERDataBuilder:
     def __data_init(self):
         """ This method serializes and deserializes __data."""
 
-        if self.is_data_preload:
-            # TODO serialize based on the hash of the values of the parameters that this class uses
-            data = self.__deserialize_dataset()
-            if data is not None:
-                print("Reloaded, not recomputed, nice!")
-                self.__data, self.__samples_x, self.__samples_y = data
-            else:
-                self.__prepare_dataset()  # KEY call, generates the dataset
-                self.__serialize_dataset()
-        else:
-            self.__prepare_dataset()
+
 
     def get_samples_x(self, split=None):
         return self.__samples_x if split is None else np.split(self.__samples_x, split)
