@@ -74,12 +74,8 @@ class LOBDataset(data.Dataset):
 
         self.x_shape = tuple(self.x[0].shape)
 
-        print('stock2orderNlen:', self.stock2orderNlen)
-
-
         print()
         print()
-
 
         if one_hot_encoding:
             self.y = F.one_hot(self.y.to(torch.int64), num_classes=self.num_classes)
