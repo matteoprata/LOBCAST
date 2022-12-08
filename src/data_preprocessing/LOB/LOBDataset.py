@@ -30,7 +30,18 @@ class LOBDataset(data.Dataset):
         self.stockName2mu, self.stockName2sigma = stockName2mu, stockName2sigma
 
         stockName2databuilder = dict()
-        for stock in list(set(co.CHOSEN_STOCKS['train'].value + co.CHOSEN_STOCKS['test'].value)):
+
+        # Choose the stock names to open to build the specific dataset.
+        # No need to open all for test set, because mu/sig are pre-computed when prev opened train and dev
+        if dataset_type == co.DatasetType.TRAIN:
+            # we open also the TEST stock(s) to determine mu and sigma for normalization, needed for all
+            stocksToOpen = list(set(co.CHOSEN_STOCKS[co.STK_OPEN.TRAIN].value + co.CHOSEN_STOCKS[co.STK_OPEN.TEST].value))  # = [LYFT, NVDA]
+        elif dataset_type == co.DatasetType.VALIDATION:
+            stocksToOpen = co.CHOSEN_STOCKS[co.STK_OPEN.TRAIN].value  # = [LYFT]
+        elif dataset_type == co.DatasetType.TEST:
+            stocksToOpen = co.CHOSEN_STOCKS[co.STK_OPEN.TEST].value  # = [NVDA]
+
+        for stock in stocksToOpen:
 
             path = \
                 co.DATASET_LOBSTER + \
@@ -62,13 +73,13 @@ class LOBDataset(data.Dataset):
         print('stockName2sigma:', self.stockName2sigma)
 
         self.stock2orderNlen = dict()
-        self.x, self.y = list(), list()
-        for i, stock in enumerate(self.stocks):
+        self.x, self.y, self.stock_number_samples = list(), list(), list()
+        for stock in self.stocks:
             databuilder = stockName2databuilder[stock]
             samplesX, samplesY = databuilder.get_samples_x(), databuilder.get_samples_y()
-            self.stock2orderNlen[stock] = (i, len(samplesX))
             self.x.extend(samplesX)
             self.y.extend(samplesY)
+            self.stock_number_samples.append(len(samplesX))
 
         self.x = torch.from_numpy(np.array(self.x)).type(torch.FloatTensor)
         self.y = torch.from_numpy(np.array(self.y)).type(torch.LongTensor)
@@ -88,4 +99,7 @@ class LOBDataset(data.Dataset):
 
     def __getitem__(self, index):
         """ Generates samples of data. """
-        return self.x[index], self.y[index]
+        return self.x[index], self.y[index], self.__getStock(index)
+
+    def __getStock(self, index):
+        return self.stocks[np.searchsorted(self.stock_number_samples, index, side='left')]

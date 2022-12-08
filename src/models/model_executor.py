@@ -48,7 +48,7 @@ class NNEngine(pl.LightningModule):
         return logits
 
     def training_step(self, batch, batch_idx):
-        x, y = batch
+        x, y, _ = batch
         prediction = self(x)
         loss = self.loss_fn(prediction, y)
         return loss
@@ -77,21 +77,23 @@ class NNEngine(pl.LightningModule):
 
     # COMMON
     def __validation_and_testing(self, batch):
-        x, y = batch
+        x, y, stock_names = batch
         prediction = self(x)
         loss_val = self.loss_fn(prediction, y)
 
         # deriving prediction from softmax probs
         prediction_ind = torch.argmax(prediction, dim=1)
 
-        return prediction_ind, y, loss_val
+        return prediction_ind, y, loss_val, stock_names
 
     def __validation_and_testing_end(self, validation_step_outputs, model_step):
 
-        predictions, ys, loss_vals = [], [], []
-        for prediction, y, loss_val in validation_step_outputs:
-            predictions += prediction.tolist()
-            ys += y.tolist()
+        predictions, ys, loss_vals, stock_names = [], [], [], []
+        for predictions_b, y_b, loss_val, stock_name_b in validation_step_outputs:
+            predictions += predictions_b.tolist()
+            ys += y_b.tolist()
+            stock_names += stock_name_b
+            # loss is single per batch
             loss_vals += [loss_val.item()]
 
         self.__compute_cm(ys, predictions, model_step, 'ALL')
@@ -113,16 +115,42 @@ class NNEngine(pl.LightningModule):
                 self.__compute_cm(ys, predictions, model_step, si)
 
         # for saving best model
+        f1score = val_dict[model_step.value + "_ALL_" + co.Metrics.F1.value]
         self.log(model_step.value + co.Metrics.F1.value, f1score, prog_bar=True)
 
         if self.remote_log is not None:  # log to wandb
             self.remote_log.log(val_dict)
-            self.remote_log.log({model_step.value + "_conf_mat": wandb.plot.confusion_matrix(
+
+    def __compute_cm(self, ys, predictions, model_step, si):
+        if model_step == co.ModelSteps.TESTING and self.remote_log is not None:  # log to wandb
+            self.remote_log.log({model_step.value + f"_conf_mat_{si}": wandb.plot.confusion_matrix(
                 probs=None,
                 y_true=ys, preds=predictions,
                 class_names=co.CLASS_NAMES,
                 title=model_step.value + "_conf_mat")}
             )
+
+    def __compute_metrics(self, ys, predictions, model_step, loss_vals, si):
+
+        cr = classification_report(ys, predictions, output_dict=True, zero_division=0)
+        accuracy = cr['accuracy']  # MICRO-F1
+        f1score = cr['macro avg']['f1-score']  # MACRO-F1
+        precision = cr['macro avg']['precision']  # MACRO-PRECISION
+        recall = cr['macro avg']['recall']  # MACRO-RECALL
+
+        mcc = matthews_corrcoef(ys, predictions)
+
+        val_dict = {
+            model_step.value + f"_{si}_" + co.Metrics.F1.value: float(f1score),
+            model_step.value + f"_{si}_" + co.Metrics.PRECISION.value: float(precision),
+            model_step.value + f"_{si}_" + co.Metrics.RECALL.value: float(recall),
+            model_step.value + f"_{si}_" + co.Metrics.ACCURACY.value: float(accuracy),
+            model_step.value + f"_{si}_" + co.Metrics.MCC.value: float(mcc),
+            # single
+            model_step.value + f"__" + co.Metrics.LOSS.value: (float(np.sum(loss_vals)),)
+        }
+
+        return val_dict
 
     def configure_optimizers(self):
 
