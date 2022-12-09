@@ -96,38 +96,39 @@ class NNEngine(pl.LightningModule):
             # loss is single per batch
             loss_vals += [loss_val.item()]
 
-        self.__compute_cm(ys, predictions, model_step, 'ALL')
+        self.__compute_cm(ys, predictions, model_step, co.SRC_STOCK_NAME)                             # cm to log
+        val_dict = self.__compute_metrics(ys, predictions, model_step, loss_vals, co.SRC_STOCK_NAME)  # dict to log
 
-        val_dict = self.__compute_metrics(ys, predictions, model_step, loss_vals, 'ALL')
-
-        df = pd.DataFrame(
-            list(zip(stock_names, predictions, ys)),
-            columns=['stock_names', 'predictions', 'ys']
-        )
-
-        if co.CHOSEN_STOCKS[co.STK_OPEN.TEST] == co.Stocks.ALL:
+        if model_step == co.ModelSteps.TESTING and co.CHOSEN_STOCKS[co.STK_OPEN.TEST] == co.Stocks.ALL:
             # computing metrics per stock
+            df = pd.DataFrame(
+                list(zip(stock_names, predictions, ys)),
+                columns=['stock_names', 'predictions', 'ys']
+            )
+
             for si in co.CHOSEN_STOCKS[co.STK_OPEN.TEST].value:
-                df_si = df[df['Name'] == si]
+                df_si = df[df['stock_names'] == si]
                 ys = df_si['ys'].to_numpy()
                 predictions = df_si['predictions'].to_numpy()
                 val_dict.update(self.__compute_metrics(ys, predictions, model_step, loss_vals, si))
+
                 self.__compute_cm(ys, predictions, model_step, si)
 
         # for saving best model
-        f1score = val_dict[model_step.value + "_ALL_" + co.Metrics.F1.value]
-        self.log(model_step.value + co.Metrics.F1.value, f1score, prog_bar=True)
+        validation_string = model_step.value + "_{}_".format(co.SRC_STOCK_NAME) + co.Metrics.F1.value
+        self.log(validation_string, val_dict[validation_string], prog_bar=True)
 
         if self.remote_log is not None:  # log to wandb
             self.remote_log.log(val_dict)
 
     def __compute_cm(self, ys, predictions, model_step, si):
-        if model_step == co.ModelSteps.TESTING and self.remote_log is not None:  # log to wandb
-            self.remote_log.log({model_step.value + f"_conf_mat_{si}": wandb.plot.confusion_matrix(
+        if self.remote_log is not None:  # log to wandb
+            name = model_step.value + f"_conf_mat_{si}"
+            self.remote_log.log({name: wandb.plot.confusion_matrix(
                 probs=None,
                 y_true=ys, preds=predictions,
                 class_names=co.CLASS_NAMES,
-                title=model_step.value + "_conf_mat")}
+                title=name)}
             )
 
     def __compute_metrics(self, ys, predictions, model_step, loss_vals, si):

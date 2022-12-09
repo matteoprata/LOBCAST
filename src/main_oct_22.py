@@ -161,6 +161,7 @@ def lunch_training():
             co.BACKWARD_WINDOW = wandb.config.window_size_backward
             co.FORWARD_WINDOW = wandb.config.window_size_forward
             co.LABELING_SIGMA_SCALER = wandb.config.labeling_sigma_scaler
+
         elif co.CHOSEN_DATASET == co.DatasetFamily.FI:
             co.BACKWARD_WINDOW = wandb.config.window_size_backward
             co.HORIZON = wandb.config.fi_horizon_k
@@ -224,6 +225,7 @@ def lunch_training_sweep():
     )
     wandb.agent(sweep_id, function=lunch_training)  # count=4 max trials
     # wandb agent -p lob-adversarial-attacks-22 -e matteoprata rygxo9ti  to run sweeps in parallel
+
 
 def pick_dataset(datasetFamily):
     if datasetFamily == co.DatasetFamily.LOBSTER:
@@ -341,6 +343,13 @@ def parser_cl_arguments():
 
 
 if __name__ == "__main__":
+
+    # python -m src.main_oct_22 -iw 1 -d LOBSTER -m MLP -p JULY2021 -str ZM -ste ZM
+    # python -m src.main_oct_22 -iw 1 -d LOBSTER -m MLP -p JULY2021 -str ZM -ste AAWW
+    # python -m src.main_oct_22 -iw 1 -d LOBSTER -m MLP -p JULY2021 -str AAPL -ste AAPL
+    # python -m src.main_oct_22 -iw 1 -d LOBSTER -m MLP -p JULY2021 -str AAPL -ste TSLA
+    # python -m src.main_oct_22 -iw 1 -d LOBSTER -m MLP -p JULY2021 -str LYFT -ste LYFT
+    # python -m src.main_oct_22 -iw 1 -d LOBSTER -m MLP -p JULY2021 -str LYFT -ste AGNC
 
     # Reproducibility stuff
     seed_everything(co.SEED)

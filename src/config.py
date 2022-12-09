@@ -248,7 +248,7 @@ SWEEP_METRIC = {
 }
 SWEEP_METHOD = 'bayes'
 
-
+SRC_STOCK_NAME = "!SRC!"
 #
 # python -m src.main -data FI -period MARCH -model TRANSLOB -stock_train ALL -stock_test ALL -is_wandb 0
 #

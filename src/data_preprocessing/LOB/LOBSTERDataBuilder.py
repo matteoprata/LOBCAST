@@ -189,20 +189,15 @@ class LOBSTERDataBuilder:
         self.__snapshotting()
 
         occurrences = collections.Counter(self.__samples_y)
-        # print("Before undersampling:", self.dataset_type, occurrences)
+        print("Before undersampling:", self.dataset_type, occurrences)
 
         if not self.dataset_type == co.DatasetType.TEST:
             self.__under_sampling()
 
-        # occurrences = collections.Counter(self.__samples_y)
-        # print("After undersampling:", self.dataset_type, occurrences)
+        occurrences = collections.Counter(self.__samples_y)
+        print("After undersampling:", self.dataset_type, occurrences)
 
         # self.plot_dataset()
-
-    def __data_init(self):
-        """ This method serializes and deserializes __data."""
-
-
 
     def get_samples_x(self, split=None):
         return self.__samples_x if split is None else np.split(self.__samples_x, split)

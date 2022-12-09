@@ -35,19 +35,17 @@ class LOBDataset(data.Dataset):
 
         # Choose the stock names to open to build the specific dataset.
         # No need to open all for test set, because mu/sig are pre-computed when prev opened train and dev
+        stocksToOpen = None
         if dataset_type == co.DatasetType.TRAIN:
             # we open also the TEST stock(s) to determine mu and sigma for normalization, needed for all
             stocksToOpen = list(set(co.CHOSEN_STOCKS[co.STK_OPEN.TRAIN].value + co.CHOSEN_STOCKS[co.STK_OPEN.TEST].value))  # = [LYFT, NVDA]
         elif dataset_type == co.DatasetType.VALIDATION:
             stocksToOpen = co.CHOSEN_STOCKS[co.STK_OPEN.TRAIN].value  # = [LYFT]
         elif dataset_type == co.DatasetType.TEST:
-            stocksToOpen = co.CHOSEN_STOCKS[co.STK_OPEN.TEST].value  # = [NVDA]
+            stocksToOpen = co.CHOSEN_STOCKS[co.STK_OPEN.TEST].value   # = [NVDA]
 
         for stock in stocksToOpen:
-
-            path = \
-                co.DATASET_LOBSTER + \
-                f'_data_dwn_48_332__{stock}_{co.CHOSEN_PERIOD.value["train"][0]}_{co.CHOSEN_PERIOD.value["test"][1]}_10'
+            path = co.DATASET_LOBSTER + f'_data_dwn_48_332__{stock}_{co.CHOSEN_PERIOD.value["train"][0]}_{co.CHOSEN_PERIOD.value["test"][1]}_10'
 
             normalization_mean = stockName2mu[stock] if stock in stockName2mu else None
             normalization_std = stockName2sigma[stock] if stock in stockName2sigma else None
@@ -76,25 +74,26 @@ class LOBDataset(data.Dataset):
         print('stockName2sigma:', self.stockName2sigma)
 
         self.stock2orderNlen = dict()
-        self.x, self.y, self.stock_number_samples = list(), list(), list()
+        self.x, self.y, self.stock_sym_name = list(), list(), list()
         for stock in self.stocks:
+            print("Handling", stock, "for dataset", dataset_type)
             databuilder = stockName2databuilder[stock]
             samplesX, samplesY = databuilder.get_samples_x(), databuilder.get_samples_y()
             self.x.extend(samplesX)
             self.y.extend(samplesY)
-            self.stock_number_samples.append(len(samplesX))
+            self.stock_sym_name.extend([stock]*len(samplesY))
 
         self.x = torch.from_numpy(np.array(self.x)).type(torch.FloatTensor)
         self.y = torch.from_numpy(np.array(self.y)).type(torch.LongTensor)
 
         self.x_shape = tuple(self.x[0].shape)
 
+        # print(len(self.x), len(self.y), len(self.stock_sym_name))
         print()
         print()
 
         if one_hot_encoding:
             self.y = F.one_hot(self.y.to(torch.int64), num_classes=self.num_classes)
-
 
     def __len__(self):
         """ Denotes the total number of samples. """
@@ -102,7 +101,4 @@ class LOBDataset(data.Dataset):
 
     def __getitem__(self, index):
         """ Generates samples of data. """
-        return self.x[index], self.y[index], self.__getStock(index)
-
-    def __getStock(self, index):
-        return self.stocks[np.searchsorted(self.stock_number_samples, index, side='left')]
+        return self.x[index], self.y[index], self.stock_sym_name[index]
