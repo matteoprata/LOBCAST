@@ -242,13 +242,17 @@ IS_WANDB = None
 
 SWEEP_NAME = None
 
-SWEEP_METRIC = {
-    'goal': 'maximize',
-    'name': ModelSteps.VALIDATION.value + Metrics.F1.value
-}
+
 SWEEP_METHOD = 'bayes'
 
 SRC_STOCK_NAME = "!SRC!"
+SWEEP_METRIC_OPT = ModelSteps.VALIDATION.value + "_{}_".format(SRC_STOCK_NAME) + Metrics.F1.value
+
+SWEEP_METRIC = {
+    'goal': 'maximize',
+    'name': SWEEP_METRIC_OPT
+}
+
 #
 # python -m src.main -data FI -period MARCH -model TRANSLOB -stock_train ALL -stock_test ALL -is_wandb 0
 #

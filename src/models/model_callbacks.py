@@ -9,14 +9,14 @@ def fname_format(dataset_type, ml_model_name, monitor_var, run_name):
     if dataset_type == co.DatasetFamily.FI:
         return src
     elif dataset_type == co.DatasetFamily.LOBSTER:
-        return src + "_wb={}_wf={}_scale={}".format(co.BACKWARD_WINDOW, co.FORWARD_WINDOW, co.LABELING_SIGMA_SCALER)
+        return src + "wb={}_wf={}_scale={}".format(co.BACKWARD_WINDOW, co.FORWARD_WINDOW, co.LABELING_SIGMA_SCALER)
     else:
         print("Unhandled model name.")
         exit()
 
 
 def callback_save_model(dataset_type, ml_model_name, run_name):
-    monitor_var = co.ModelSteps.VALIDATION.value + "_{}_".format(co.SRC_STOCK_NAME) + co.Metrics.F1.value
+    monitor_var = co.SWEEP_METRIC_OPT
     check_point_callback = pl.callbacks.ModelCheckpoint(
         monitor=monitor_var,
         verbose=True,
@@ -30,7 +30,7 @@ def callback_save_model(dataset_type, ml_model_name, run_name):
 
 def early_stopping():
     """ Stops if models stops improving. """
-    monitor_var = co.ModelSteps.VALIDATION.value + "_{}_".format(co.SRC_STOCK_NAME) + co.Metrics.F1.value
+    monitor_var = co.SWEEP_METRIC_OPT
     return pl.callbacks.EarlyStopping(
         monitor=monitor_var,
         min_delta=0.00,

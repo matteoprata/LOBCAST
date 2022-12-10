@@ -197,7 +197,7 @@ def lunch_training():
         check_val_every_n_epoch=co.VALIDATE_EVERY,
         max_epochs=co.EPOCHS,
         callbacks=[
-            cbk.callback_save_model(co.CHOSEN_MODEL.value, run_name),
+            cbk.callback_save_model(co.CHOSEN_DATASET, co.CHOSEN_MODEL.value, run_name),
             cbk.early_stopping()
         ]
     )
