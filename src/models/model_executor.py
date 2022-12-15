@@ -64,16 +64,17 @@ class NNEngine(pl.LightningModule):
     def training_epoch_end(self, validation_step_outputs):
         losses = [el["loss"].item() for el in validation_step_outputs]
         sum_losses = float(np.sum(losses))
-        self.log(co.ModelSteps.TRAINING.value + co.Metrics.LOSS.value, sum_losses, prog_bar=True)
+        var_name = co.ModelSteps.TRAINING.value + co.Metrics.LOSS.value
+        self.log(var_name, sum_losses, prog_bar=True)
 
         if self.remote_log is not None:
-            self.remote_log.log({co.ModelSteps.TRAINING.value + co.Metrics.LOSS.value: sum_losses})
+            self.remote_log.log({var_name: sum_losses})
 
     def validation_epoch_end(self, validation_step_outputs):
         self.__validation_and_testing_end(validation_step_outputs, model_step=co.ModelSteps.VALIDATION)
 
-    def test_epoch_end(self, validation_step_outputs):
-        self.__validation_and_testing_end(validation_step_outputs, model_step=co.ModelSteps.TESTING)
+    def test_epoch_end(self, test_step_outputs):
+        self.__validation_and_testing_end(test_step_outputs, model_step=co.ModelSteps.TESTING)
 
     # COMMON
     def __validation_and_testing(self, batch):
@@ -116,7 +117,7 @@ class NNEngine(pl.LightningModule):
 
         # for saving best model
         validation_string = model_step.value + "_{}_".format(co.SRC_STOCK_NAME) + co.Metrics.F1.value
-        self.log(validation_string, val_dict[validation_string], prog_bar=True)
+        self.log(validation_string, val_dict[validation_string], prog_bar=True)   # validation_!SRC!_F1
 
         if self.remote_log is not None:  # log to wandb
             self.remote_log.log(val_dict)
@@ -148,7 +149,7 @@ class NNEngine(pl.LightningModule):
             model_step.value + f"_{si}_" + co.Metrics.ACCURACY.value: float(accuracy),
             model_step.value + f"_{si}_" + co.Metrics.MCC.value: float(mcc),
             # single
-            model_step.value + f"__" + co.Metrics.LOSS.value: (float(np.sum(loss_vals)),)
+            model_step.value + f"__" + co.Metrics.LOSS.value: float(np.sum(loss_vals)),
         }
 
         return val_dict
