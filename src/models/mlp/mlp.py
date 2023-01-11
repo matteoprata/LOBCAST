@@ -4,6 +4,7 @@
 import pytorch_lightning as pl
 from torch import nn
 
+
 class MLP(pl.LightningModule):
 
     def __init__(

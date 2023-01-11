@@ -1,17 +1,17 @@
 
-import src.config as co
+import src.constants as cst
 
 hyperparameters_tlb = {
 
-    co.TuningVars.EPOCHS.value: {'values': [100]},
+    cst.LearningHyperParameter.EPOCHS.value: {'values': [100]},
 
-    co.TuningVars.OPTIMIZER.value: {'values': [co.Optimizers.ADAM.value]},
-    co.TuningVars.LEARNING_RATE.value: {'values': [0.0001]},  # 'max': 0.001, 'min': 0.0001
-    co.TuningVars.WEIGHT_DECAY.value: {'values': [1e-5]},
+    cst.LearningHyperParameter.OPTIMIZER.value: {'values': [cst.Optimizers.ADAM.value]},
+    cst.LearningHyperParameter.LEARNING_RATE.value: {'values': [0.0001]},  # 'max': 0.001, 'min': 0.0001
+    cst.LearningHyperParameter.WEIGHT_DECAY.value: {'values': [1e-5]},
 
-    co.TuningVars.BATCH_SIZE.value: {'values': [32]},  # [32, 64, 128]
-    co.TuningVars.IS_SHUFFLE.value: {'values': [True]},
-    co.TuningVars.NUM_SNAPSHOTS.value: {'values': [100]},
+    cst.LearningHyperParameter.BATCH_SIZE.value: {'values': [32]},  # [32, 64, 128]
+    cst.LearningHyperParameter.IS_SHUFFLE.value: {'values': [True]},
+    cst.LearningHyperParameter.NUM_SNAPSHOTS.value: {'values': [100]},
 
 }
 

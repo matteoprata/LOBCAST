@@ -5,12 +5,13 @@ import pickle
 import src.data_preprocessing.preprocessing_utils as ppu
 import src.utils.utilities as util
 import src.utils.lob_util as lbu
-import src.config as co
+
 from enum import Enum
 import tqdm
 import collections
 import numpy as np
 from datetime import datetime
+import src.constants as cst
 
 
 class LOBSTERDataBuilder:
@@ -18,23 +19,24 @@ class LOBSTERDataBuilder:
         self,
         stock_name,
         lobster_data_dir,
+        config,
         dataset_type,
-        n_lob_levels=co.N_LOB_LEVELS,
-        normalization_type=co.NormalizationType.Z_SCORE,
+        n_lob_levels=None,
+        normalization_type=cst.NormalizationType.Z_SCORE,
         normalization_mean=None,
         normalization_std=None,
         start_end_trading_day=("1990-01-01", "2100-01-01"),
         crop_trading_day_by=0,
-        window_size_forward=co.FORWARD_WINDOW,
-        window_size_backward=co.BACKWARD_WINDOW,
+        window_size_forward=None,
+        window_size_backward=None,
         num_snapshots=100,
         label_threshold_pos=None,
         label_threshold_neg=None,
         label_dynamic_scaler=None,
-        data_granularity=co.Granularity.Sec1,
-        is_data_preload=co.IS_DATA_PRELOAD,
+        data_granularity=cst.Granularity.Sec1,
+        is_data_preload=None,
     ):
-
+        self.config = config
         self.dataset_type = dataset_type
         self.lobster_dataset_name = lobster_data_dir
         self.n_lob_levels = n_lob_levels
@@ -70,14 +72,14 @@ class LOBSTERDataBuilder:
 
     def __read_dataset(self):
         """ Reads the dataset from the pickle if they exist (generates it in case). Otherwise, it opens the trading files."""
-        exists = os.path.exists(co.DATA_PICKLES + self.F_NAME_PICKLE)
+        exists = os.path.exists(self.config.DATA_PICKLES + self.F_NAME_PICKLE)
 
         if self.is_data_preload and exists:
             print("Reloaded, not recomputed, nice!")
             self.__data = self.__deserialize_dataset()
         else:
             out_df = lbu.from_folder_to_unique_df(
-                co.DATA_SOURCE + self.lobster_dataset_name,
+                self.config.DATA_SOURCE + self.lobster_dataset_name,
                 level=self.n_lob_levels,
                 granularity=self.data_granularity,
                 first_date=self.start_end_trading_day[0],
@@ -92,7 +94,7 @@ class LOBSTERDataBuilder:
 
     def __normalize_dataset(self):
         """ Does normalization. """
-        if self.normalization_type == co.NormalizationType.Z_SCORE:
+        if self.normalization_type == cst.NormalizationType.Z_SCORE:
             # returns the mean and std, both for the price and for the volume
             self.__data, means_dicts, stds_dicts = ppu.stationary_normalize_data(
                 self.__data,
@@ -100,11 +102,11 @@ class LOBSTERDataBuilder:
                 self.normalization_stds)
 
             # the training dataset shares its normalization with the others
-            if self.dataset_type == co.DatasetType.TRAIN:
+            if self.dataset_type == cst.DatasetType.TRAIN:
                 self.normalization_means = means_dicts
                 self.normalization_stds = stds_dicts
 
-        elif self.normalization_type == co.NormalizationType.NONE:
+        elif self.normalization_type == cst.NormalizationType.NONE:
             pass
 
         # needed to update the mid-prices columns, after the normalization, mainly for visualization purposes
@@ -144,16 +146,12 @@ class LOBSTERDataBuilder:
         n_min_occ = occurrences[i_min_occ]                 # number of occurrences of the minority class
 
         indexes_chosen = []
-        for i in [co.Predictions.UPWARD.value, co.Predictions.STATIONARY.value, co.Predictions.DOWNWARD.value]:
+        for i in [co.Predictions.UPWARD.value, cst.Predictions.STATIONARY.value, cst.Predictions.DOWNWARD.value]:
             indexes = np.where(self.__samples_y == i)[0]
-            if len(indexes) < co.INSTANCES_LOWERBOUND:
-                print("The instance is not well formed, there are less than {} instances fo the class {} ({})."
-                      .format(co.INSTANCES_LOWERBOUND, i, len(indexes)))
-                self.__abort_generation()
-                return
+            assert len(indexes) >= self.config.INSTANCES_LOWERBOUND, "The instance is not well formed, there are less than " \
+                   "{} instances for the class {} ({}).".format(self.config.INSTANCES_LOWERBOUND, i, len(indexes))
 
-            indexes_chosen += list(co.RANDOM_GEN_DATASET.choice(indexes, n_min_occ, replace=False))
-
+            indexes_chosen += list(self.config.RANDOM_GEN_DATASET.choice(indexes, n_min_occ, replace=False))
         indexes_chosen = np.sort(indexes_chosen)
         self.__samples_x = self.__samples_x[indexes_chosen]
         self.__samples_y = self.__samples_y[indexes_chosen]
@@ -170,13 +168,13 @@ class LOBSTERDataBuilder:
         self.__data, self.__samples_x, self.__samples_y = None, None, None
 
     def __serialize_dataset(self):
-        if not os.path.exists(co.DATA_PICKLES + self.F_NAME_PICKLE):
+        if not os.path.exists(self.config.DATA_PICKLES + self.F_NAME_PICKLE):
             print("Serialization...", self.F_NAME_PICKLE)
-            util.write_data(self.__data, co.DATA_PICKLES, self.F_NAME_PICKLE)
+            util.write_data(self.__data, self.config.DATA_PICKLES, self.F_NAME_PICKLE)
 
     def __deserialize_dataset(self):
         print("Deserialization...", self.F_NAME_PICKLE)
-        out = util.read_data(co.DATA_PICKLES + self.F_NAME_PICKLE)
+        out = util.read_data(self.config.DATA_PICKLES + self.F_NAME_PICKLE)
         return out
 
     def __prepare_dataset(self):
@@ -191,7 +189,7 @@ class LOBSTERDataBuilder:
         occurrences = collections.Counter(self.__samples_y)
         print("Before undersampling:", self.dataset_type, occurrences)
 
-        if not self.dataset_type == co.DatasetType.TEST:
+        if not self.dataset_type == cst.DatasetType.TEST:
             self.__under_sampling()
 
         occurrences = collections.Counter(self.__samples_y)

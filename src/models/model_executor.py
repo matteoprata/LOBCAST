@@ -11,13 +11,16 @@ from sklearn.metrics import matthews_corrcoef
 
 
 import numpy as np
-import src.config as co
+import src.constants as cst
 import wandb
+from src.config import Configuration
+
 
 class NNEngine(pl.LightningModule):
 
     def __init__(
         self,
+        config: Configuration,
         model_type,
         neural_architecture,
         optimizer,
@@ -27,8 +30,9 @@ class NNEngine(pl.LightningModule):
         remote_log=None
     ):
         super().__init__()
-        assert optimizer == co.Optimizers.ADAM.value or optimizer == co.Optimizers.RMSPROP.value
+        assert optimizer == cst.Optimizers.ADAM.value or optimizer == cst.Optimizers.RMSPROP.value
 
+        self.config = config
         self.remote_log = remote_log
 
         self.model_type = model_type
@@ -64,17 +68,17 @@ class NNEngine(pl.LightningModule):
     def training_epoch_end(self, validation_step_outputs):
         losses = [el["loss"].item() for el in validation_step_outputs]
         sum_losses = float(np.sum(losses))
-        var_name = co.ModelSteps.TRAINING.value + co.Metrics.LOSS.value
+        var_name = cst.ModelSteps.TRAINING.value + cst.Metrics.LOSS.value
         self.log(var_name, sum_losses, prog_bar=True)
 
         if self.remote_log is not None:
             self.remote_log.log({var_name: sum_losses})
 
     def validation_epoch_end(self, validation_step_outputs):
-        self.__validation_and_testing_end(validation_step_outputs, model_step=co.ModelSteps.VALIDATION)
+        self.__validation_and_testing_end(validation_step_outputs, model_step=cst.ModelSteps.VALIDATION)
 
     def test_epoch_end(self, test_step_outputs):
-        self.__validation_and_testing_end(test_step_outputs, model_step=co.ModelSteps.TESTING)
+        self.__validation_and_testing_end(test_step_outputs, model_step=cst.ModelSteps.TESTING)
 
     # COMMON
     def __validation_and_testing(self, batch):
@@ -97,17 +101,17 @@ class NNEngine(pl.LightningModule):
             # loss is single per batch
             loss_vals += [loss_val.item()]
 
-        self.__compute_cm(ys, predictions, model_step, co.SRC_STOCK_NAME)                             # cm to log
-        val_dict = self.__compute_metrics(ys, predictions, model_step, loss_vals, co.SRC_STOCK_NAME)  # dict to log
+        self.__compute_cm(ys, predictions, model_step, self.config.SRC_STOCK_NAME)                             # cm to log
+        val_dict = self.__compute_metrics(ys, predictions, model_step, loss_vals, self.config.SRC_STOCK_NAME)  # dict to log
 
-        if model_step == co.ModelSteps.TESTING and co.CHOSEN_STOCKS[co.STK_OPEN.TEST] == co.Stocks.ALL:
+        if model_step == cst.ModelSteps.TESTING and self.config.CHOSEN_STOCKS[cst.STK_OPEN.TEST] == cst.Stocks.ALL:
             # computing metrics per stock
             df = pd.DataFrame(
                 list(zip(stock_names, predictions, ys)),
                 columns=['stock_names', 'predictions', 'ys']
             )
 
-            for si in co.CHOSEN_STOCKS[co.STK_OPEN.TEST].value:
+            for si in self.config.CHOSEN_STOCKS[cst.STK_OPEN.TEST].value:
                 df_si = df[df['stock_names'] == si]
                 ys = df_si['ys'].to_numpy()
                 predictions = df_si['predictions'].to_numpy()
@@ -116,7 +120,7 @@ class NNEngine(pl.LightningModule):
                 self.__compute_cm(ys, predictions, model_step, si)
 
         # for saving best model
-        validation_string = model_step.value + "_{}_".format(co.SRC_STOCK_NAME) + co.Metrics.F1.value
+        validation_string = model_step.value + "_{}_".format(self.config.SRC_STOCK_NAME) + cst.Metrics.F1.value
         self.log(validation_string, val_dict[validation_string], prog_bar=True)   # validation_!SRC!_F1
 
         if self.remote_log is not None:  # log to wandb
@@ -128,7 +132,7 @@ class NNEngine(pl.LightningModule):
             self.remote_log.log({name: wandb.plot.confusion_matrix(
                 probs=None,
                 y_true=ys, preds=predictions,
-                class_names=co.CLASS_NAMES,
+                class_names=self.config.CLASS_NAMES,
                 title=name)}
             )
 
@@ -143,20 +147,20 @@ class NNEngine(pl.LightningModule):
         mcc = matthews_corrcoef(ys, predictions)
 
         val_dict = {
-            model_step.value + f"_{si}_" + co.Metrics.F1.value: float(f1score),
-            model_step.value + f"_{si}_" + co.Metrics.PRECISION.value: float(precision),
-            model_step.value + f"_{si}_" + co.Metrics.RECALL.value: float(recall),
-            model_step.value + f"_{si}_" + co.Metrics.ACCURACY.value: float(accuracy),
-            model_step.value + f"_{si}_" + co.Metrics.MCC.value: float(mcc),
+            model_step.value + f"_{si}_" + cst.Metrics.F1.value: float(f1score),
+            model_step.value + f"_{si}_" + cst.Metrics.PRECISION.value: float(precision),
+            model_step.value + f"_{si}_" + cst.Metrics.RECALL.value: float(recall),
+            model_step.value + f"_{si}_" + cst.Metrics.ACCURACY.value: float(accuracy),
+            model_step.value + f"_{si}_" + cst.Metrics.MCC.value: float(mcc),
             # single
-            model_step.value + f"__" + co.Metrics.LOSS.value: float(np.sum(loss_vals)),
+            model_step.value + f"__" + cst.Metrics.LOSS.value: float(np.sum(loss_vals)),
         }
 
         return val_dict
 
     def configure_optimizers(self):
 
-        if self.model_type == co.Models.DAIN:
+        if self.model_type == cst.Models.DAIN:
             return torch.optim.RMSprop([
                 {'params': self.neural_architecture.base.parameters()},
                 {'params': self.neural_architecture.dean.mean_layer.parameters(), 'lr': self.lr*self.neural_architecture.dean.mean_lr},
@@ -164,7 +168,7 @@ class NNEngine(pl.LightningModule):
                 {'params': self.neural_architecture.dean.gating_layer.parameters(), 'lr': self.lr*self.neural_architecture.dean.gate_lr},
             ], lr=self.lr)
 
-        if self.optimizer == co.Optimizers.ADAM.value:
+        if self.optimizer == cst.Optimizers.ADAM.value:
             return torch.optim.Adam(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
-        elif self.optimizer == co.Optimizers.RMSPROP.value:
+        elif self.optimizer == cst.Optimizers.RMSPROP.value:
             return torch.optim.RMSprop(self.parameters(), lr=self.lr)

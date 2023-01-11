@@ -1,30 +1,30 @@
 
-import src.config as co
+import src.constants as cst
 
 hyperparameters_lobster = {
 
-    co.TuningVars.BACKWARD_WINDOW.value: {
+    cst.LearningHyperParameter.BACKWARD_WINDOW.value: {
         'values': [
             # co.WinSize.SEC10.value,
             # co.WinSize.SEC20.value,
             # co.WinSize.SEC30.value,
-            co.WinSize.SEC50.value,
-            co.WinSize.SEC100.value
+            cst.WinSize.SEC50.value,
+            cst.WinSize.SEC100.value
             ]
     },
 
-    co.TuningVars.FORWARD_WINDOW.value: {
+    cst.LearningHyperParameter.FORWARD_WINDOW.value: {
         'values': [
-            co.WinSize.SEC10.value,
-            co.WinSize.SEC20.value,
+            cst.WinSize.SEC10.value,
+            cst.WinSize.SEC20.value,
             # co.WinSize.SEC30.value,
             # co.WinSize.SEC50.value,
             # co.WinSize.SEC100.value
         ]
     },
 
-    co.TuningVars.LABELING_SIGMA_SCALER.value: {
-        'values': [0.1, 0.25, 0.5, 0.75]
+    cst.LearningHyperParameter.LABELING_SIGMA_SCALER.value: {
+        'min': 0.1, 'max': 2.0  # 'values': [0.1, 0.25, 0.5, 0.75]
     },
 
 }

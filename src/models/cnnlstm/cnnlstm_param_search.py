@@ -1,20 +1,20 @@
 
-import src.config as co
+import src.constants as cst
 
 hyperparameters_cnnlstm = {
 
-    co.TuningVars.EPOCHS.value: {'values': [100]},
-    co.TuningVars.OPTIMIZER.value: {'values': [co.Optimizers.RMSPROP.value]},
-    co.TuningVars.LEARNING_RATE.value: {'max': 0.001, 'min': 0.0001},  # 'max': 0.001, 'min': 0.0001
+    cst.LearningHyperParameter.EPOCHS.value: {'values': [100]},
+    cst.LearningHyperParameter.OPTIMIZER.value: {'values': [cst.Optimizers.RMSPROP.value]},
+    cst.LearningHyperParameter.LEARNING_RATE.value: {'max': 0.001, 'min': 0.0001},  # 'max': 0.001, 'min': 0.0001
 
-    co.TuningVars.BATCH_SIZE.value: {'values': [16, 32, 64]},  # [32, 64, 128]
-    co.TuningVars.IS_SHUFFLE.value: {'values': [True]},
-    co.TuningVars.NUM_SNAPSHOTS.value: {'values': [100]},
+    cst.LearningHyperParameter.BATCH_SIZE.value: {'values': [16, 32, 64]},  # [32, 64, 128]
+    cst.LearningHyperParameter.IS_SHUFFLE.value: {'values': [True]},
+    cst.LearningHyperParameter.NUM_SNAPSHOTS.value: {'values': [100]},
 
-    co.TuningVars.LSTM_HIDDEN.value: {'values': [32]},
-    co.TuningVars.LSTM_N_HIDDEN.value: {'values': [1]},
-    co.TuningVars.MLP_HIDDEN.value: {'values': [32, 64]},
+    cst.LearningHyperParameter.LSTM_HIDDEN.value: {'values': [32]},
+    cst.LearningHyperParameter.LSTM_N_HIDDEN.value: {'values': [1]},
+    cst.LearningHyperParameter.MLP_HIDDEN.value: {'values': [32, 64]},
 
-    co.TuningVars.P_DROPOUT.value: {'values': [0.1, 0.2, 0.3]},
+    cst.LearningHyperParameter.P_DROPOUT.value: {'values': [0.1, 0.2, 0.3]},
 
 }

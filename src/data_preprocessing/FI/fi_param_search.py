@@ -1,14 +1,14 @@
 
-import src.config as co
+import src.constants as cst
 
 hyperparameters_fi = {
 
-    co.TuningVars.FI_HORIZON.value: {'values': [
-        co.Horizons.K1.value,
-        co.Horizons.K2.value,
-        co.Horizons.K3.value,
-        co.Horizons.K5.value,
-        co.Horizons.K10.value
+        cst.LearningHyperParameter.FI_HORIZON.value: {'values': [
+        cst.Horizons.K1.value,
+        cst.Horizons.K2.value,
+        cst.Horizons.K3.value,
+        cst.Horizons.K5.value,
+        cst.Horizons.K10.value
     ]},
 
 }

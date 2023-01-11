@@ -5,6 +5,7 @@ import pytorch_lightning as pl
 import torch
 from torch import nn
 
+
 class CNNLSTM(pl.LightningModule):
     def __init__(self, num_features, num_classes, batch_size, seq_len, hidden_size, num_layers, hidden_mlp, p_dropout):
         super().__init__()

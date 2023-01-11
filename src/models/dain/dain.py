@@ -5,6 +5,7 @@ import pytorch_lightning as pl
 import torch.nn as nn
 from src.models.dain.dain_layer import DAIN_Layer
 
+
 class DAIN(pl.LightningModule):
 
     def __init__(

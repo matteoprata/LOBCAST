@@ -65,8 +65,8 @@ def add_lob_labels(data, window_size_forward, window_size_backward, label_thresh
     data[DataCols.PERCENTAGE_CHANGE.value] = get_percentage_change(data, DataCols.MID_PRICE_PAST.value, DataCols.MID_PRICE_FUTURE.value)
     ratio_mu, ratio_si = data[DataCols.PERCENTAGE_CHANGE.value].mean(), data[DataCols.PERCENTAGE_CHANGE.value].std()
 
-    #pd.DataFrame(data[DataCols.PERCENTAGE_CHANGE.value]).hist(bins=100)
-    #plt.show()
+    # pd.DataFrame(data[DataCols.PERCENTAGE_CHANGE.value]).hist(bins=100)
+    # plt.show()
 
     label_threshold_pos = (ratio_mu + ratio_si * sigma_fraction) if sigma_fraction is not None else label_threshold_pos
     label_threshold_neg = (ratio_mu - ratio_si * sigma_fraction) if sigma_fraction is not None else label_threshold_neg

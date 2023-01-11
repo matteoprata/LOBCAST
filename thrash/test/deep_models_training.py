@@ -18,7 +18,7 @@ from src.models.cnn2.cnn2 import CNN2
 from src.models.lstm.lstm import LSTM
 from src.models.deeplob.deeplob import DeepLob
 from src.models.cnnlstm.cnnlstm import CNNLSTM
-from src.utils.lobdataset import LOBDataset, DEEPDataset
+from thrash.lobdataset import LOBDataset, DEEPDataset
 
 
 def load_data(batch_size, horizon, base_lob_dts, type_model, polluded) -> tuple:

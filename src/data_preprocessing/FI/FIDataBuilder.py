@@ -1,6 +1,6 @@
 import collections
 
-import src.config as co
+import src.constants as cst
 import numpy as np
 import tqdm
 
@@ -12,9 +12,9 @@ class FIDataBuilder:
             self,
             fi_data_dir,
             dataset_type,
-            train_val_split=co.TRAIN_SPLIT_VAL,
+            train_val_split=None,
             auction=False,
-            normalization_type=co.NormalizationType.Z_SCORE,
+            normalization_type=cst.NormalizationType.Z_SCORE,
             horizon=10,
             window=100,
     ):
@@ -37,23 +37,23 @@ class FIDataBuilder:
         """ Reads the dataset from the FI files. """
 
         AUCTION = 'Auction' if self.auction else 'NoAuction'
-        N = '1.' if self.normalization_type == co.NormalizationType.Z_SCORE else '2.' if self.normalization_type == co.NormalizationType.MINMAX else '3.'
-        NORMALIZATION = 'Zscore' if self.normalization_type == co.NormalizationType.Z_SCORE else 'MinMax' if self.normalization_type == co.NormalizationType.MINMAX else 'DecPre'
-        DATASET_TYPE = 'Training' if self.dataset_type == co.DatasetType.TRAIN else 'Testing'
+        N = '1.' if self.normalization_type == cst.NormalizationType.Z_SCORE else '2.' if self.normalization_type == cst.NormalizationType.MINMAX else '3.'
+        NORMALIZATION = 'Zscore' if self.normalization_type == cst.NormalizationType.Z_SCORE else 'MinMax' if self.normalization_type == cst.NormalizationType.MINMAX else 'DecPre'
+        DATASET_TYPE = 'Training' if self.dataset_type == cst.DatasetType.TRAIN else 'Testing'
         DIR = self.fi_data_dir + \
                  "/{}".format(AUCTION) + \
                  "/{}{}_{}".format(N, AUCTION, NORMALIZATION) + \
                  "/{}_{}_{}".format(AUCTION, NORMALIZATION, DATASET_TYPE)
 
-        NORMALIZATION = 'ZScore' if self.normalization_type == co.NormalizationType.Z_SCORE else 'MinMax' if self.normalization_type == co.NormalizationType.MINMAX else 'DecPre'
-        DATASET_TYPE = 'Train' if self.dataset_type == co.DatasetType.TRAIN else 'Test'
+        NORMALIZATION = 'ZScore' if self.normalization_type == cst.NormalizationType.Z_SCORE else 'MinMax' if self.normalization_type == co.NormalizationType.MINMAX else 'DecPre'
+        DATASET_TYPE = 'Train' if self.dataset_type == cst.DatasetType.TRAIN else 'Test'
 
         F_EXTENSION = '.txt'
 
 
         # if it is training time, we open the 7-days training file
         # if it is testing time, we open the 3 test files
-        if self.dataset_type == co.DatasetType.TRAIN or self.dataset_type == co.DatasetType.VALIDATION:
+        if self.dataset_type == cst.DatasetType.TRAIN or self.dataset_type == cst.DatasetType.VALIDATION:
 
             F_NAME = DIR + \
                      '/{}_Dst_{}_{}_CF_7'.format(DATASET_TYPE, AUCTION, NORMALIZATION) + \
@@ -63,9 +63,9 @@ class FIDataBuilder:
 
             out_df = np.loadtxt(F_NAME)
 
-            if self.dataset_type == co.DatasetType.TRAIN:
+            if self.dataset_type == cst.DatasetType.TRAIN:
                 out_df = out_df[:, :int(np.floor(out_df.shape[1] * self.train_val_split))]
-            elif self.dataset_type == co.DatasetType.VALIDATION:
+            elif self.dataset_type == cst.DatasetType.VALIDATION:
                 out_df = out_df[:, :int(np.floor(out_df.shape[1] * (1-self.train_val_split)))]
 
         else:
