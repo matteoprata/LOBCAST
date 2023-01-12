@@ -47,7 +47,7 @@ class LOBDataset(data.Dataset):
             stocksToOpen = config.CHOSEN_STOCKS[cst.STK_OPEN.TEST].value   # = [NVDA]
 
         for stock in stocksToOpen:
-            path = config.DATASET_LOBSTER + f'_data_dwn_48_332__{stock}_{config.CHOSEN_PERIOD.value["train"][0]}_{config.CHOSEN_PERIOD.value["test"][1]}_10'
+            path = cst.DATASET_LOBSTER + f'_data_dwn_48_332__{stock}_{config.CHOSEN_PERIOD.value["train"][0]}_{config.CHOSEN_PERIOD.value["test"][1]}_10'
 
             normalization_mean = stockName2mu[stock] if stock in stockName2mu else None
             normalization_std = stockName2sigma[stock] if stock in stockName2sigma else None
@@ -58,16 +58,16 @@ class LOBDataset(data.Dataset):
                 stock,
                 path,
                 config=config,
-                n_lob_levels=config.N_LOB_LEVELS,
+                n_lob_levels=cst.N_LOB_LEVELS,
                 dataset_type=dataset_type,
                 start_end_trading_day=start_end_trading_day,
                 crop_trading_day_by=60*30,
-                window_size_forward=config.FORWARD_WINDOW,
-                window_size_backward=config.BACKWARD_WINDOW,
+                window_size_forward=config.HYPER_PARAMETERS[cst.LearningHyperParameter.FORWARD_WINDOW],
+                window_size_backward=config.HYPER_PARAMETERS[cst.LearningHyperParameter.BACKWARD_WINDOW],
                 normalization_mean=normalization_mean,
                 normalization_std=normalization_std,
                 num_snapshots=num_snapshots,
-                label_dynamic_scaler=config.LABELING_SIGMA_SCALER,
+                label_dynamic_scaler=config.HYPER_PARAMETERS[cst.LearningHyperParameter.LABELING_SIGMA_SCALER],
                 is_data_preload=config.IS_DATA_PRELOAD
             )
 

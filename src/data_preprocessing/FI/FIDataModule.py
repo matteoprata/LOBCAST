@@ -1,10 +1,9 @@
 import torch
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
-import src.config as co
 
 from pprint import pprint
-
+import src.constants as cst
 
 
 class FIDataModule(pl.LightningDataModule):
@@ -23,7 +22,7 @@ class FIDataModule(pl.LightningDataModule):
         self.x_shape = self.train_set.x_shape
         self.num_classes = self.train_set.num_classes
 
-        self.pin_memory = True if co.DEVICE_TYPE == 'cuda' else False
+        self.pin_memory = True if cst.DEVICE_TYPE == 'cuda' else False
 
     def setup(self, stage=None):
         pass

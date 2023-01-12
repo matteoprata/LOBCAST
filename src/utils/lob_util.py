@@ -14,11 +14,12 @@ from datetime import datetime, timedelta
 from collections import Counter
 from plotly import graph_objs as go
 
-import src.config as config
+import src.constants as cst
 
 # ---- DATASET CONVERTION ----
 
 # txt to lob
+
 
 def f1_file_dataset_to_lob_df(dataset_filename : str, label_type : int =4):
     """ The function load the data from dataset_filename
@@ -216,7 +217,7 @@ def plot_candlestick(df: pd.DataFrame, filename: str = None, plot: bool = True) 
     fig.write_html("prova.html")
 
 
-def candlestick_from_7z(sym_7z: str, startdate: str, lastdate: str, granularity: config.Granularity) -> None:
+def candlestick_from_7z(sym_7z: str, startdate: str, lastdate: str, granularity: cst.Granularity) -> None:
     """ use plotly to plot candle stick
 
         the input df should contains: date, open, high, low, close
@@ -232,7 +233,7 @@ def candlestick_test() -> None:
     start_date = datetime.strptime("06.02.2018", "%d.%m.%Y")
     df_o = pd.read_csv("old_data/lobster_data/AAPL_2020-10-07_34200000_57600000_orderbook_1.csv")
     df_m = pd.read_csv("old_data/lobster_data/AAPL_2020-10-07_34200000_57600000_message_1.csv")
-    gd.lobster_to_ohlc(df_m, df_o, start_date, granularity=config.Granularity.Min5, plot=True)
+    gd.lobster_to_ohlc(df_m, df_o, start_date, granularity=cst.Granularity.Min5, plot=True)
 
 
 def plot_all_test() -> None:
@@ -240,15 +241,15 @@ def plot_all_test() -> None:
     start_date = datetime.strptime("06.02.2018", "%d.%m.%Y")
     df_o = pd.read_csv("old_data/lobster_data/AAPL_2020-10-07_34200000_57600000_orderbook_1.csv")
     df_m = pd.read_csv("old_data/lobster_data/AAPL_2020-10-07_34200000_57600000_message_1.csv")
-    df_1 = gd.lobster_to_ohlc(df_m, df_o, start_date, granularity=config.Granularity.Min1)
+    df_1 = gd.lobster_to_ohlc(df_m, df_o, start_date, granularity=cst.Granularity.Min1)
 
     df_o = pd.read_csv("old_data/lobster_data/TAP_2018-02-06_34200000_57600000_orderbook_1.csv")
     df_m = pd.read_csv("old_data/lobster_data/TAP_2018-02-06_34200000_57600000_message_1.csv")
-    df_2 = gd.lobster_to_ohlc(df_m, df_o, start_date, granularity=config.Granularity.Min1)
+    df_2 = gd.lobster_to_ohlc(df_m, df_o, start_date, granularity=cst.Granularity.Min1)
 
     df_o = pd.read_csv("old_data/lobster_data/TSLA_2018-09-07_34200000_57600000_orderbook_1.csv")
     df_m = pd.read_csv("old_data/lobster_data/TSLA_2018-09-07_34200000_57600000_message_1.csv")
-    df_3 = gd.lobster_to_ohlc(df_m, df_o, start_date, granularity=config.Granularity.Min1)
+    df_3 = gd.lobster_to_ohlc(df_m, df_o, start_date, granularity=cst.Granularity.Min1)
 
     plot_symbols([(df_1, "apple"), (df_2, "tap"), (df_3, "tesla")])
 
@@ -292,7 +293,7 @@ def from_folder_to_unique_df(
         last_date:  str = "2100-01-01",
         plot: bool = False, level: int = 10,
         path: str = "",
-        granularity: config.Granularity = config.Granularity.Sec1,
+        granularity: cst.Granularity = cst.Granularity.Sec1,
         add_messages=False,
         boundaries_purge=0):
     """ return a unique df with also the label
@@ -376,7 +377,7 @@ def read_sub_routine(file_7z: str, first_date: str = "1990-01-01",
 
 def lobster_to_sec_df_from_files(message_file, orderbook_file,
                                  datetime_str="01.10.2020",
-                                 granularity: config.Granularity = config.Granularity.Sec1):
+                                 granularity: cst.Granularity = cst.Granularity.Sec1):
     """ create a dataframe with midprices, sell and buy for each second
 
         message_file : a csv file with the messages (lobster old_data format) without initial start lob
@@ -397,7 +398,7 @@ def lobster_to_gran_df(
         message_df,
         orderbook_df,
         datetime_start: datetime,
-        granularity: config.Granularity = config.Granularity.Sec1,
+        granularity: cst.Granularity = cst.Granularity.Sec1,
         level: int = 10,
         add_messages=False,
         boundaries_purge=0
@@ -425,7 +426,7 @@ def lobster_to_gran_df(
 
     if 'Events' in granularity.name or (add_messages and granularity is None):
         orderbook_df[message_df.columns] = message_df[message_df.columns]
-        accepted_orders = [o.value for o in (config.OrderEvent.EXECUTION, config.OrderEvent.SUBMISSION, config.OrderEvent.HIDDEN_EXECUTION)]
+        accepted_orders = [o.value for o in (cst.OrderEvent.EXECUTION, cst.OrderEvent.SUBMISSION, cst.OrderEvent.HIDDEN_EXECUTION)]
         orderbook_df = orderbook_df[orderbook_df["event_type"].isin(accepted_orders)]
 
     if 'Events' in granularity.name:
@@ -437,7 +438,7 @@ def lobster_to_gran_df(
             orderbook_df = orderbook_df.resample(granularity.value).first()
             orderbook_df.reset_index(inplace=True)
 
-    assert not boundaries_purge > 0 or granularity == config.Granularity.Sec1, "Unhandled boundaries_purge."
+    assert not boundaries_purge > 0 or granularity == cst.Granularity.Sec1, "Unhandled boundaries_purge."
 
     orderbook_df = orderbook_df.sort_values(by="date").reset_index(drop=True).copy()
     orderbook_df.drop(columns=['seconds'], inplace=True)

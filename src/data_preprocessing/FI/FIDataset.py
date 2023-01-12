@@ -3,8 +3,9 @@
 from torch.utils import data
 import torch.nn.functional as F
 import torch
+import src.constants as cst
 import numpy as np
-import src.config as co
+
 
 class FIDataset(data.Dataset):
     """ Characterizes a dataset for PyTorch. """
@@ -26,4 +27,4 @@ class FIDataset(data.Dataset):
 
     def __getitem__(self, index):
         """ Generates samples of data. """
-        return self.x[index], self.y[index]
+        return self.x[index], self.y[index], cst.Stocks.FI.value[0]

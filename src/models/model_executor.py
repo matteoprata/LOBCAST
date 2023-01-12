@@ -101,9 +101,11 @@ class NNEngine(pl.LightningModule):
             # loss is single per batch
             loss_vals += [loss_val.item()]
 
-        self.__compute_cm(ys, predictions, model_step, self.config.SRC_STOCK_NAME)                             # cm to log
-        val_dict = self.__compute_metrics(ys, predictions, model_step, loss_vals, self.config.SRC_STOCK_NAME)  # dict to log
+        # COMPUTE CM
+        self.__compute_cm(ys, predictions, model_step, self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name)                             # cm to log
+        val_dict = self.__compute_metrics(ys, predictions, model_step, loss_vals, self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name)  # dict to log
 
+        # PER STOCK PREDICTIONS
         if model_step == cst.ModelSteps.TESTING and self.config.CHOSEN_STOCKS[cst.STK_OPEN.TEST] == cst.Stocks.ALL:
             # computing metrics per stock
             df = pd.DataFrame(
@@ -120,7 +122,7 @@ class NNEngine(pl.LightningModule):
                 self.__compute_cm(ys, predictions, model_step, si)
 
         # for saving best model
-        validation_string = model_step.value + "_{}_".format(self.config.SRC_STOCK_NAME) + cst.Metrics.F1.value
+        validation_string = model_step.value + "_{}_".format(self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name) + cst.Metrics.F1.value
         self.log(validation_string, val_dict[validation_string], prog_bar=True)   # validation_!SRC!_F1
 
         if self.remote_log is not None:  # log to wandb
@@ -132,7 +134,7 @@ class NNEngine(pl.LightningModule):
             self.remote_log.log({name: wandb.plot.confusion_matrix(
                 probs=None,
                 y_true=ys, preds=predictions,
-                class_names=self.config.CLASS_NAMES,
+                class_names=[cl.name for cl in cst.Predictions],
                 title=name)}
             )
 

@@ -1,13 +1,13 @@
 
 from enum import Enum
-
+import torch
 
 class LearningHyperParameter(Enum):
     OPTIMIZER = "optimizer"
     LEARNING_RATE = "lr"
     WEIGHT_DECAY = "weight_decay"
-    EPOCHS = "epochs"
-    IS_SHUFFLE = "is_shuffle"
+    EPOCHS_UB = "epochs"
+    IS_SHUFFLE_TRAIN_SET = "is_shuffle"
     BATCH_SIZE = "batch_size"
     MLP_HIDDEN = "hidden_mlp"
     LSTM_HIDDEN = "lstm_hidden"
@@ -16,7 +16,7 @@ class LearningHyperParameter(Enum):
     P_DROPOUT = "p_dropout"
     BACKWARD_WINDOW = "window_size_backward"
     FORWARD_WINDOW = "window_size_forward"
-    LABELING_THRESHOLD = "labeling_threshold"
+    # LABELING_THRESHOLD = "labeling_threshold"
     LABELING_SIGMA_SCALER = "labeling_sigma_scaler"
     FI_HORIZON = 'fi_horizon_k'
     NUM_SNAPSHOTS = 'num_snapshots'
@@ -69,12 +69,13 @@ class WinSize(Enum):
     MIN10 = 60 * 10
     MIN20 = 60 * 20
 
-class Horizons(Enum):
+class FI_Horizons(Enum):
     K1 = 1
     K2 = 2
     K3 = 3
     K5 = 5
     K10 = 10
+
 
 class Predictions(Enum):
     UPWARD = 2
@@ -117,7 +118,7 @@ class Stocks(Enum):
     WING = ["WING"]
     SHLS = ["SHLS"]
     LSTR = ["LSTR"]
-
+    FI = ["FI"]
     ALL = ["SOFI", "NFLX", "CSCO", "WING", "SHLS", "LSTR"]
 
 
@@ -173,4 +174,16 @@ class DatasetType(Enum):
     VALIDATION = "val"
 
 
+N_LOB_LEVELS = 10
+
+NUM_GPUS = 1 if torch.cuda.is_available() else 0
+DEVICE_TYPE = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+
 PROJECT_NAME = "lob-adversarial-attacks-22"
+
+SAVED_MODEL_DIR = "data/saved_models/"
+DATA_SOURCE = "data/"
+DATASET_LOBSTER = "LOBSTER_6/unzipped/"
+DATASET_FI = "FI-2010/BenchmarkDatasets"
+DATA_PICKLES = "data/pickles/"

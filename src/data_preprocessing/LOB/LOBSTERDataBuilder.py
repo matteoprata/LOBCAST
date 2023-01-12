@@ -72,14 +72,14 @@ class LOBSTERDataBuilder:
 
     def __read_dataset(self):
         """ Reads the dataset from the pickle if they exist (generates it in case). Otherwise, it opens the trading files."""
-        exists = os.path.exists(self.config.DATA_PICKLES + self.F_NAME_PICKLE)
+        exists = os.path.exists(cst.DATA_PICKLES + self.F_NAME_PICKLE)
 
         if self.is_data_preload and exists:
             print("Reloaded, not recomputed, nice!")
             self.__data = self.__deserialize_dataset()
         else:
             out_df = lbu.from_folder_to_unique_df(
-                self.config.DATA_SOURCE + self.lobster_dataset_name,
+                cst.DATA_SOURCE + self.lobster_dataset_name,
                 level=self.n_lob_levels,
                 granularity=self.data_granularity,
                 first_date=self.start_end_trading_day[0],
@@ -146,10 +146,10 @@ class LOBSTERDataBuilder:
         n_min_occ = occurrences[i_min_occ]                 # number of occurrences of the minority class
 
         indexes_chosen = []
-        for i in [co.Predictions.UPWARD.value, cst.Predictions.STATIONARY.value, cst.Predictions.DOWNWARD.value]:
+        for i in [cst.Predictions.UPWARD.value, cst.Predictions.STATIONARY.value, cst.Predictions.DOWNWARD.value]:
             indexes = np.where(self.__samples_y == i)[0]
-            assert len(indexes) >= self.config.INSTANCES_LOWERBOUND, "The instance is not well formed, there are less than " \
-                   "{} instances for the class {} ({}).".format(self.config.INSTANCES_LOWERBOUND, i, len(indexes))
+            assert len(indexes) >= self.config.INSTANCES_LOWER_BOUND, "The instance is not well formed, there are less than " \
+                   "{} instances for the class {} ({}).".format(self.config.INSTANCES_LOWER_BOUND, i, len(indexes))
 
             indexes_chosen += list(self.config.RANDOM_GEN_DATASET.choice(indexes, n_min_occ, replace=False))
         indexes_chosen = np.sort(indexes_chosen)
@@ -168,13 +168,13 @@ class LOBSTERDataBuilder:
         self.__data, self.__samples_x, self.__samples_y = None, None, None
 
     def __serialize_dataset(self):
-        if not os.path.exists(self.config.DATA_PICKLES + self.F_NAME_PICKLE):
+        if not os.path.exists(cst.DATA_PICKLES + self.F_NAME_PICKLE):
             print("Serialization...", self.F_NAME_PICKLE)
-            util.write_data(self.__data, self.config.DATA_PICKLES, self.F_NAME_PICKLE)
+            util.write_data(self.__data, cst.DATA_PICKLES, self.F_NAME_PICKLE)
 
     def __deserialize_dataset(self):
         print("Deserialization...", self.F_NAME_PICKLE)
-        out = util.read_data(self.config.DATA_PICKLES + self.F_NAME_PICKLE)
+        out = util.read_data(cst.DATA_PICKLES + self.F_NAME_PICKLE)
         return out
 
     def __prepare_dataset(self):

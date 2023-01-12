@@ -12,6 +12,7 @@ import argparse
 import random
 import numpy as np
 import wandb
+import traceback
 
 # TORCH
 from pytorch_lightning import Trainer
@@ -65,31 +66,39 @@ def _wandb_exe(config: Configuration):
         config.WANDB_INSTANCE = wandb_instance
 
         for param in cst.LearningHyperParameter:
-            config.HYPER_PARAMETERS_SET[param] = wandb_instance.config[param.value]
+            if param.value in wandb_instance.config:
+                config.HYPER_PARAMETERS[param] = wandb_instance.config[param.value]
 
-        lunch_single(config)
-
-
-def lunch_single(config: Configuration):
-
-    data_module = pick_dataset(config)
-    model = pick_model(config, data_module)
-
-    trainer = Trainer(
-        accelerator=config.DEVICE_TYPE,
-        devices=config.NUM_GPUS,
-        check_val_every_n_epoch=config.VALIDATE_EVERY,
-        max_epochs=config.EPOCHS,
-        callbacks=[
-            cbk.callback_save_model(config, config.CHOSEN_DATASET, config.CHOSEN_MODEL.value, config.WANDB_RUN_NAME),
-            cbk.early_stopping(config)
-        ]
-    )
-    trainer.fit (model, data_module)
-    trainer.test(model, data_module, ckpt_path="best")
+        launch_single(config)
 
 
-def lunch_wandb(config: Configuration):
+def launch_single(config: Configuration):
+
+    try:
+        config.dynamic_config_setup()  # todo before launch
+
+        data_module = pick_dataset(config)
+        model = pick_model(config, data_module)
+
+        trainer = Trainer(
+            accelerator=cst.DEVICE_TYPE,
+            devices=cst.NUM_GPUS,
+            check_val_every_n_epoch=config.VALIDATE_EVERY,
+            max_epochs=config.HYPER_PARAMETERS[cst.LearningHyperParameter.EPOCHS_UB],
+            callbacks=[
+                cbk.callback_save_model(config, config.CHOSEN_DATASET, config.CHOSEN_MODEL.value, config.WANDB_RUN_NAME),
+                cbk.early_stopping(config)
+            ]
+        )
+        trainer.fit (model, data_module)
+        trainer.test(model, data_module, ckpt_path="best")
+
+    except:
+        print("The following error was raised")
+        print(traceback.print_exc(), file=sys.stderr)
+        exit(1)
+
+def launch_wandb(config: Configuration):
     # 🐝 STEP: initialize sweep by passing in config
 
     sweep_id = wandb.sweep(
@@ -112,35 +121,44 @@ def lunch_wandb(config: Configuration):
 def parser_cl_arguments(config: Configuration):
     """ Parses the arguments for the command line. """
 
+    print("Setting arguments.")
+
     parser = argparse.ArgumentParser(description='Stock Price Trend Prediction arguments:')
 
-    # python -m src.main_oct_22 -iw 0 -d LOBSTER -m MLP -p JULY2021 -str ALL -ste ALL
+    # python src/main.py -iw 0 -d LOBSTER -m MLP -p JULY2021 -str NFLX -ste NFLX
+    # python src/main.py -iw 1 -d FI -m MLP
 
     parser.add_argument('-iw',  '--is_wandb',    default=config.IS_WANDB, type=int)
-    parser.add_argument('-d',   '--data',        default=config.CHOSEN_DATASET.value)
-    parser.add_argument('-m',   '--model',       default=config.CHOSEN_MODEL.value)
-    parser.add_argument('-p',   '--period',      default=config.CHOSEN_PERIOD.value)
-    parser.add_argument('-str', '--stock_train', default=config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].value)
-    parser.add_argument('-ste', '--stock_test',  default=config.CHOSEN_STOCKS[cst.STK_OPEN.TEST].value)
+    parser.add_argument('-d',   '--data',        default=config.CHOSEN_DATASET.name)
+    parser.add_argument('-m',   '--model',       default=config.CHOSEN_MODEL.name)
+    parser.add_argument('-p',   '--period',      default=config.CHOSEN_PERIOD.name)
+    parser.add_argument('-str', '--stock_train', default=config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name)
+    parser.add_argument('-ste', '--stock_test',  default=config.CHOSEN_STOCKS[cst.STK_OPEN.TEST].name)
 
     for lp in cst.LearningHyperParameter:
-        val = config.HYPER_PARAMETERS_SET[lp]
-        parser.add_argument('-{}'.format(lp.value), '--{}'.format(lp.value), default=val, type=type(val))
+        val = config.HYPER_PARAMETERS[lp]
+        parser.add_argument('-{}'.format(lp.name), '--{}'.format(lp.name), default=val, type=type(val))
 
     # Parsing arguments from cli
-    args = parser.parse_args()
+    args = vars(parser.parse_args())
 
     # Setting args from cli in the config
-    config.IS_WANDB = bool(args.is_wandb)
+    config.IS_WANDB = bool(args["is_wandb"])
 
-    config.CHOSEN_DATASET = cst.DatasetFamily[args.data]
-    config.CHOSEN_PERIOD = cst.Periods[args.period]
-    config.CHOSEN_MODEL = cst.Models[args.model]
-    config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN] = cst.Stocks[args.stock_train]
-    config.CHOSEN_STOCKS[cst.STK_OPEN.TEST] = cst.Stocks[args.stock_test]
+    config.CHOSEN_DATASET = cst.DatasetFamily[args["data"]]
+    config.CHOSEN_PERIOD = cst.Periods[args["period"]]
+    config.CHOSEN_MODEL = cst.Models[args["model"]]
+    config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN] = cst.Stocks[args["stock_train"]]
+    config.CHOSEN_STOCKS[cst.STK_OPEN.TEST] = cst.Stocks[args["stock_test"]]
 
     for lp in cst.LearningHyperParameter:
-        config.HYPER_PARAMETERS_SET[lp] = args[lp.name]
+        config.HYPER_PARAMETERS[lp] = args[lp.name]
+
+    # STOCKS FI
+    if config.CHOSEN_DATASET == cst.DatasetFamily.FI:
+        config.CHOSEN_PERIOD = None
+        config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN] = cst.Stocks.FI
+        config.CHOSEN_STOCKS[cst.STK_OPEN.TEST] = cst.Stocks.FI
 
 
 def set_seeds(config: Configuration):
@@ -153,14 +171,13 @@ def set_seeds(config: Configuration):
 
 if __name__ == "__main__":
 
-    # python -m src.main_oct_22 -iw 1 -d LOBSTER -m MLP -p JULY2021 -str ALL -ste ALL
-    # python -m src.main_oct_22 -iw 1 -d LOBSTER -m MLP -p JULY2021 -str AAPL -ste AAPL
-
     cf = Configuration()
     parser_cl_arguments(cf)
     set_seeds(cf)
+    cf.dynamic_config_setup()
 
     if cf.IS_WANDB:
-        lunch_wandb(cf)
+        launch_wandb(cf)
     else:
-        lunch_single(cf)
+        launch_single(cf)
+

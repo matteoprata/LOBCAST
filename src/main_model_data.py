@@ -29,26 +29,26 @@ from src.models.lstm.lstm import LSTM
 def prepare_data_FI(config: Configuration):
 
     fi_train = FIDataBuilder(
-        config.DATA_SOURCE + config.DATASET_FI,
+        cst.DATA_SOURCE + cst.DATASET_FI,
         dataset_type=cst.DatasetType.TRAIN,
-        horizon=config.HORIZON,
-        window=config.NUM_SNAPSHOTS,
+        horizon=config.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON],
+        window=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_SNAPSHOTS],
         train_val_split=config.TRAIN_SPLIT_VAL,
     )
 
     fi_val = FIDataBuilder(
-        config.DATA_SOURCE + config.DATASET_FI,
+        cst.DATA_SOURCE + cst.DATASET_FI,
         dataset_type=cst.DatasetType.VALIDATION,
-        horizon=config.HORIZON,
-        window=config.NUM_SNAPSHOTS,
+        horizon=config.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON],
+        window=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_SNAPSHOTS],
         train_val_split=config.TRAIN_SPLIT_VAL
     )
 
     fi_test = FIDataBuilder(
-        config.DATA_SOURCE + config.DATASET_FI,
+        cst.DATA_SOURCE + cst.DATASET_FI,
         dataset_type=cst.DatasetType.TEST,
-        horizon=config.HORIZON,
-        window=config.NUM_SNAPSHOTS,
+        horizon=config.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON],
+        window=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_SNAPSHOTS],
         train_val_split=config.TRAIN_SPLIT_VAL
     )
 
@@ -61,7 +61,8 @@ def prepare_data_FI(config: Configuration):
     print(len(train_set), len(val_set), len(test_set))
     print()
 
-    fi_dm = FIDataModule(train_set, val_set, test_set, config.BATCH_SIZE, config.IS_SHUFFLE_INPUT)
+    fi_dm = FIDataModule(train_set, val_set, test_set, config.HYPER_PARAMETERS[cst.LearningHyperParameter.BATCH_SIZE],
+                         config.HYPER_PARAMETERS[cst.LearningHyperParameter.IS_SHUFFLE_TRAIN_SET])
     return fi_dm
 
 
@@ -97,7 +98,8 @@ def prepare_data_LOBSTER(config: Configuration):
     print(len(train_set), len(val_set), len(test_set))
     print()
 
-    lob_dm = LOBDataModule(config, train_set, val_set, test_set, config.BATCH_SIZE, config.IS_SHUFFLE_INPUT)
+    lob_dm = LOBDataModule(train_set, val_set, test_set, config.HYPER_PARAMETERS[cst.LearningHyperParameter.BATCH_SIZE],
+                           config.HYPER_PARAMETERS[cst.LearningHyperParameter.IS_SHUFFLE_TRAIN_SET])
     return lob_dm
 
 
@@ -116,8 +118,8 @@ def pick_model(config: Configuration, data_module):
         net_architecture = MLP(
             num_features=np.prod(data_module.x_shape),  # 40 * wind
             num_classes=data_module.num_classes,
-            hidden_layer_dim=config.MLP_HIDDEN,
-            p_dropout=config.P_DROPOUT
+            hidden_layer_dim=config.HYPER_PARAMETERS[cst.LearningHyperParameter.MLP_HIDDEN],
+            p_dropout=config.HYPER_PARAMETERS[cst.LearningHyperParameter.P_DROPOUT],
         )
 
     elif config.CHOSEN_MODEL == cst.Models.CNN1:
@@ -136,22 +138,22 @@ def pick_model(config: Configuration, data_module):
         net_architecture = LSTM(
             x_shape=data_module.x_shape[1],  # 40, wind is the time
             num_classes=data_module.num_classes,
-            hidden_layer_dim=config.LSTM_HIDDEN,
-            hidden_mlp=config.MLP_HIDDEN,
-            num_layers=config.LSTM_N_HIDDEN,
-            p_dropout=config.P_DROPOUT
+            hidden_layer_dim=config.HYPER_PARAMETERS[cst.LearningHyperParameter.LSTM_HIDDEN],
+            hidden_mlp=config.HYPER_PARAMETERS[cst.LearningHyperParameter.MLP_HIDDEN],
+            num_layers=config.HYPER_PARAMETERS[cst.LearningHyperParameter.LSTM_N_HIDDEN],
+            p_dropout=config.HYPER_PARAMETERS[cst.LearningHyperParameter.P_DROPOUT],
         )
 
     elif config.CHOSEN_MODEL == cst.Models.CNNLSTM:
         net_architecture = CNNLSTM(
             num_features=data_module.x_shape[1],
             num_classes=data_module.num_classes,
-            batch_size=config.BATCH_SIZE,
+            batch_size=config.HYPER_PARAMETERS[cst.LearningHyperParameter.BATCH_SIZE],
             seq_len=data_module.x_shape[0],
-            hidden_size=config.LSTM_HIDDEN,
-            num_layers=config.LSTM_N_HIDDEN,
-            hidden_mlp=config.MLP_HIDDEN,
-            p_dropout=config.P_DROPOUT
+            hidden_size=config.HYPER_PARAMETERS[cst.LearningHyperParameter.LSTM_HIDDEN],
+            num_layers=config.HYPER_PARAMETERS[cst.LearningHyperParameter.LSTM_N_HIDDEN],
+            hidden_mlp=config.HYPER_PARAMETERS[cst.LearningHyperParameter.MLP_HIDDEN],
+            p_dropout=config.HYPER_PARAMETERS[cst.LearningHyperParameter.P_DROPOUT],
         )
 
     elif config.CHOSEN_MODEL == cst.Models.DAIN:
@@ -159,8 +161,8 @@ def pick_model(config: Configuration, data_module):
             backward_window=data_module.x_shape[0],
             num_features=data_module.x_shape[1],
             num_classes=data_module.num_classes,
-            mlp_hidden=config.MLP_HIDDEN,
-            p_dropout=config.P_DROPOUT,
+            mlp_hidden=config.HYPER_PARAMETERS[cst.LearningHyperParameter.MLP_HIDDEN],
+            p_dropout=config.HYPER_PARAMETERS[cst.LearningHyperParameter.P_DROPOUT],
             mode='adaptive_avg',
             mean_lr=1e-06,
             gate_lr=1e-02,
@@ -182,12 +184,12 @@ def pick_model(config: Configuration, data_module):
 
     engine = NNEngine(
         config=config,
-        model_type=chosen_model,
+        model_type=config.CHOSEN_MODEL,
         neural_architecture=net_architecture,
-        optimizer=config.OPTIMIZER,
-        lr=config.LEARNING_RATE,
-        weight_decay=config.WEIGHT_DECAY,
+        optimizer=config.HYPER_PARAMETERS[cst.LearningHyperParameter.OPTIMIZER],
+        lr=config.HYPER_PARAMETERS[cst.LearningHyperParameter.LEARNING_RATE],
+        weight_decay=config.HYPER_PARAMETERS[cst.LearningHyperParameter.WEIGHT_DECAY],
         loss_weights=loss_weights,
-        remote_log=config.WANDB_INSTANCE).to(config.DEVICE_TYPE)
+        remote_log=config.WANDB_INSTANCE).to(cst.DEVICE_TYPE)
 
     return engine
