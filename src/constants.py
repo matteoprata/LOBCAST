@@ -2,6 +2,7 @@
 from enum import Enum
 import torch
 
+
 class LearningHyperParameter(Enum):
     OPTIMIZER = "optimizer"
     LEARNING_RATE = "lr"
@@ -68,6 +69,7 @@ class WinSize(Enum):
     MIN05 = 60 * 5
     MIN10 = 60 * 10
     MIN20 = 60 * 20
+
 
 class FI_Horizons(Enum):
     K1 = 1
@@ -187,3 +189,6 @@ DATA_SOURCE = "data/"
 DATASET_LOBSTER = "LOBSTER_6/unzipped/"
 DATASET_FI = "FI-2010/BenchmarkDatasets"
 DATA_PICKLES = "data/pickles/"
+
+DATA_EXPERIMENTS = "data/experiments/"
+

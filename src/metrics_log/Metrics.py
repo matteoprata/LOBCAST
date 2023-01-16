@@ -1,0 +1,38 @@
+
+from src.utils.utilities import write_json
+from src.constants import Predictions
+import src.constants as cst
+
+
+class Metrics:
+    def __init__(self, config):
+        self._config = config
+        self._config_dict = None
+        self._testing_metrics = []  # list of tuples (test symbol, metric)
+        self._testing_cf = []       # list of tuples (test symbol, cfm)
+
+    def add_testing_metrics(self, symbol, testing_metrics):
+        self._testing_metrics += [(symbol, testing_metrics)]
+
+    def add_testing_cfm(self, symbol, testing_cf):
+        self._testing_cf += [(symbol, testing_cf)]
+
+    def dump(self):
+        for isym in range(len(self._testing_metrics)):
+            sym, cm = self._testing_cf[isym]
+            _, met = self._testing_metrics[isym]
+
+            compound_dict = {**met, **cm, **self._config_dict}
+            fname = "model={}-trst={}-test={}-data={}-peri={}.json".format(
+                self._config.CHOSEN_MODEL.name,
+                self._config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name,
+                sym,
+                self._config.CHOSEN_DATASET.value,
+                self._config.CHOSEN_PERIOD.name
+            )
+            write_json(compound_dict, cst.DATA_EXPERIMENTS + fname)
+            print("DUMPING", cst.DATA_EXPERIMENTS + fname)
+
+    def close(self):
+        self._config_dict = self._config.__dict__
+        self.dump()

@@ -1,8 +1,8 @@
 
 import src.constants as cst
 
-hyperparameters_fi = {
-
+HP_FI = {
+        # TODO REMOVE
         cst.LearningHyperParameter.FI_HORIZON.value: {'values': [
         cst.FI_Horizons.K1.value,
         cst.FI_Horizons.K2.value,

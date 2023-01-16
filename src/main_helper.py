@@ -5,6 +5,7 @@ import numpy as np
 import src.constants as cst
 from src.config import Configuration
 from src.models.model_executor import NNEngine
+from src.metrics_log.Metrics import Metrics
 
 # DATASETS
 from src.data_preprocessing.FI.FIDataBuilder import FIDataBuilder

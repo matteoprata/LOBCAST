@@ -22,7 +22,7 @@ def callback_save_model(config, dataset_type, ml_model_name, run_name):
     check_point_callback = pl.callbacks.ModelCheckpoint(
         monitor=monitor_var,
         verbose=True,
-        save_top_k=3,
+        save_top_k=1,
         mode='max',
         dirpath=cst.SAVED_MODEL_DIR + config.SWEEP_NAME,
         filename=fname_format(config, dataset_type, ml_model_name, monitor_var, run_name)

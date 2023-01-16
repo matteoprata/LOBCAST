@@ -50,7 +50,6 @@ class FIDataBuilder:
 
         F_EXTENSION = '.txt'
 
-
         # if it is training time, we open the 7-days training file
         # if it is testing time, we open the 3 test files
         if self.dataset_type == cst.DatasetType.TRAIN or self.dataset_type == cst.DatasetType.VALIDATION:

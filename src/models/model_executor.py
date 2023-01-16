@@ -8,7 +8,7 @@ import torch.nn as nn
 
 from sklearn.metrics import classification_report
 from sklearn.metrics import matthews_corrcoef
-
+from sklearn.metrics import confusion_matrix
 
 import numpy as np
 import src.constants as cst
@@ -27,7 +27,7 @@ class NNEngine(pl.LightningModule):
         lr,
         weight_decay=0,
         loss_weights=None,
-        remote_log=None
+        remote_log=None,
     ):
         super().__init__()
         assert optimizer == cst.Optimizers.ADAM.value or optimizer == cst.Optimizers.RMSPROP.value
@@ -72,13 +72,56 @@ class NNEngine(pl.LightningModule):
         self.log(var_name, sum_losses, prog_bar=True)
 
         if self.remote_log is not None:
-            self.remote_log.log({var_name: sum_losses})
+            self.remote_log.log({var_name: sum_losses}, step=self.current_epoch)
 
     def validation_epoch_end(self, validation_step_outputs):
-        self.__validation_and_testing_end(validation_step_outputs, model_step=cst.ModelSteps.VALIDATION)
+        preds, truths, loss_vals, stock_names = self.get_prediction_vectors(validation_step_outputs)
+
+        model_step = cst.ModelSteps.VALIDATION
+
+        # COMPUTE CM (1) (SRC) - (SRC)
+        self.__compute_wandb_cm(truths, preds, model_step, self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name)  # cm to log
+        val_dict = self.__compute_metrics(truths, preds, model_step, loss_vals, self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name)  # dict to log
+
+        # for saving best model
+        validation_string = "{}_{}_{}".format(model_step.value, self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, cst.Metrics.F1.value)
+        self.log(validation_string, val_dict[validation_string], prog_bar=True)  # validation_!SRC!_F1
+
+        if self.remote_log is not None:  # log to wandb
+            self.remote_log.log(val_dict, step=self.current_epoch)
 
     def test_epoch_end(self, test_step_outputs):
-        self.__validation_and_testing_end(test_step_outputs, model_step=cst.ModelSteps.TESTING)
+        preds, truths, loss_vals, stock_names = self.get_prediction_vectors(test_step_outputs)
+
+        model_step = cst.ModelSteps.TESTING
+
+        # COMPUTE CM (1) (SRC) - (SRC)
+        self.__compute_wandb_cm(truths, preds, model_step, self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name)  # cm to log
+        val_dict = self.__compute_metrics(truths, preds, model_step, loss_vals, self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name)  # dict to log
+
+        # PER STOCK PREDICTIONS
+        if model_step == cst.ModelSteps.TESTING and self.config.CHOSEN_STOCKS[cst.STK_OPEN.TEST] == cst.Stocks.ALL:
+            # computing metrics per stock
+            df = pd.DataFrame(
+                list(zip(stock_names, preds, truths)),
+                columns=['stock_names', 'predictions', 'ys']
+            )
+
+            for si in self.config.CHOSEN_STOCKS[cst.STK_OPEN.TEST].value:
+                df_si = df[df['stock_names'] == si]
+                truths = df_si['ys'].to_numpy()
+                preds = df_si['predictions'].to_numpy()
+
+                dic_si = self.__compute_metrics(truths, preds, model_step, loss_vals, si)
+                self.config.METRICS_JSON.add_testing_metrics(si, dic_si)
+                val_dict.update(dic_si)
+
+                self.__compute_wandb_cm(truths, preds, model_step, si)
+                cm = self.__compute_sk_cm(truths, preds)
+                self.config.METRICS_JSON.add_testing_cfm(si, cm)
+
+        if self.remote_log is not None:  # log to wandb
+            self.remote_log.log(val_dict, step=self.current_epoch)
 
     # COMMON
     def __validation_and_testing(self, batch):
@@ -91,52 +134,32 @@ class NNEngine(pl.LightningModule):
 
         return prediction_ind, y, loss_val, stock_names
 
-    def __validation_and_testing_end(self, validation_step_outputs, model_step):
-
-        predictions, ys, loss_vals, stock_names = [], [], [], []
-        for predictions_b, y_b, loss_val, stock_name_b in validation_step_outputs:
-            predictions += predictions_b.tolist()
-            ys += y_b.tolist()
+    def get_prediction_vectors(self, model_output):
+        preds, truths, losses, stock_names = [], [], [], []
+        for preds_b, y_b, loss_val, stock_name_b in model_output:
+            preds += preds_b.tolist()
+            truths += y_b.tolist()
             stock_names += stock_name_b
             # loss is single per batch
-            loss_vals += [loss_val.item()]
+            losses += [loss_val.item()]
+        return preds, truths, losses, stock_names
 
-        # COMPUTE CM
-        self.__compute_cm(ys, predictions, model_step, self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name)                             # cm to log
-        val_dict = self.__compute_metrics(ys, predictions, model_step, loss_vals, self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name)  # dict to log
-
-        # PER STOCK PREDICTIONS
-        if model_step == cst.ModelSteps.TESTING and self.config.CHOSEN_STOCKS[cst.STK_OPEN.TEST] == cst.Stocks.ALL:
-            # computing metrics per stock
-            df = pd.DataFrame(
-                list(zip(stock_names, predictions, ys)),
-                columns=['stock_names', 'predictions', 'ys']
-            )
-
-            for si in self.config.CHOSEN_STOCKS[cst.STK_OPEN.TEST].value:
-                df_si = df[df['stock_names'] == si]
-                ys = df_si['ys'].to_numpy()
-                predictions = df_si['predictions'].to_numpy()
-                val_dict.update(self.__compute_metrics(ys, predictions, model_step, loss_vals, si))
-
-                self.__compute_cm(ys, predictions, model_step, si)
-
-        # for saving best model
-        validation_string = model_step.value + "_{}_".format(self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name) + cst.Metrics.F1.value
-        self.log(validation_string, val_dict[validation_string], prog_bar=True)   # validation_!SRC!_F1
-
-        if self.remote_log is not None:  # log to wandb
-            self.remote_log.log(val_dict)
-
-    def __compute_cm(self, ys, predictions, model_step, si):
+    def __compute_wandb_cm(self, ys, predictions, model_step, si):
         if self.remote_log is not None:  # log to wandb
             name = model_step.value + f"_conf_mat_{si}"
             self.remote_log.log({name: wandb.plot.confusion_matrix(
                 probs=None,
                 y_true=ys, preds=predictions,
                 class_names=[cl.name for cl in cst.Predictions],
-                title=name)}
+                title=name)},
+                step=self.current_epoch
             )
+
+    def __compute_sk_cm(self, truths, preds):
+        y_actu = pd.Series(truths, name='actual')
+        y_pred = pd.Series(preds, name='predicted')
+        mat_confusion = confusion_matrix(y_actu, y_pred)
+        return mat_confusion
 
     def __compute_metrics(self, ys, predictions, model_step, loss_vals, si):
 

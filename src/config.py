@@ -1,11 +1,10 @@
-from enum import Enum
+
 import numpy as np
-import torch
-from datetime import datetime
+import os
 
-
-from src.constants import LearningHyperParameter, Optimizers
+from src.constants import LearningHyperParameter
 import src.constants as cst
+from src.metrics_log.Metrics import Metrics
 
 np.set_printoptions(suppress=True)
 
@@ -13,6 +12,8 @@ np.set_printoptions(suppress=True)
 class Configuration:
 
     def __init__(self):
+
+        self.setup_all_directories()
 
         self.SEED = 0
         self.RANDOM_GEN_DATASET = None
@@ -33,6 +34,8 @@ class Configuration:
         }
 
         self.IS_WANDB = 0
+        self.IS_TUNE_H_PARAMS = False
+
         self.SWEEP_NAME = None
         self.SWEEP_METHOD = 'bayes'
 
@@ -44,6 +47,7 @@ class Configuration:
             'name': None
         }
 
+        self.METRICS_JSON = Metrics(self)
         self.HYPER_PARAMETERS = {lp: None for lp in LearningHyperParameter}
 
         self.HYPER_PARAMETERS[LearningHyperParameter.BATCH_SIZE] = 32
@@ -64,14 +68,24 @@ class Configuration:
         self.HYPER_PARAMETERS[LearningHyperParameter.LSTM_HIDDEN] = 32
         self.HYPER_PARAMETERS[LearningHyperParameter.LSTM_N_HIDDEN] = 1
         self.HYPER_PARAMETERS[LearningHyperParameter.DAIN_LAYER_MODE] = 'full'
-        self.HYPER_PARAMETERS[LearningHyperParameter.P_DROPOUT] = .1
+        self.HYPER_PARAMETERS[LearningHyperParameter.P_DROPOUT] = 0
 
     def dynamic_config_setup(self):
+        # sets the name of the metric to optimize
         self.SWEEP_METRIC['name'] = cst.ModelSteps.VALIDATION.value + "_{}_".format(self.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name) + cst.Metrics.F1.value
 
+        # sets the name of the sweep
         if self.CHOSEN_DATASET == cst.DatasetFamily.FI:
             self.SWEEP_NAME = self.CHOSEN_DATASET.value + '_' + self.CHOSEN_MODEL.value + ''
         else:
             self.SWEEP_NAME = self.CHOSEN_DATASET.value + '_' + self.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name + '_' +\
                    self.CHOSEN_STOCKS[cst.STK_OPEN.TEST].name + '_' + self.CHOSEN_PERIOD.name + '_' + self.CHOSEN_MODEL.value + ''
 
+
+
+    @staticmethod
+    def setup_all_directories():
+        paths = ["data", "data/saved_models", cst.DATA_EXPERIMENTS]
+        for p in paths:
+            if not os.path.exists(p):
+                os.makedirs(p)

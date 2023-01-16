@@ -1,7 +1,7 @@
 
 import src.constants as cst
 
-hyperparameters_lobster = {
+HP_LOBSTER = {
 
     cst.LearningHyperParameter.BACKWARD_WINDOW.value: {
         'values': [
