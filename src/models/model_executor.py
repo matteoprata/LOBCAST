@@ -80,7 +80,7 @@ class NNEngine(pl.LightningModule):
         model_step = cst.ModelSteps.VALIDATION
 
         # COMPUTE CM (1) (SRC) - (SRC)
-        self.__compute_wandb_cm(truths, preds, model_step, self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name)  # cm to log
+        self.__log_wandb_cm(truths, preds, model_step, self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name)  # cm to log
         val_dict = self.__compute_metrics(truths, preds, model_step, loss_vals, self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name)  # dict to log
 
         # for saving best model
@@ -96,11 +96,16 @@ class NNEngine(pl.LightningModule):
         model_step = cst.ModelSteps.TESTING
 
         # COMPUTE CM (1) (SRC) - (SRC)
-        self.__compute_wandb_cm(truths, preds, model_step, self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name)  # cm to log
+        self.__log_wandb_cm(truths, preds, model_step, self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name)  # cm to log
+
         val_dict = self.__compute_metrics(truths, preds, model_step, loss_vals, self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name)  # dict to log
+        self.config.METRICS_JSON.add_testing_metrics(self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, val_dict)
+
+        cm = self.__compute_sk_cm(truths, preds)
+        self.config.METRICS_JSON.add_testing_cfm(self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, cm)
 
         # PER STOCK PREDICTIONS
-        if model_step == cst.ModelSteps.TESTING and self.config.CHOSEN_STOCKS[cst.STK_OPEN.TEST] == cst.Stocks.ALL:
+        if self.config.CHOSEN_STOCKS[cst.STK_OPEN.TEST] == cst.Stocks.ALL:
             # computing metrics per stock
             df = pd.DataFrame(
                 list(zip(stock_names, preds, truths)),
@@ -109,19 +114,19 @@ class NNEngine(pl.LightningModule):
 
             for si in self.config.CHOSEN_STOCKS[cst.STK_OPEN.TEST].value:
                 df_si = df[df['stock_names'] == si]
-                truths = df_si['ys'].to_numpy()
-                preds = df_si['predictions'].to_numpy()
+                truths_si = df_si['ys'].to_numpy()
+                preds_si = df_si['predictions'].to_numpy()
 
-                dic_si = self.__compute_metrics(truths, preds, model_step, loss_vals, si)
+                dic_si = self.__compute_metrics(truths_si, preds_si, model_step, loss_vals, si)
                 self.config.METRICS_JSON.add_testing_metrics(si, dic_si)
                 val_dict.update(dic_si)
 
-                self.__compute_wandb_cm(truths, preds, model_step, si)
-                cm = self.__compute_sk_cm(truths, preds)
+                self.__log_wandb_cm(truths_si, preds_si, model_step, si)
+                cm = self.__compute_sk_cm(truths_si, preds_si)
                 self.config.METRICS_JSON.add_testing_cfm(si, cm)
 
         if self.remote_log is not None:  # log to wandb
-            self.remote_log.log(val_dict, step=self.current_epoch)
+            self.remote_log.log(val_dict)
 
     # COMMON
     def __validation_and_testing(self, batch):
@@ -144,7 +149,7 @@ class NNEngine(pl.LightningModule):
             losses += [loss_val.item()]
         return preds, truths, losses, stock_names
 
-    def __compute_wandb_cm(self, ys, predictions, model_step, si):
+    def __log_wandb_cm(self, ys, predictions, model_step, si):
         if self.remote_log is not None:  # log to wandb
             name = model_step.value + f"_conf_mat_{si}"
             self.remote_log.log({name: wandb.plot.confusion_matrix(
@@ -152,7 +157,6 @@ class NNEngine(pl.LightningModule):
                 y_true=ys, preds=predictions,
                 class_names=[cl.name for cl in cst.Predictions],
                 title=name)},
-                step=self.current_epoch
             )
 
     def __compute_sk_cm(self, truths, preds):

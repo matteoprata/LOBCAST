@@ -2,7 +2,6 @@
 import src.constants as cst
 
 HP_DAIN = {
-
     cst.LearningHyperParameter.EPOCHS_UB.value: {'values': [100]},
     cst.LearningHyperParameter.OPTIMIZER.value: {'values': [cst.Optimizers.RMSPROP.value]},
     cst.LearningHyperParameter.LEARNING_RATE.value: {'values': [0.0001]},
@@ -21,7 +20,6 @@ HP_DAIN = {
 
     cst.LearningHyperParameter.MLP_HIDDEN.value: {'values': [512]},
     cst.LearningHyperParameter.P_DROPOUT.value: {'values': [0.5]}
-
 }
 
 

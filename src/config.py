@@ -74,14 +74,27 @@ class Configuration:
         # sets the name of the metric to optimize
         self.SWEEP_METRIC['name'] = cst.ModelSteps.VALIDATION.value + "_{}_".format(self.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name) + cst.Metrics.F1.value
 
-        # sets the name of the sweep
-        if self.CHOSEN_DATASET == cst.DatasetFamily.FI:
-            self.SWEEP_NAME = self.CHOSEN_DATASET.value + '_' + self.CHOSEN_MODEL.value + ''
-        else:
-            self.SWEEP_NAME = self.CHOSEN_DATASET.value + '_' + self.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name + '_' +\
-                   self.CHOSEN_STOCKS[cst.STK_OPEN.TEST].name + '_' + self.CHOSEN_PERIOD.name + '_' + self.CHOSEN_MODEL.value + ''
+        # # sets the name of the sweep
+        # if self.CHOSEN_DATASET == cst.DatasetFamily.FI:
+        #     self.SWEEP_NAME = self.CHOSEN_DATASET.value + '_' + self.CHOSEN_MODEL.value + ''
+        # else:
+        #     self.SWEEP_NAME = self.CHOSEN_DATASET.value + '_' + self.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name + '_' +\
+        #            self.CHOSEN_STOCKS[cst.STK_OPEN.TEST].name + '_' + self.CHOSEN_PERIOD.name + '_' + self.CHOSEN_MODEL.value + ''
 
+        self.SWEEP_NAME = self.cf_name_format().format(
+            self.CHOSEN_MODEL.name,
+            self.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name,
+            self.CHOSEN_STOCKS[cst.STK_OPEN.TEST].name,
+            self.CHOSEN_DATASET.value,
+            self.CHOSEN_PERIOD.name,
+            self.HYPER_PARAMETERS[cst.LearningHyperParameter.BACKWARD_WINDOW],
+            self.HYPER_PARAMETERS[cst.LearningHyperParameter.FORWARD_WINDOW],
+            self.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON],
+        )
 
+    @staticmethod
+    def cf_name_format(ext=""):
+        return "model={}-trst={}-test={}-data={}-peri={}-bw={}-fw={}-fiw={}" + ext
 
     @staticmethod
     def setup_all_directories():

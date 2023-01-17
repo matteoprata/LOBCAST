@@ -3,7 +3,7 @@ from enum import Enum
 import torch
 
 
-class LearningHyperParameter(Enum):
+class LearningHyperParameter(str, Enum):
     OPTIMIZER = "optimizer"
     LEARNING_RATE = "lr"
     WEIGHT_DECAY = "weight_decay"
@@ -23,7 +23,7 @@ class LearningHyperParameter(Enum):
     NUM_SNAPSHOTS = 'num_snapshots'
 
 
-class STK_OPEN(Enum):
+class STK_OPEN(str, Enum):
     """ The modalities associated to a list of stocks. """
     # TODO rename
     TRAIN = "train_mod"
@@ -86,7 +86,7 @@ class Predictions(Enum):
 
 
 # to use in the future
-class Models(Enum):
+class Models(str, Enum):
     MLP = "MLP"
     CNN1 = "CNN1"
     CNN2 = "CNN2"
@@ -98,7 +98,7 @@ class Models(Enum):
     CTABL = "CTABL"
 
 
-class DatasetFamily(Enum):
+class DatasetFamily(str, Enum):
     FI = "FI"
     LOBSTER = "Lobster"
 
@@ -113,7 +113,7 @@ class DatasetFamily(Enum):
 #
 #     ALL = ["AAPL", "TSLA", "ZM", "AAWW", "AGNC", "LYFT"]
 
-class Stocks(Enum):
+class Stocks(str, Enum):
     SOFI = ["SOFI"]
     NFLX = ["NFLX"]
     CSCO = ["CSCO"]
@@ -124,7 +124,7 @@ class Stocks(Enum):
     ALL = ["SOFI", "NFLX", "CSCO", "WING", "SHLS", "LSTR"]
 
 
-class Periods(Enum):
+class Periods(str, Enum):
     MARCH2020 = {
         'train': ('2020-03-02', '2020-03-20'),
         'val': ('2020-03-23', '2020-03-27'),
@@ -176,13 +176,20 @@ class DatasetType(Enum):
     VALIDATION = "val"
 
 
+class ExpIndependentVariables(Enum):
+    MODEL = 'model'
+    K_FI = 'k'
+    FORWARD_WIN = 'fw'
+    BACKWARD_WIN = 'bw'
+
+
 N_LOB_LEVELS = 10
 
 NUM_GPUS = 1 if torch.cuda.is_available() else 0
 DEVICE_TYPE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
-PROJECT_NAME = "lob-adversarial-attacks-22"
+PROJECT_NAME = "lob-adversarial-attacks-feb-23"
 
 SAVED_MODEL_DIR = "data/saved_models/"
 DATA_SOURCE = "data/"
@@ -191,4 +198,17 @@ DATASET_FI = "FI-2010/BenchmarkDatasets"
 DATA_PICKLES = "data/pickles/"
 
 DATA_EXPERIMENTS = "data/experiments/"
+
+
+class ServersMAC(Enum):
+    ALIEN1 = 0
+    ALIEN2 = 1
+    FISSO1 = 2
+
+
+ServerMACIDs = {
+    '3b:5a:48:6f:c3:0e': ServersMAC.ALIEN1,
+    '91:29:87:cc:61:09': ServersMAC.ALIEN2,
+    '12:19:23:96:dd:8b': ServersMAC.FISSO1
+}
 
