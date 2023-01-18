@@ -37,8 +37,8 @@ class Metrics:
                 self._config.HYPER_PARAMETERS[cst.LearningHyperParameter.FORWARD_WINDOW],
                 self._config.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON],
             )
-            write_json(compound_dict, cst.DATA_EXPERIMENTS + fname)
-            print("DUMPING", cst.DATA_EXPERIMENTS + fname)
+            write_json(compound_dict, cst.DIR_EXPERIMENTS + fname)
+            print("DUMPING", cst.DIR_EXPERIMENTS + fname)
 
     def close(self):
         self._config_dict = self._config.__dict__

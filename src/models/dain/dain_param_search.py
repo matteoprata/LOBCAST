@@ -4,7 +4,7 @@ import src.constants as cst
 HP_DAIN = {
     cst.LearningHyperParameter.EPOCHS_UB.value: {'values': [100]},
     cst.LearningHyperParameter.OPTIMIZER.value: {'values': [cst.Optimizers.RMSPROP.value]},
-    cst.LearningHyperParameter.LEARNING_RATE.value: {'values': [0.0001]},
+    cst.LearningHyperParameter.LEARNING_RATE.value: {'max': 0.001, 'min': 0.0001},
 
     cst.LearningHyperParameter.IS_SHUFFLE_TRAIN_SET.value: {'values': [True]},
     cst.LearningHyperParameter.BATCH_SIZE.value: {'values': [16, 32, 64]},

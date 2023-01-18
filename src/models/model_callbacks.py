@@ -25,7 +25,7 @@ def callback_save_model(config, run_name):
         verbose=True,
         save_top_k=1,
         mode='max',
-        dirpath=cst.SAVED_MODEL_DIR + config.SWEEP_NAME,
+        dirpath=cst.DIR_SAVED_MODEL + config.WANDB_SWEEP_NAME,
         filename="run=" + run_name + "-{epoch}-{" + monitor_var + ':.2f}'
     )
     return check_point_callback

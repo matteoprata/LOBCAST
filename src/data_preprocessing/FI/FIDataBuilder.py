@@ -45,7 +45,7 @@ class FIDataBuilder:
                  "/{}{}_{}".format(N, AUCTION, NORMALIZATION) + \
                  "/{}_{}_{}".format(AUCTION, NORMALIZATION, DATASET_TYPE)
 
-        NORMALIZATION = 'ZScore' if self.normalization_type == cst.NormalizationType.Z_SCORE else 'MinMax' if self.normalization_type == co.NormalizationType.MINMAX else 'DecPre'
+        NORMALIZATION = 'ZScore' if self.normalization_type == cst.NormalizationType.Z_SCORE else 'MinMax' if self.normalization_type == cst.NormalizationType.MINMAX else 'DecPre'
         DATASET_TYPE = 'Train' if self.dataset_type == cst.DatasetType.TRAIN else 'Test'
 
         F_EXTENSION = '.txt'

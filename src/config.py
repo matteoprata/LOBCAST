@@ -5,14 +5,16 @@ import os
 from src.constants import LearningHyperParameter
 import src.constants as cst
 from src.metrics_log.Metrics import Metrics
+from datetime import date, datetime
 
 np.set_printoptions(suppress=True)
 
 
 class Configuration:
 
-    def __init__(self):
+    def __init__(self, now=None):
 
+        self.NOW = datetime.now().strftime("%Y-%m-%d+%H-%M-%S") if now is None else now
         self.setup_all_directories()
 
         self.SEED = 0
@@ -25,22 +27,22 @@ class Configuration:
         self.TRAIN_SPLIT_VAL = .8  # FI only
 
         self.CHOSEN_DATASET = cst.DatasetFamily.FI
-        self.CHOSEN_PERIOD = cst.Periods.JULY2021
+        self.CHOSEN_PERIOD = cst.Periods.FI
         self.CHOSEN_MODEL = cst.Models.MLP
 
         self.CHOSEN_STOCKS = {
-            cst.STK_OPEN.TRAIN: cst.Stocks.ALL,
-            cst.STK_OPEN.TEST: cst.Stocks.ALL
+            cst.STK_OPEN.TRAIN: cst.Stocks.FI,
+            cst.STK_OPEN.TEST: cst.Stocks.FI
         }
 
         self.IS_WANDB = 0
         self.IS_TUNE_H_PARAMS = False
 
-        self.SWEEP_NAME = None
         self.SWEEP_METHOD = 'bayes'
 
         self.WANDB_INSTANCE = None
         self.WANDB_RUN_NAME = None
+        self.WANDB_SWEEP_NAME = None
 
         self.SWEEP_METRIC = {
             'goal': 'maximize',
@@ -58,8 +60,8 @@ class Configuration:
 
         self.HYPER_PARAMETERS[LearningHyperParameter.NUM_SNAPSHOTS] = 100
         # LOBSTER way to label to measure percentage change LOBSTER = HORIZON
-        self.HYPER_PARAMETERS[LearningHyperParameter.BACKWARD_WINDOW] = cst.WinSize.SEC100.value
-        self.HYPER_PARAMETERS[LearningHyperParameter.FORWARD_WINDOW] = cst.WinSize.SEC50.value
+        self.HYPER_PARAMETERS[LearningHyperParameter.BACKWARD_WINDOW] = cst.WinSize.NONE.value
+        self.HYPER_PARAMETERS[LearningHyperParameter.FORWARD_WINDOW] = cst.WinSize.NONE.value
         self.HYPER_PARAMETERS[LearningHyperParameter.IS_SHUFFLE_TRAIN_SET] = True
         self.HYPER_PARAMETERS[LearningHyperParameter.LABELING_SIGMA_SCALER] = .9
         self.HYPER_PARAMETERS[LearningHyperParameter.FI_HORIZON] = 10  # in FI = FORWARD_WINDOW  = k in papers
@@ -72,16 +74,9 @@ class Configuration:
 
     def dynamic_config_setup(self):
         # sets the name of the metric to optimize
-        self.SWEEP_METRIC['name'] = cst.ModelSteps.VALIDATION.value + "_{}_".format(self.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name) + cst.Metrics.F1.value
+        self.SWEEP_METRIC['name'] = "{}_{}_{}".format(cst.ModelSteps.VALIDATION.value, self.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, cst.Metrics.F1.value)
 
-        # # sets the name of the sweep
-        # if self.CHOSEN_DATASET == cst.DatasetFamily.FI:
-        #     self.SWEEP_NAME = self.CHOSEN_DATASET.value + '_' + self.CHOSEN_MODEL.value + ''
-        # else:
-        #     self.SWEEP_NAME = self.CHOSEN_DATASET.value + '_' + self.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name + '_' +\
-        #            self.CHOSEN_STOCKS[cst.STK_OPEN.TEST].name + '_' + self.CHOSEN_PERIOD.name + '_' + self.CHOSEN_MODEL.value + ''
-
-        self.SWEEP_NAME = self.cf_name_format().format(
+        self.WANDB_SWEEP_NAME = self.cf_name_format().format(
             self.CHOSEN_MODEL.name,
             self.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name,
             self.CHOSEN_STOCKS[cst.STK_OPEN.TEST].name,
@@ -96,9 +91,12 @@ class Configuration:
     def cf_name_format(ext=""):
         return "model={}-trst={}-test={}-data={}-peri={}-bw={}-fw={}-fiw={}" + ext
 
-    @staticmethod
-    def setup_all_directories():
-        paths = ["data", "data/saved_models", cst.DATA_EXPERIMENTS]
+    def setup_all_directories(self):
+        cst.PROJECT_NAME = cst.PROJECT_NAME.format(self.NOW)
+        cst.DIR_SAVED_MODEL = cst.DIR_SAVED_MODEL.format(self.NOW) + "/"
+        cst.DIR_EXPERIMENTS = cst.DIR_EXPERIMENTS.format(self.NOW) + "/"
+
+        paths = ["data", cst.DIR_SAVED_MODEL, cst.DIR_EXPERIMENTS]
         for p in paths:
             if not os.path.exists(p):
                 os.makedirs(p)

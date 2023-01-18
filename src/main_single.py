@@ -24,9 +24,7 @@ import src.models.model_callbacks as cbk
 from src.config import Configuration
 
 # DATASETS
-from src.data_preprocessing.FI.fi_param_search import HP_FI
 from src.data_preprocessing.LOB.lobster_param_search import HP_LOBSTER
-from src.utils.utilities import get_sys_mac
 
 # MODELS
 from src.models.mlp.mlp_param_search import HP_MLP, HP_MLP_FI_FIXED
@@ -62,17 +60,16 @@ HP_DICT_DATASET = {
 }
 
 
-def save_models_on_wandb(config: Configuration):
-    """ Dumps all the models in the wandb run. """
+# def save_models_on_wandb(config: Configuration):
+#     """ Dumps all the models in the wandb run. """
+#
+#     if config.WANDB_INSTANCE:
+#         path = cst.DIR_SAVED_MODEL + config.WANDB_SWEEP_NAME
+#         for f in os.listdir(path):
+#             art = wandb.Artifact(f.replace("=", "-"), type="model")
+#             art.add_file(path + "/" + f, f)
+#             config.WANDB_INSTANCE.log_artifact(art)
 
-    if config.WANDB_INSTANCE:
-        path = cst.SAVED_MODEL_DIR + config.SWEEP_NAME
-        for f in os.listdir(path):
-            art = wandb.Artifact(f.replace("=", "-"), type="model")
-            art.add_file(path + "/" + f, f)
-            config.WANDB_INSTANCE.log_artifact(art)
-
-# data/saved_models/model=MLP-trst=FI-test=FI-data=FI-peri=JULY2021-bw=100-fw=50-fiw=1/run-model-MLP-trst-FI-test-FI-data-FI-peri-JULY2021-bw-100-fw-50-fiw-1-epoch-1-validation_FI_f1-0.35.ckpt
 
 def _wandb_exe(config: Configuration):
     """ Either a single wandb run or a sweep. """
@@ -80,7 +77,7 @@ def _wandb_exe(config: Configuration):
     run_name = None
     if not config.IS_TUNE_H_PARAMS:
         config.dynamic_config_setup()
-        run_name = config.SWEEP_NAME
+        run_name = config.WANDB_SWEEP_NAME
 
     with wandb.init(project=cst.PROJECT_NAME, name=run_name) as wandb_instance:
         wandb_instance.log_code("src/")
@@ -102,6 +99,7 @@ def launch_single(config: Configuration, model_params=None):
         # selects the parameters for the run
         if not config.IS_TUNE_H_PARAMS:
             assert model_params is None
+
             if config.CHOSEN_DATASET == cst.DatasetFamily.FI:
                 model_params = HP_DICT_MODEL[config.CHOSEN_MODEL].fixed_fi
             elif config.CHOSEN_DATASET == cst.DatasetFamily.LOBSTER:
@@ -128,11 +126,12 @@ def launch_single(config: Configuration, model_params=None):
                 cbk.early_stopping(config)
             ]
         )
-        trainer.fit(model, data_module)
+        trainer. fit(model, data_module)
         trainer.test(model, data_module, ckpt_path="best")
 
-        config.METRICS_JSON.close()
-        # save_models_on_wandb(config)
+        if not config.IS_TUNE_H_PARAMS:
+            config.METRICS_JSON.close()
+
     try:
         core(model_params)
     except:
@@ -144,23 +143,25 @@ def launch_single(config: Configuration, model_params=None):
 def launch_wandb(config: Configuration):
     # 🐝 STEP: initialize sweep by passing in config
 
+    config.dynamic_config_setup()
+
     if config.IS_TUNE_H_PARAMS:
         # DO SWEEP
         sweep_id = wandb.sweep(
             sweep={
                 'command': ["${env}", "python3", "${program}", "${args}"],
-                'program': "src/main.py",
-                'name':   config.SWEEP_NAME,
+                'program': "src/main_single.py",
+                'name':   config.WANDB_SWEEP_NAME,
                 'method': config.SWEEP_METHOD,
                 'metric': config.SWEEP_METRIC,
                 'parameters': {
-                    **HP_DICT_DATASET[config.CHOSEN_DATASET].sweep,
+                    **HP_DICT_DATASET[config.CHOSEN_DATASET],
                     **HP_DICT_MODEL[config.CHOSEN_MODEL].sweep
                 }
             },
             project=cst.PROJECT_NAME
         )
-        wandb.agent(sweep_id, function=lambda: _wandb_exe(config))
+        wandb.agent(sweep_id, function=lambda: _wandb_exe(config), count=cst.WANDB_SWEEP_MAX_RUNS)
     else:
         # NO SWEEP
         _wandb_exe(config)
@@ -173,7 +174,7 @@ def parser_cl_arguments(config: Configuration):
 
     parser = argparse.ArgumentParser(description='Stock Price Trend Prediction arguments:')
 
-    parser.add_argument('-iw',  '--is_wandb',    default=config.IS_WANDB, type=int)
+    parser.add_argument('-iw',  '--is_wandb',   default=config.IS_WANDB, type=int)
     parser.add_argument('-ih',  '--is_tune',    default=config.IS_TUNE_H_PARAMS, type=int)
 
     parser.add_argument('-d',   '--data',        default=config.CHOSEN_DATASET.name)
@@ -204,6 +205,7 @@ def parser_cl_arguments(config: Configuration):
 
     # STOCKS FI
     if config.CHOSEN_DATASET == cst.DatasetFamily.FI:
+        config.CHOSEN_PERIOD = cst.Periods.FI
         config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN] = cst.Stocks.FI
         config.CHOSEN_STOCKS[cst.STK_OPEN.TEST] = cst.Stocks.FI
 
@@ -233,13 +235,13 @@ if __name__ == "__main__":
     else:
         launch_single(cf)
 
-    # python src/main.py -iw 1 -ih 1 -d LOBSTER -m MLP -p JULY2021 -str NFLX -ste NFLX
-    # python src/main.py -iw 0 -ih 0 -d FI -m MLP
+    # python src/main_single.py -iw 1 -ih 1 -d LOBSTER -m MLP -p JULY2021 -str NFLX -ste NFLX
+    # python src/main_single.py -iw 0 -ih 0 -d FI -m MLP
 
-    # python src/main.py -iw 0 -ih 0 -d FI -m MLP -FI_HORIZON 1
-    # python src/main.py -iw 0 -ih 0 -d FI -m MLP -FI_HORIZON 2
-    # python src/main.py -iw 0 -ih 0 -d FI -m MLP -FI_HORIZON 3
-    # python src/main.py -iw 0 -ih 0 -d FI -m MLP -FI_HORIZON 5
-    # python src/main.py -iw 0 -ih 0 -d FI -m MLP -FI_HORIZON 10
+    # python src/main_single.py -iw 0 -ih 0 -d FI -m MLP -FI_HORIZON 1
+    # python src/main_single.py -iw 0 -ih 0 -d FI -m MLP -FI_HORIZON 2
+    # python src/main_single.py -iw 0 -ih 0 -d FI -m MLP -FI_HORIZON 3
+    # python src/main_single.py -iw 0 -ih 0 -d FI -m MLP -FI_HORIZON 5
+    # python src/main_single.py -iw 0 -ih 0 -d FI -m MLP -FI_HORIZON 10
 
 

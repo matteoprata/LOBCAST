@@ -70,6 +70,8 @@ class WinSize(Enum):
     MIN10 = 60 * 10
     MIN20 = 60 * 20
 
+    NONE = None
+
 
 class FI_Horizons(Enum):
     K1 = 1
@@ -137,6 +139,8 @@ class Periods(str, Enum):
         'test': ('2021-07-30', '2021-08-06'),
     }
 
+    FI = {}
+
 
 class Granularity(Enum):
     """ The possible Granularity to build the OHLC old_data from lob """
@@ -188,16 +192,17 @@ N_LOB_LEVELS = 10
 NUM_GPUS = 1 if torch.cuda.is_available() else 0
 DEVICE_TYPE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
+PROJECT_NAME = "LOB-CLASSIFIERS-({})"
+DIR_EXPERIMENTS = "data/experiments/" + PROJECT_NAME
+DIR_SAVED_MODEL = "data/saved_models/" + PROJECT_NAME
 
-PROJECT_NAME = "lob-adversarial-attacks-feb-23"
-
-SAVED_MODEL_DIR = "data/saved_models/"
 DATA_SOURCE = "data/"
 DATASET_LOBSTER = "LOBSTER_6/unzipped/"
 DATASET_FI = "FI-2010/BenchmarkDatasets"
 DATA_PICKLES = "data/pickles/"
 
-DATA_EXPERIMENTS = "data/experiments/"
+
+WANDB_SWEEP_MAX_RUNS = 15
 
 
 class ServersMAC(Enum):

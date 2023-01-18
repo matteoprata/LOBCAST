@@ -72,7 +72,7 @@ class NNEngine(pl.LightningModule):
         self.log(var_name, sum_losses, prog_bar=True)
 
         if self.remote_log is not None:
-            self.remote_log.log({var_name: sum_losses}, step=self.current_epoch)
+            self.remote_log.log({var_name: sum_losses})
 
     def validation_epoch_end(self, validation_step_outputs):
         preds, truths, loss_vals, stock_names = self.get_prediction_vectors(validation_step_outputs)
@@ -88,7 +88,7 @@ class NNEngine(pl.LightningModule):
         self.log(validation_string, val_dict[validation_string], prog_bar=True)  # validation_!SRC!_F1
 
         if self.remote_log is not None:  # log to wandb
-            self.remote_log.log(val_dict, step=self.current_epoch)
+            self.remote_log.log(val_dict)
 
     def test_epoch_end(self, test_step_outputs):
         preds, truths, loss_vals, stock_names = self.get_prediction_vectors(test_step_outputs)

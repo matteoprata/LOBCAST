@@ -1,4 +1,4 @@
-
+import copy
 
 import numpy as np
 
@@ -45,13 +45,15 @@ def prepare_data_FI(config: Configuration):
         train_val_split=config.TRAIN_SPLIT_VAL
     )
 
-    fi_test = FIDataBuilder(
-        cst.DATA_SOURCE + cst.DATASET_FI,
-        dataset_type=cst.DatasetType.TEST,
-        horizon=config.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON],
-        window=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_SNAPSHOTS],
-        train_val_split=config.TRAIN_SPLIT_VAL
-    )
+    # fi_test = FIDataBuilder(
+    #     cst.DATA_SOURCE + cst.DATASET_FI,
+    #     dataset_type=cst.DatasetType.TEST,
+    #     horizon=config.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON],
+    #     window=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_SNAPSHOTS],
+    #     train_val_split=config.TRAIN_SPLIT_VAL
+    # )
+
+    fi_test = fi_val
 
     train_set = FIDataset(x=fi_train.get_samples_x(), y=fi_train.get_samples_y())
     val_set   = FIDataset(x=fi_val.get_samples_x(),   y=fi_val.get_samples_y())
@@ -62,7 +64,8 @@ def prepare_data_FI(config: Configuration):
     print(len(train_set), len(val_set), len(test_set))
     print()
 
-    fi_dm = FIDataModule(train_set, val_set, test_set, config.HYPER_PARAMETERS[cst.LearningHyperParameter.BATCH_SIZE],
+    fi_dm = FIDataModule(train_set, val_set, test_set,
+                         config.HYPER_PARAMETERS[cst.LearningHyperParameter.BATCH_SIZE],
                          config.HYPER_PARAMETERS[cst.LearningHyperParameter.IS_SHUFFLE_TRAIN_SET])
     return fi_dm
 
