@@ -190,7 +190,9 @@ def pick_model(config: Configuration, data_module):
         optimizer=config.HYPER_PARAMETERS[cst.LearningHyperParameter.OPTIMIZER],
         lr=config.HYPER_PARAMETERS[cst.LearningHyperParameter.LEARNING_RATE],
         weight_decay=config.HYPER_PARAMETERS[cst.LearningHyperParameter.WEIGHT_DECAY],
+        eps=config.HYPER_PARAMETERS[cst.LearningHyperParameter.EPS],
         loss_weights=loss_weights,
-        remote_log=config.WANDB_INSTANCE).to(cst.DEVICE_TYPE)
+        remote_log=config.WANDB_INSTANCE
+    ).to(cst.DEVICE_TYPE)
 
     return engine
