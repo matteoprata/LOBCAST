@@ -66,10 +66,10 @@ class WinSize(Enum):
     SEC50 = 50
     SEC100 = 100
 
-    MIN01 = 60
-    MIN05 = 60 * 5
-    MIN10 = 60 * 10
-    MIN20 = 60 * 20
+    # MIN01 = 60
+    # MIN05 = 60 * 5
+    # MIN10 = 60 * 10
+    # MIN20 = 60 * 20
 
     NONE = None
 
@@ -127,7 +127,7 @@ FI_HORIZONS_MAPPINGS = {
 #
 #     ALL = ["AAPL", "TSLA", "ZM", "AAWW", "AGNC", "LYFT"]
 
-class Stocks(str, Enum):
+class Stocks(list, Enum):
     SOFI = ["SOFI"]
     NFLX = ["NFLX"]
     CSCO = ["CSCO"]
@@ -138,7 +138,7 @@ class Stocks(str, Enum):
     ALL = ["SOFI", "NFLX", "CSCO", "WING", "SHLS", "LSTR"]
 
 
-class Periods(str, Enum):
+class Periods(dict, Enum):
     MARCH2020 = {
         'train': ('2020-03-02', '2020-03-20'),
         'val': ('2020-03-23', '2020-03-27'),

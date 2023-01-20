@@ -107,6 +107,7 @@ class FIDataBuilder:
     def __snapshotting(self):
         """ This creates 4 X n_levels X window_size_backward -> prediction. """
 
+        # TODO: make it efficient by using numpy
         X, Y = [], []
         print("Snapshotting... (__data has", self.data.shape[0], "rows)")
         for st in tqdm.tqdm(range(0, self.samples_x.shape[0] - self.window)):

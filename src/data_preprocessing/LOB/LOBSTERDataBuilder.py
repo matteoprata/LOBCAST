@@ -11,6 +11,7 @@ import tqdm
 import collections
 import numpy as np
 from datetime import datetime
+from src.config import Configuration
 import src.constants as cst
 
 
@@ -19,7 +20,7 @@ class LOBSTERDataBuilder:
         self,
         stock_name,
         lobster_data_dir,
-        config,
+        config: Configuration,
         dataset_type,
         n_lob_levels=None,
         normalization_type=cst.NormalizationType.Z_SCORE,
@@ -114,14 +115,32 @@ class LOBSTERDataBuilder:
         self.__data = ppu.add_midprices_columns(self.__data, self.window_size_forward, self.window_size_backward)
 
     def __label_dataset(self):
-        self.__data, self.label_threshold_pos, self.label_threshold_neg = ppu.add_lob_labels(
-            self.__data,
-            self.window_size_forward,
-            self.window_size_backward,
-            self.label_threshold_pos,
-            self.label_threshold_neg,
-            self.label_dynamic_scaler
-        )
+
+        if self.config.CHOSEN_MODEL == cst.Models.DEEPLOBATT:
+            for winsize in cst.WinSize:
+                if winsize.value is None:
+                    continue
+                self.__data, self.label_threshold_pos, self.label_threshold_neg = ppu.add_lob_labels(
+                    self.__data,
+                    winsize.value,
+                    self.window_size_backward,
+                    self.label_threshold_pos,
+                    self.label_threshold_neg,
+                    self.label_dynamic_scaler
+                )
+                self.__data = self.__data.rename(columns={'y': f'y{winsize.value}'})
+
+            self.__data['y'] = self.__data[[f'y{winsize.value}' for winsize in cst.WinSize if winsize.value is not None]].values.tolist()
+
+        else:
+            self.__data, self.label_threshold_pos, self.label_threshold_neg = ppu.add_lob_labels(
+                self.__data,
+                self.window_size_forward,
+                self.window_size_backward,
+                self.label_threshold_pos,
+                self.label_threshold_neg,
+                self.label_dynamic_scaler
+            )
 
     def __snapshotting(self):
         """ This creates 4 X n_levels X NUM_SNAPSHOTS -> prediction. """
