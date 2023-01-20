@@ -10,26 +10,27 @@ from pprint import pprint
 
 class FIDataBuilder:
     def __init__(
-            self,
-            fi_data_dir,
-            dataset_type,
-            train_val_split=None,
-            auction=False,
-            normalization_type=cst.NormalizationType.Z_SCORE,
-            horizon=10,
-            window=100,
+        self,
+        fi_data_dir,
+        dataset_type,
+        horizon=10,
+        window=100,
+        train_val_split=None,
+        chosen_model=None,
+        auction=False,
+        normalization_type=cst.NormalizationType.Z_SCORE,
     ):
 
         assert horizon in (1, 2, 3, 5, 10)
 
         self.dataset_type = dataset_type
         self.train_val_split = train_val_split
+        self.chosen_model = chosen_model
         self.fi_data_dir = fi_data_dir
         self.auction = auction
         self.normalization_type = normalization_type
         self.horizon = horizon
         self.window = window
-        self.ys_occurrences = None
 
         # KEY call, generates the dataset
         self.data, self.samples_x, self.samples_y = None, None, None
@@ -102,7 +103,13 @@ class FIDataBuilder:
             10: -1
         }
 
-        self.samples_y = self.data[T[self.horizon], :].transpose()
+        if self.chosen_model == cst.Models.DEEPLOBATT:
+            self.samples_y = self.data[-5:, :].transpose()
+            # self.samples_y.shape = (n_samples, 5)
+        else:
+            self.samples_y = self.data[T[self.horizon], :]
+            # self.samples_y.shape = (n_samples,)
+
         self.samples_y -= 1
 
     def __snapshotting(self):
@@ -134,8 +141,6 @@ class FIDataBuilder:
             #self.__under_sampling()
 
         print("dataset type:", self.dataset_type, " - normalization:", self.normalization_type)
-        self.ys_occurrences = collections.Counter(self.samples_y)
-        print("occurrences:", self.ys_occurrences)
         print()
 
     def get_data(self, first_half_split=1):

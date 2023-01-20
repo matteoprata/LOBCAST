@@ -37,6 +37,7 @@ from src.models.dain.dain_param_search import HP_DAIN, HP_DAIN_FI_FIXED
 from src.models.deeplob.dlb_param_search import HP_DEEP, HP_DEEP_FI_FIXED
 from src.models.lstm.lstm_param_search import HP_LSTM, HP_LSTM_FI_FIXED
 from src.models.binctabl.binctabl_param_search import HP_BINTABL, HP_BINTABL_FI_FIXED
+from src.models.deeplobatt.dlbatt_param_search import HP_DEEPATT, HP_DEEPATT_FI_FIXED
 
 
 from src.main_helper import pick_model, pick_dataset
@@ -55,6 +56,7 @@ HP_DICT_MODEL = {
     cst.Models.TRANSLOB: HPSearchTypes(HP_TRANS, HP_TRANS_FI_FIXED, None),
     cst.Models.CTABL: HPSearchTypes(HP_TABL, HP_TABL_FI_FIXED, None),
     cst.Models.BINCTABL: HPSearchTypes(HP_BINTABL, HP_BINTABL_FI_FIXED, None),
+    cst.Models.DEEPLOBATT: HPSearchTypes(HP_DEEPATT, HP_DEEPATT_FI_FIXED, None),
 }
 
 HP_DICT_DATASET = {

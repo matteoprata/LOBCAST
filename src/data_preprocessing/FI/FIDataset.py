@@ -11,15 +11,18 @@ import collections
 class FIDataset(data.Dataset):
     """ Characterizes a dataset for PyTorch. """
 
-    def __init__(self, x, y, num_classes=3, one_hot_encoding=False):
+    def __init__(self, x, y, chosen_model=None, num_classes=3, one_hot_encoding=False):
         self.num_classes = num_classes
+        self.chosen_model = chosen_model
+        self.loss_weights = None
 
         self.x = torch.from_numpy(x).type(torch.FloatTensor)
         self.y = torch.from_numpy(y).type(torch.LongTensor)
 
-        self.ys_occurrences = collections.Counter(y)
-        occs = np.array([self.ys_occurrences[k] for k in sorted(self.ys_occurrences)])
-        self.loss_weights = torch.Tensor(occs / np.sum(occs))
+        if chosen_model == cst.Models.CTABL or chosen_model == cst.Models.BINCTABL:
+            self.ys_occurrences = collections.Counter(y)
+            occs = np.array([self.ys_occurrences[k] for k in sorted(self.ys_occurrences)])
+            self.loss_weights = torch.Tensor(occs / np.sum(occs))
 
         if one_hot_encoding:
             self.y = F.one_hot(self.y.to(torch.int64), num_classes=self.num_classes)
