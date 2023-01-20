@@ -27,4 +27,5 @@ HP_DEEPATT_LOBSTER_FIXED = {
     cst.LearningHyperParameter.BATCH_SIZE.value: 32,
     cst.LearningHyperParameter.NUM_SNAPSHOTS.value: 50,
     cst.LearningHyperParameter.BACKWARD_WINDOW.value: 100,
+    cst.LearningHyperParameter.FORWARD_WINDOW.value: 10,
 }

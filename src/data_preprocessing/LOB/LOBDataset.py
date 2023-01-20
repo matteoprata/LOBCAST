@@ -26,6 +26,7 @@ class LOBDataset(data.Dataset):
             num_snapshots=100,
             one_hot_encoding=False
     ):
+        self.config = config
         self.ys_occurrences = None
         self.dataset_type = dataset_type
         self.stocks = stocks
@@ -85,25 +86,26 @@ class LOBDataset(data.Dataset):
             print("Handling", stock, "for dataset", dataset_type)
             databuilder = stockName2databuilder[stock]
             samplesX, samplesY = databuilder.get_samples_x(), databuilder.get_samples_y()
-            self.x.extend(samplesX)
-            self.y.extend(samplesY)
+            self.x.append(samplesX)
+            self.y.append(samplesY)
             self.stock_sym_name.extend([stock]*len(samplesY))
 
-        self.ys_occurrences = collections.Counter(np.array(self.y))
-        occs = np.array([self.ys_occurrences[k] for k in sorted(self.ys_occurrences)])
-        self.loss_weights = torch.Tensor(occs / np.sum(occs))
+        self.x = np.concatenate(self.x, axis=0)
+        self.y = np.concatenate(self.y, axis=0)
 
-        self.x = torch.from_numpy(np.array(self.x)).type(torch.FloatTensor)
+        self.x = torch.from_numpy(self.x).type(torch.FloatTensor)
         self.y = torch.from_numpy(np.array(self.y)).type(torch.LongTensor)
 
+        if not self.config.CHOSEN_MODEL == cst.Models.DEEPLOBATT:
+            self.ys_occurrences = collections.Counter(self.y)
+            occs = np.array([self.ys_occurrences[k] for k in sorted(self.ys_occurrences)])
+            self.loss_weights = torch.Tensor(occs / np.sum(occs))
+        else:
+            self.y = F.one_hot(self.y.to(torch.int64), num_classes=self.num_classes).float()
+            self.y = torch.permute(self.y, (0, 2, 1))
+            # y.shape = (n_samples, num_classes, num_horizons)
+
         self.x_shape = tuple(self.x[0].shape)
-
-        # print(len(self.x), len(self.y), len(self.stock_sym_name))
-        # print()
-        # print()
-
-        if one_hot_encoding:
-            self.y = F.one_hot(self.y.to(torch.int64), num_classes=self.num_classes)
 
     def __len__(self):
         """ Denotes the total number of samples. """

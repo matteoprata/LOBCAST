@@ -99,7 +99,7 @@ class FIDataBuilder:
             self.samples_y = self.data[-5:, :].transpose()
             # self.samples_y.shape = (n_samples, 5)
         else:
-            self.samples_y = self.data[cst.FI_HORIZONS_MAPPINGS[self.horizon], :]
+            self.samples_y = self.data[cst.HORIZONS_MAPPINGS_FI[self.horizon], :]
             # self.samples_y.shape = (n_samples,)
 
         self.samples_y -= 1

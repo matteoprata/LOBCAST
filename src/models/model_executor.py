@@ -1,5 +1,3 @@
-from pprint import pprint
-
 import pandas as pd
 import pytorch_lightning as pl
 
@@ -14,6 +12,7 @@ import numpy as np
 import src.constants as cst
 import wandb
 from src.config import Configuration
+from src.utils.utilities import get_index_from_window
 
 
 class NNEngine(pl.LightningModule):
@@ -156,8 +155,9 @@ class NNEngine(pl.LightningModule):
 
         if self.config.CHOSEN_MODEL == cst.Models.DEEPLOBATT:
             truths = np.argmax(truths, axis=1)
-            truths = truths[:, cst.FI_HORIZONS_MAPPINGS[self.config.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON]]]
-            preds = preds[:, cst.FI_HORIZONS_MAPPINGS[self.config.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON]]]
+            index = get_index_from_window(self.config)
+            truths = truths[:, index]
+            preds = preds[:, index]
 
         return preds, truths, losses, stock_names
 

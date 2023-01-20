@@ -108,12 +108,21 @@ class DatasetFamily(str, Enum):
     FI = "FI"
     LOBSTER = "Lobster"
 
-FI_HORIZONS_MAPPINGS = {
+
+HORIZONS_MAPPINGS_FI = {
     1: -5,
     2: -4,
     3: -3,
     5: -2,
     10: -1
+}
+
+HORIZONS_MAPPINGS_LOBSTER = {
+    10: -5,
+    20: -4,
+    30: -3,
+    50: -2,
+    100: -1
 }
 
 

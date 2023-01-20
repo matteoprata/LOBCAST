@@ -202,8 +202,6 @@ def pick_model(config: Configuration, data_module):
         loss_weights = data_module.train_set.loss_weights
 
     elif config.CHOSEN_MODEL == cst.Models.DEEPLOBATT:
-        if config.CHOSEN_DATASET == cst.DatasetFamily.LOBSTER:
-            raise NotImplementedError("The multi-labeling of LOBSTER is not implemented yet")
         net_architecture = DeepLobAtt()
 
     engine = NNEngine(
