@@ -63,7 +63,10 @@ class DeepLobAtt(pl.LightningModule):
         self.fc1 = nn.Linear(128, 3)
         self.BN = nn.BatchNorm1d(1, momentum=0.6)
 
-    def forward(self, x, decoder_inputs):
+    def forward(self, x):
+        decoder_inputs = torch.zeros(x.shape[0], 1, 3, device=cst.DEVICE_TYPE)
+        decoder_inputs[:, 0, 0] = 1
+
         h0 = torch.zeros(1, x.size(0), 64, device=cst.DEVICE_TYPE)
         c0 = torch.zeros(1, x.size(0), 64, device=cst.DEVICE_TYPE)
 
