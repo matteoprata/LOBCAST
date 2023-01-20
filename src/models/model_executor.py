@@ -149,6 +149,16 @@ class NNEngine(pl.LightningModule):
             stock_names += stock_name_b
             # loss is single per batch
             losses += [loss_val.item()]
+
+        preds = np.array(preds)
+        truths = np.array(truths)
+        losses = np.array(losses)
+
+        if self.config.CHOSEN_MODEL == cst.Models.DEEPLOBATT:
+            truths = np.argmax(truths, axis=1)
+            truths = truths[:, cst.FI_HORIZONS_MAPPINGS[self.config.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON]]]
+            preds = preds[:, cst.FI_HORIZONS_MAPPINGS[self.config.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON]]]
+
         return preds, truths, losses, stock_names
 
     def __log_wandb_cm(self, ys, predictions, model_step, si):
@@ -161,13 +171,15 @@ class NNEngine(pl.LightningModule):
                 title=name)},
             )
 
-    def __compute_sk_cm(self, truths, preds):
+    def __compute_sk_cm(self, truths, predictions):
         y_actu = pd.Series(truths, name='actual')
-        y_pred = pd.Series(preds, name='predicted')
+        y_pred = pd.Series(predictions, name='predicted')
         mat_confusion = confusion_matrix(y_actu, y_pred)
         return mat_confusion
 
     def __compute_metrics(self, ys, predictions, model_step, loss_vals, si):
+        ys = torch.Tensor(ys)
+        predictions = torch.Tensor(predictions)
 
         cr = classification_report(ys, predictions, output_dict=True, zero_division=0)
         accuracy = cr['accuracy']  # MICRO-F1
@@ -176,7 +188,6 @@ class NNEngine(pl.LightningModule):
         recall = cr['macro avg']['recall']  # MACRO-RECALL
 
         mcc = matthews_corrcoef(ys, predictions)
-
         val_dict = {
             model_step.value + f"_{si}_" + cst.Metrics.F1.value: float(f1score),
             model_step.value + f"_{si}_" + cst.Metrics.PRECISION.value: float(precision),

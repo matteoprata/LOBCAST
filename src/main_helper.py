@@ -204,7 +204,6 @@ def pick_model(config: Configuration, data_module):
     elif config.CHOSEN_MODEL == cst.Models.DEEPLOBATT:
         if config.CHOSEN_DATASET == cst.DatasetFamily.LOBSTER:
             raise NotImplementedError("The multi-labeling of LOBSTER is not implemented yet")
-        raise NotImplementedError("The multi-labeling evaluation is not implemented yet")
         net_architecture = DeepLobAtt()
 
     engine = NNEngine(

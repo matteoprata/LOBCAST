@@ -1,4 +1,3 @@
-
 import src.constants as cst
 
 HP_DEEPATT = {
@@ -7,7 +6,7 @@ HP_DEEPATT = {
     cst.LearningHyperParameter.LEARNING_RATE.value: {'max': 0.001, 'min': 0.0001},  # 'max': 0.001, 'min': 0.0001
     cst.LearningHyperParameter.EPS.value: {'values': [1e-07]},  # 'max': 0.001, 'min': 0.0001
     cst.LearningHyperParameter.BATCH_SIZE.value: {'values': [32, 64, 128]},  # [32, 64, 128]
-    cst.LearningHyperParameter.NUM_SNAPSHOTS.value: {'values': [50]},  # [32, 64, 128]
+    cst.LearningHyperParameter.NUM_SNAPSHOTS.value: {'values': [50]},  # [50, 100]
 }
 
 

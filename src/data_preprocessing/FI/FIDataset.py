@@ -19,15 +19,14 @@ class FIDataset(data.Dataset):
         self.x = torch.from_numpy(x).type(torch.FloatTensor)
         self.y = torch.from_numpy(y).type(torch.LongTensor)
 
-        if chosen_model == cst.Models.CTABL or chosen_model == cst.Models.BINCTABL:
+        if not chosen_model == cst.Models.DEEPLOBATT:
             self.ys_occurrences = collections.Counter(y)
             occs = np.array([self.ys_occurrences[k] for k in sorted(self.ys_occurrences)])
             self.loss_weights = torch.Tensor(occs / np.sum(occs))
-
-        if chosen_model == cst.Models.DEEPLOBATT:
-            # y.shape should be (batch_size, num_classes, num_horizons)
+        else:
             self.y = F.one_hot(self.y.to(torch.int64), num_classes=self.num_classes).float()
             self.y = torch.permute(self.y, (0, 2, 1))
+            # y.shape = (n_samples, num_classes, num_horizons)
 
         self.x_shape = tuple(self.x[0].shape)
 

@@ -95,19 +95,11 @@ class FIDataBuilder:
         """ gets the labels """
         # the last five elements in self.data contain the labels
         # they are based on the possible horizon values [1, 2, 3, 5, 10]
-        T = {
-            1: -5,
-            2: -4,
-            3: -3,
-            5: -2,
-            10: -1
-        }
-
         if self.chosen_model == cst.Models.DEEPLOBATT:
             self.samples_y = self.data[-5:, :].transpose()
             # self.samples_y.shape = (n_samples, 5)
         else:
-            self.samples_y = self.data[T[self.horizon], :]
+            self.samples_y = self.data[cst.FI_HORIZONS_MAPPINGS[self.horizon], :]
             # self.samples_y.shape = (n_samples,)
 
         self.samples_y -= 1
