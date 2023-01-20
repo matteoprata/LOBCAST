@@ -28,7 +28,7 @@ class Configuration:
 
         self.CHOSEN_DATASET = cst.DatasetFamily.FI
         self.CHOSEN_PERIOD = cst.Periods.FI
-        self.CHOSEN_MODEL = cst.Models.MLP
+        self.CHOSEN_MODEL = cst.Models.DEEPLOBATT
 
         self.CHOSEN_STOCKS = {
             cst.STK_OPEN.TRAIN: cst.Stocks.FI,
