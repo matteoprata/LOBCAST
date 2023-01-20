@@ -24,8 +24,10 @@ class FIDataset(data.Dataset):
             occs = np.array([self.ys_occurrences[k] for k in sorted(self.ys_occurrences)])
             self.loss_weights = torch.Tensor(occs / np.sum(occs))
 
-        if one_hot_encoding:
-            self.y = F.one_hot(self.y.to(torch.int64), num_classes=self.num_classes)
+        if chosen_model == cst.Models.DEEPLOBATT:
+            # y.shape should be (batch_size, num_classes, num_horizons)
+            self.y = F.one_hot(self.y.to(torch.int64), num_classes=self.num_classes).float()
+            self.y = torch.permute(self.y, (0, 2, 1))
 
         self.x_shape = tuple(self.x[0].shape)
 

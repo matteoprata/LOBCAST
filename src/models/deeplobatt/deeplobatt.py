@@ -64,6 +64,8 @@ class DeepLobAtt(pl.LightningModule):
         self.BN = nn.BatchNorm1d(1, momentum=0.6)
 
     def forward(self, x):
+        x = x[:, None, :, :]  # none stands for the channel
+
         decoder_inputs = torch.zeros(x.shape[0], 1, 3, device=cst.DEVICE_TYPE)
         decoder_inputs[:, 0, 0] = 1
 
@@ -71,9 +73,7 @@ class DeepLobAtt(pl.LightningModule):
         c0 = torch.zeros(1, x.size(0), 64, device=cst.DEVICE_TYPE)
 
         x = self.conv1(x)
-
         x = self.conv2(x)
-
         x = self.conv3(x)
 
         x_inp1 = self.inp1(x)
@@ -83,7 +83,6 @@ class DeepLobAtt(pl.LightningModule):
         x = torch.cat((x_inp1, x_inp2, x_inp3), dim=1)
 
         x = x.permute(0, 2, 1, 3)
-
         x = torch.reshape(x, (-1, x.shape[1], x.shape[2]))
 
         encoder_outputs, (h0, c0) = self.lstm(x, (h0, c0))
@@ -121,4 +120,6 @@ class DeepLobAtt(pl.LightningModule):
             states = [state_h, state_c]
 
         all_outputs = torch.permute(all_outputs, (1, 2, 0))
+
+        # all_outputs.shape = (batch_size, num_classes, num_horizons)
         return all_outputs

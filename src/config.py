@@ -88,6 +88,10 @@ class Configuration:
             self.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON],
         )
 
+        # TODO: controllare
+        if not self.IS_TUNE_H_PARAMS and not self.IS_WANDB:
+            self.WANDB_RUN_NAME = self.WANDB_SWEEP_NAME
+
     @staticmethod
     def cf_name_format(ext=""):
         return "model={}-trst={}-test={}-data={}-peri={}-bw={}-fw={}-fiw={}" + ext
