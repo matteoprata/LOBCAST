@@ -1,5 +1,6 @@
 import torch
 
+
 class WeightConstraint(object):
     def __init__(self):
         pass

@@ -4,7 +4,7 @@
 import pytorch_lightning as pl
 import torch
 import torch.nn as nn
-import src.config as co
+import src.constants as cst
 
 
 class TransLob(pl.LightningModule):
@@ -80,7 +80,7 @@ class TransLob(pl.LightningModule):
         pos = torch.arange(0, n_levels, 1, dtype=torch.float32) / (n_levels - 1)
         pos = (pos + pos) - 1
         # pos = np.reshape(pos, (pos.shape[0]))
-        pos_final = torch.zeros((x.shape[0], n_levels, 1), dtype=torch.float32, device=co.DEVICE_TYPE)
+        pos_final = torch.zeros((x.shape[0], n_levels, 1), dtype=torch.float32, device=cst.DEVICE_TYPE)
         for i in range(pos_final.shape[0]):
             for j in range(pos_final.shape[1]):
                 pos_final[i, j, 0] = pos[j]

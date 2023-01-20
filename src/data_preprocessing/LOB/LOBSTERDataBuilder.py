@@ -57,6 +57,7 @@ class LOBSTERDataBuilder:
 
         self.label_threshold_pos = label_threshold_pos
         self.label_threshold_neg = label_threshold_neg
+        self.ys_occurrences = None
 
         # to store the datasets
         self.STOCK_NAME = stock_name
@@ -192,8 +193,8 @@ class LOBSTERDataBuilder:
         if not self.dataset_type == cst.DatasetType.TEST:
             self.__under_sampling()
 
-        occurrences = collections.Counter(self.__samples_y)
-        print("After undersampling:", self.dataset_type, occurrences)
+        self.ys_occurrences = collections.Counter(self.__samples_y)
+        print("After undersampling:", self.dataset_type, self.ys_occurrences)
 
         # self.plot_dataset()
 

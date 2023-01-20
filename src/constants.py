@@ -97,7 +97,10 @@ class Models(str, Enum):
     DEEPLOB = "DeepLob"
     DAIN = "DAIN"
     TRANSLOB = "TransLob"
+
     CTABL = "CTABL"
+    BINCTABL = "BINCTABL"
+    DEEPLOBATT = "DEEPLOBATT"
 
 
 class DatasetFamily(str, Enum):
@@ -206,14 +209,14 @@ WANDB_SWEEP_MAX_RUNS = 15
 
 
 class ServersMAC(Enum):
-    ALIEN1 = 0
-    ALIEN2 = 1
-    FISSO1 = 2
+    # ALIEN1 = 0
+    # ALIEN2 = 1
+    FISSO1 = 0
 
 
 ServerMACIDs = {
-    '3b:5a:48:6f:c3:0e': ServersMAC.ALIEN1,
-    '91:29:87:cc:61:09': ServersMAC.ALIEN2,
+    # '3b:5a:48:6f:c3:0e': ServersMAC.ALIEN1,
+    # '91:29:87:cc:61:09': ServersMAC.ALIEN2,
     '12:19:23:96:dd:8b': ServersMAC.FISSO1
 }
 

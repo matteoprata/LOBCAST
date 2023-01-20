@@ -5,6 +5,7 @@ import torch.nn.functional as F
 import numpy as np
 import torch
 import src.constants as cst
+import collections
 
 from src.data_preprocessing.LOB.LOBSTERDataBuilder import LOBSTERDataBuilder
 from src.config import Configuration
@@ -25,6 +26,7 @@ class LOBDataset(data.Dataset):
             num_snapshots=100,
             one_hot_encoding=False
     ):
+        self.ys_occurrences = None
         self.dataset_type = dataset_type
         self.stocks = stocks
         self.start_end_trading_day = start_end_trading_day
@@ -87,14 +89,18 @@ class LOBDataset(data.Dataset):
             self.y.extend(samplesY)
             self.stock_sym_name.extend([stock]*len(samplesY))
 
+        self.ys_occurrences = collections.Counter(np.array(self.y))
+        occs = np.array([self.ys_occurrences[k] for k in sorted(self.ys_occurrences)])
+        self.loss_weights = torch.Tensor(occs / np.sum(occs))
+
         self.x = torch.from_numpy(np.array(self.x)).type(torch.FloatTensor)
         self.y = torch.from_numpy(np.array(self.y)).type(torch.LongTensor)
 
         self.x_shape = tuple(self.x[0].shape)
 
         # print(len(self.x), len(self.y), len(self.stock_sym_name))
-        print()
-        print()
+        # print()
+        # print()
 
         if one_hot_encoding:
             self.y = F.one_hot(self.y.to(torch.int64), num_classes=self.num_classes)

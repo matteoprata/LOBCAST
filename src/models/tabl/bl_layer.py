@@ -2,9 +2,9 @@ import pytorch_lightning as pl
 from torch import nn
 import torch
 
-class BL_layer(pl.LightningModule):
 
-    def __init__(self, d2, d1, t1, t2):
+class BL_layer(nn.Module):
+  def __init__(self, d2, d1, t1, t2):
         super().__init__()
         weight1 = torch.Tensor(d2, d1)
         self.W1 = nn.Parameter(weight1)
@@ -20,6 +20,8 @@ class BL_layer(pl.LightningModule):
 
         self.activation = nn.ReLU()
 
-    def forward(self, x):
-        x = self.activation(self.W1 @ x @ self.W2 + self.B)
-        return x
+  def forward(self, x):
+
+    x = self.activation(self.W1 @ x @ self.W2 + self.B)
+
+    return x

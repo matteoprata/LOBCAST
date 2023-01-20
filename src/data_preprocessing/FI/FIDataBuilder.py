@@ -1,4 +1,5 @@
 import collections
+from collections import Counter
 
 import src.constants as cst
 import numpy as np
@@ -28,6 +29,7 @@ class FIDataBuilder:
         self.normalization_type = normalization_type
         self.horizon = horizon
         self.window = window
+        self.ys_occurrences = None
 
         # KEY call, generates the dataset
         self.data, self.samples_x, self.samples_y = None, None, None
@@ -132,8 +134,8 @@ class FIDataBuilder:
             #self.__under_sampling()
 
         print("dataset type:", self.dataset_type, " - normalization:", self.normalization_type)
-        occurrences = collections.Counter(self.samples_y)
-        print("occurrences:", occurrences)
+        self.ys_occurrences = collections.Counter(self.samples_y)
+        print("occurrences:", self.ys_occurrences)
         print()
 
     def get_data(self, first_half_split=1):

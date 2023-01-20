@@ -1,7 +1,7 @@
 
 import src.constants as cst
 
-HP_TABL = {
+HP_BINTABL = {
     cst.LearningHyperParameter.EPOCHS_UB.value: {'values': [200]},
     cst.LearningHyperParameter.OPTIMIZER.value: {'values': [cst.Optimizers.ADAM.value]},
     cst.LearningHyperParameter.LEARNING_RATE.value: {'max': 0.001, 'min': 0.0001},  # 'max': 0.001, 'min': 0.0001
@@ -9,10 +9,9 @@ HP_TABL = {
     cst.LearningHyperParameter.NUM_SNAPSHOTS.value: {'values': [10]},
 }
 
-
 # SC = {0.01, 0.005, 0.001, 0.0005, 0.0001}
 
-HP_TABL_FI_FIXED = {
+HP_BINTABL_FI_FIXED = {
     cst.LearningHyperParameter.EPOCHS_UB.value: 200,
     cst.LearningHyperParameter.OPTIMIZER.value: cst.Optimizers.ADAM.value,
     cst.LearningHyperParameter.LEARNING_RATE.value: 0.0001,

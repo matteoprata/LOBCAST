@@ -11,12 +11,12 @@ from src.main_single import *
 from src.utils.utilities import get_sys_mac
 
 
-def experiment_FI():
+def experiment_FI(sweep_time=None, models_todo=None):
 
-    # 2023-01-18+14-23-21
-    parser = argparse.ArgumentParser(description='Stock Price Trend Prediction Sweep FI:')
-    parser.add_argument('-now', '--now', default=None)
-    args = vars(parser.parse_args())
+    if sweep_time is None:
+        parser = argparse.ArgumentParser(description='Stock Price Trend Prediction Sweep FI:')
+        parser.add_argument('-now', '--now', default=None)
+        args = vars(parser.parse_args())
 
     mac = get_sys_mac()
 
@@ -27,12 +27,13 @@ def experiment_FI():
         print("This SERVER is not handled for the experiment.")
         exit()
 
-    for mod in list(cst.Models)[server.value::len(cst.ServersMAC)]:
+    models_todo = models_todo if models_todo is not None else cst.Models
+    for mod in list(models_todo)[server.value::len(cst.ServersMAC)]:
         k = cst.FI_Horizons.K10
         print("Running FI experiment on {}, with K={}".format(mod, k))
 
         try:
-            now = args["now"]
+            now = args["now"] if sweep_time is None else sweep_time
             cf: Configuration = Configuration(now)
             set_seeds(cf)
 
@@ -53,4 +54,6 @@ def experiment_FI():
             sys.exit()
 
 
-experiment_FI()
+sweep_time = "2023-01-18+14-23-21"
+models_todo = [cst.Models.BINCTABL, cst.Models.CTABL]
+experiment_FI(sweep_time, models_todo)

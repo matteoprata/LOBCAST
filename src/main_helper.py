@@ -1,23 +1,18 @@
-import copy
-
 import numpy as np
 
 import src.constants as cst
 from src.config import Configuration
 from src.models.model_executor import NNEngine
-from src.metrics_log.Metrics import Metrics
 
 # DATASETS
 from src.data_preprocessing.FI.FIDataBuilder import FIDataBuilder
-from src.data_preprocessing.FI.FIDataModule import FIDataModule
 from src.data_preprocessing.FI.FIDataset import FIDataset
-from src.data_preprocessing.LOB.LOBDataModule import LOBDataModule
+from src.data_preprocessing.DataModule import DataModule
 from src.data_preprocessing.LOB.LOBDataset import LOBDataset
 
 # MODELS
 from src.models.mlp.mlp import MLP
 from src.models.tabl.ctabl import CTABL
-from src.models.tabl.weight_constraint import WeightConstraint
 from src.models.translob.translob import TransLob
 from src.models.cnn1.cnn1 import CNN1
 from src.models.cnn2.cnn2 import CNN2
@@ -25,6 +20,7 @@ from src.models.cnnlstm.cnnlstm import CNNLSTM
 from src.models.dain.dain import DAIN
 from src.models.deeplob.deeplob import DeepLob
 from src.models.lstm.lstm import LSTM
+from src.models.binctabl.BinTabl import BiN_CTABL
 
 
 def prepare_data_FI(config: Configuration):
@@ -64,9 +60,9 @@ def prepare_data_FI(config: Configuration):
     print(len(train_set), len(val_set), len(test_set))
     print()
 
-    fi_dm = FIDataModule(train_set, val_set, test_set,
-                         config.HYPER_PARAMETERS[cst.LearningHyperParameter.BATCH_SIZE],
-                         config.HYPER_PARAMETERS[cst.LearningHyperParameter.IS_SHUFFLE_TRAIN_SET])
+    fi_dm = DataModule(train_set, val_set, test_set,
+                       config.HYPER_PARAMETERS[cst.LearningHyperParameter.BATCH_SIZE],
+                       config.HYPER_PARAMETERS[cst.LearningHyperParameter.IS_SHUFFLE_TRAIN_SET])
     return fi_dm
 
 
@@ -102,8 +98,8 @@ def prepare_data_LOBSTER(config: Configuration):
     print(len(train_set), len(val_set), len(test_set))
     print()
 
-    lob_dm = LOBDataModule(train_set, val_set, test_set, config.HYPER_PARAMETERS[cst.LearningHyperParameter.BATCH_SIZE],
-                           config.HYPER_PARAMETERS[cst.LearningHyperParameter.IS_SHUFFLE_TRAIN_SET])
+    lob_dm = DataModule(train_set, val_set, test_set, config.HYPER_PARAMETERS[cst.LearningHyperParameter.BATCH_SIZE],
+                        config.HYPER_PARAMETERS[cst.LearningHyperParameter.IS_SHUFFLE_TRAIN_SET])
     return lob_dm
 
 
@@ -180,11 +176,12 @@ def pick_model(config: Configuration, data_module):
         net_architecture = TransLob()
 
     elif config.CHOSEN_MODEL == cst.Models.CTABL:
-        raise NotImplementedError
         net_architecture = CTABL(60, 40, 10, 10, 120, 5, 3, 1)
-        constraint = WeightConstraint()
-        net_architecture.apply(constraint)
-        # TODO: compute loss_weights
+        loss_weights = data_module.train_set.loss_weights
+
+    elif config.CHOSEN_MODEL == cst.Models.BINCTABL:
+        net_architecture = BiN_CTABL(60, 40, 10, 10, 120, 5, 3, 1)
+        loss_weights = data_module.train_set.loss_weights
 
     engine = NNEngine(
         config=config,

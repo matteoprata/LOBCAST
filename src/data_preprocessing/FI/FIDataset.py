@@ -5,6 +5,7 @@ import torch.nn.functional as F
 import torch
 import src.constants as cst
 import numpy as np
+import collections
 
 
 class FIDataset(data.Dataset):
@@ -15,6 +16,10 @@ class FIDataset(data.Dataset):
 
         self.x = torch.from_numpy(x).type(torch.FloatTensor)
         self.y = torch.from_numpy(y).type(torch.LongTensor)
+
+        self.ys_occurrences = collections.Counter(y)
+        occs = np.array([self.ys_occurrences[k] for k in sorted(self.ys_occurrences)])
+        self.loss_weights = torch.Tensor(occs / np.sum(occs))
 
         if one_hot_encoding:
             self.y = F.one_hot(self.y.to(torch.int64), num_classes=self.num_classes)

@@ -4,10 +4,10 @@ from torch.utils.data import DataLoader
 import src.constants as cst
 
 
-class LOBDataModule(pl.LightningDataModule):
+class DataModule(pl.LightningDataModule):
     """ Splits the datasets in TRAIN, VALIDATION, TEST. """
 
-    def __init__(self, train_set, val_set, test_set, batch_size, is_shuffle_train=True):
+    def __init__(self, train_set, val_set, test_set, batch_size,  is_shuffle_train=True):
         super().__init__()
 
         self.train_set = train_set
