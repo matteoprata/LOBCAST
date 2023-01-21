@@ -11,6 +11,7 @@ import tqdm
 import collections
 import numpy as np
 from datetime import datetime
+from src.config import Configuration
 import src.constants as cst
 
 
@@ -19,7 +20,7 @@ class LOBSTERDataBuilder:
         self,
         stock_name,
         lobster_data_dir,
-        config,
+        config: Configuration,
         dataset_type,
         n_lob_levels=None,
         normalization_type=cst.NormalizationType.Z_SCORE,
@@ -57,7 +58,6 @@ class LOBSTERDataBuilder:
 
         self.label_threshold_pos = label_threshold_pos
         self.label_threshold_neg = label_threshold_neg
-        self.ys_occurrences = None
 
         # to store the datasets
         self.STOCK_NAME = stock_name
@@ -100,7 +100,8 @@ class LOBSTERDataBuilder:
             self.__data, means_dicts, stds_dicts = ppu.stationary_normalize_data(
                 self.__data,
                 self.normalization_means,
-                self.normalization_stds)
+                self.normalization_stds
+            )
 
             # the training dataset shares its normalization with the others
             if self.dataset_type == cst.DatasetType.TRAIN:
@@ -114,46 +115,68 @@ class LOBSTERDataBuilder:
         self.__data = ppu.add_midprices_columns(self.__data, self.window_size_forward, self.window_size_backward)
 
     def __label_dataset(self):
-        self.__data, self.label_threshold_pos, self.label_threshold_neg = ppu.add_lob_labels(
-            self.__data,
-            self.window_size_forward,
-            self.window_size_backward,
-            self.label_threshold_pos,
-            self.label_threshold_neg,
-            self.label_dynamic_scaler
-        )
+
+        if self.config.CHOSEN_MODEL == cst.Models.DEEPLOBATT:
+            for winsize in cst.WinSize:
+                if winsize.value is None:
+                    continue
+                self.__data, self.label_threshold_pos, self.label_threshold_neg = ppu.add_lob_labels(
+                    self.__data,
+                    winsize.value,
+                    self.window_size_backward,
+                    self.label_threshold_pos,
+                    self.label_threshold_neg,
+                    self.label_dynamic_scaler
+                )
+                self.__data = self.__data.rename(columns={'y': f'y{winsize.value}'})
+
+            self.__data['y'] = self.__data[[f'y{winsize.value}' for winsize in cst.WinSize if winsize.value is not None]].values.tolist()
+
+        else:
+            self.__data, self.label_threshold_pos, self.label_threshold_neg = ppu.add_lob_labels(
+                self.__data,
+                self.window_size_forward,
+                self.window_size_backward,
+                self.label_threshold_pos,
+                self.label_threshold_neg,
+                self.label_dynamic_scaler
+            )
 
     def __snapshotting(self):
         """ This creates 4 X n_levels X NUM_SNAPSHOTS -> prediction. """
         print("Snapshotting... (__data has", self.__data.shape[0], "rows)")
 
         relevant_columns = [c for c in self.__data.columns if "sell" in c or "buy" in c]
-        relevant_columns = [self.__data.columns.get_loc(rc) for rc in relevant_columns]
+        # relevant_columns = [self.__data.columns.get_loc(rc) for rc in relevant_columns]
         y_id = self.__data.columns.get_loc(ppu.DataCols.PREDICTION.value)
 
         n_tot = self.__data.shape[0] - self.num_snapshots
-        data_np = self.__data.to_numpy()
-        X = np.array([data_np[st:st + self.num_snapshots, relevant_columns] for st in tqdm.tqdm(range(0, n_tot))])
-        Y = np.array([data_np[st + self.num_snapshots - 1, y_id] for st in tqdm.tqdm(range(0, n_tot))])
+        data_x_np = self.__data[relevant_columns].to_numpy()
+        data_y_np = self.__data[ppu.DataCols.PREDICTION.value].to_numpy()
+
+        X = np.array([data_x_np[st:st + self.num_snapshots] for st in tqdm.tqdm(range(0, n_tot))])
+        Y = np.array([data_y_np[st + self.num_snapshots - 1] for st in tqdm.tqdm(range(0, n_tot))])
 
         self.__samples_x, self.__samples_y = X, Y
+
+
 
     def __under_sampling(self):
         """ Discard instances of the majority class. """
         print("Doing under-sampling...")
 
-        occurrences = collections.Counter(self.__samples_y)
+        occurrences, ys = self.__compute_occurrences()
         i_min_occ = min(occurrences, key=occurrences.get)  # index of the class with the least instances
         n_min_occ = occurrences[i_min_occ]                 # number of occurrences of the minority class
 
         indexes_chosen = []
         for i in [cst.Predictions.UPWARD.value, cst.Predictions.STATIONARY.value, cst.Predictions.DOWNWARD.value]:
-            indexes = np.where(self.__samples_y == i)[0]
+            indexes = np.where(ys == i)[0]
             assert len(indexes) >= self.config.INSTANCES_LOWER_BOUND, "The instance is not well formed, there are less than " \
                    "{} instances for the class {} ({}).".format(self.config.INSTANCES_LOWER_BOUND, i, len(indexes))
-
             indexes_chosen += list(self.config.RANDOM_GEN_DATASET.choice(indexes, n_min_occ, replace=False))
         indexes_chosen = np.sort(indexes_chosen)
+
         self.__samples_x = self.__samples_x[indexes_chosen]
         self.__samples_y = self.__samples_y[indexes_chosen]
 
@@ -187,16 +210,25 @@ class LOBSTERDataBuilder:
         self.__normalize_dataset()
         self.__snapshotting()
 
-        occurrences = collections.Counter(self.__samples_y)
+        occurrences, _ = self.__compute_occurrences()
         print("Before undersampling:", self.dataset_type, occurrences)
 
         if not self.dataset_type == cst.DatasetType.TEST:
             self.__under_sampling()
 
-        self.ys_occurrences = collections.Counter(self.__samples_y)
-        print("After undersampling:", self.dataset_type, self.ys_occurrences)
+        occurrences, _ = self.__compute_occurrences()
+        print("After undersampling:", self.dataset_type, occurrences)
 
         # self.plot_dataset()
+
+    def __compute_occurrences(self):
+        ys = None
+        if self.config.CHOSEN_MODEL == cst.Models.DEEPLOBATT:
+            ys = self.__samples_y[:, cst.HORIZONS_MAPPINGS_LOBSTER[self.window_size_forward]]
+        else:
+            ys = self.__samples_y
+        occurrences = collections.Counter(ys)
+        return occurrences, ys
 
     def get_samples_x(self, split=None):
         return self.__samples_x if split is None else np.split(self.__samples_x, split)

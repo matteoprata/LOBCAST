@@ -3,6 +3,7 @@ import pickle
 import os
 import json
 import platform, socket, re, uuid, psutil, logging
+import src.constants as cst
 
 
 def read_data(fname):
@@ -55,3 +56,9 @@ def get_sys_info():
 def get_sys_mac():
     return ':'.join(re.findall('..', '%012x' % uuid.getnode()))
 
+
+def get_index_from_window(config):
+    if config.CHOSEN_DATASET == cst.DatasetFamily.FI:
+        return cst.HORIZONS_MAPPINGS_FI[config.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON]]
+    elif config.CHOSEN_DATASET == cst.DatasetFamily.LOBSTER:
+        return cst.HORIZONS_MAPPINGS_LOBSTER[config.HYPER_PARAMETERS[cst.LearningHyperParameter.FORWARD_WINDOW]]

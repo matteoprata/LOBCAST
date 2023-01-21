@@ -7,6 +7,7 @@ class LearningHyperParameter(str, Enum):
     OPTIMIZER = "optimizer"
     LEARNING_RATE = "lr"
     WEIGHT_DECAY = "weight_decay"
+    EPS = "eps"
     EPOCHS_UB = "epochs"
     IS_SHUFFLE_TRAIN_SET = "is_shuffle"
     BATCH_SIZE = "batch_size"
@@ -65,10 +66,10 @@ class WinSize(Enum):
     SEC50 = 50
     SEC100 = 100
 
-    MIN01 = 60
-    MIN05 = 60 * 5
-    MIN10 = 60 * 10
-    MIN20 = 60 * 20
+    # MIN01 = 60
+    # MIN05 = 60 * 5
+    # MIN10 = 60 * 10
+    # MIN20 = 60 * 20
 
     NONE = None
 
@@ -108,6 +109,23 @@ class DatasetFamily(str, Enum):
     LOBSTER = "Lobster"
 
 
+HORIZONS_MAPPINGS_FI = {
+    1: -5,
+    2: -4,
+    3: -3,
+    5: -2,
+    10: -1
+}
+
+HORIZONS_MAPPINGS_LOBSTER = {
+    10: -5,
+    20: -4,
+    30: -3,
+    50: -2,
+    100: -1
+}
+
+
 # class Stocks(Enum):
 #     AAPL = ["AAPL"]
 #     TSLA = ["TSLA"]
@@ -118,7 +136,7 @@ class DatasetFamily(str, Enum):
 #
 #     ALL = ["AAPL", "TSLA", "ZM", "AAWW", "AGNC", "LYFT"]
 
-class Stocks(str, Enum):
+class Stocks(list, Enum):
     SOFI = ["SOFI"]
     NFLX = ["NFLX"]
     CSCO = ["CSCO"]
@@ -129,7 +147,7 @@ class Stocks(str, Enum):
     ALL = ["SOFI", "NFLX", "CSCO", "WING", "SHLS", "LSTR"]
 
 
-class Periods(str, Enum):
+class Periods(dict, Enum):
     MARCH2020 = {
         'train': ('2020-03-02', '2020-03-20'),
         'val': ('2020-03-23', '2020-03-27'),

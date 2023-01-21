@@ -34,9 +34,10 @@ from src.models.cnn1.cnn1_param_search import HP_CNN1, HP_CNN1_FI_FIXED
 from src.models.cnn2.cnn2_param_search import HP_CNN2, HP_CNN2_FI_FIXED
 from src.models.cnnlstm.cnnlstm_param_search import HP_CNNLSTM, HP_CNNLSTM_FI_FIXED
 from src.models.dain.dain_param_search import HP_DAIN, HP_DAIN_FI_FIXED
-from src.models.deeplob.dlb_param_search import HP_DEEP, HP_DEEP_FI_FIXED
+from src.models.deeplob.dlb_param_search import HP_DEEP, HP_DEEP_FI_FIXED, HP_DEEP_LOBSTER_FIXED
 from src.models.lstm.lstm_param_search import HP_LSTM, HP_LSTM_FI_FIXED
 from src.models.binctabl.binctabl_param_search import HP_BINTABL, HP_BINTABL_FI_FIXED
+from src.models.deeplobatt.dlbatt_param_search import HP_DEEPATT, HP_DEEPATT_FI_FIXED, HP_DEEPATT_LOBSTER_FIXED
 
 
 from src.main_helper import pick_model, pick_dataset
@@ -51,10 +52,11 @@ HP_DICT_MODEL = {
     cst.Models.LSTM: HPSearchTypes(HP_LSTM, HP_LSTM_FI_FIXED, None),
     cst.Models.CNNLSTM: HPSearchTypes(HP_CNNLSTM, HP_CNNLSTM_FI_FIXED, None),
     cst.Models.DAIN: HPSearchTypes(HP_DAIN, HP_DAIN_FI_FIXED, None),
-    cst.Models.DEEPLOB: HPSearchTypes(HP_DEEP, HP_DEEP_FI_FIXED, None),
+    cst.Models.DEEPLOB: HPSearchTypes(HP_DEEP, HP_DEEP_FI_FIXED, HP_DEEP_LOBSTER_FIXED),
     cst.Models.TRANSLOB: HPSearchTypes(HP_TRANS, HP_TRANS_FI_FIXED, None),
     cst.Models.CTABL: HPSearchTypes(HP_TABL, HP_TABL_FI_FIXED, None),
     cst.Models.BINCTABL: HPSearchTypes(HP_BINTABL, HP_BINTABL_FI_FIXED, None),
+    cst.Models.DEEPLOBATT: HPSearchTypes(HP_DEEPATT, HP_DEEPATT_FI_FIXED, HP_DEEPATT_LOBSTER_FIXED),
 }
 
 HP_DICT_DATASET = {
@@ -246,5 +248,7 @@ if __name__ == "__main__":
     # python src/main_single.py -iw 0 -ih 0 -d FI -m MLP -FI_HORIZON 3
     # python src/main_single.py -iw 0 -ih 0 -d FI -m MLP -FI_HORIZON 5
     # python src/main_single.py -iw 0 -ih 0 -d FI -m MLP -FI_HORIZON 10
+
+    # python -m src.main_single -iw 0 -ih 0 -d LOBSTER -p JULY2021 -m DEEPLOBATT -str ALL -ste ALL
 
 

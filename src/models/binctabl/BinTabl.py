@@ -31,7 +31,6 @@ class BiN_BTABL(nn.Module):
         self.max_norm_(self.TABL.W2.data)
         x = self.TABL(x)
         x = torch.squeeze(x)
-        x = torch.softmax(x, 1)
 
         return x
 

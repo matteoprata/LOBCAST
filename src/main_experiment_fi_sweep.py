@@ -55,5 +55,5 @@ def experiment_FI(sweep_time=None, models_todo=None):
 
 
 sweep_time = "2023-01-18+14-23-21"
-models_todo = [cst.Models.BINCTABL]
+models_todo = [cst.Models.DEEPLOBATT]
 experiment_FI(sweep_time, models_todo)

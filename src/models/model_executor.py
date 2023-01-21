@@ -1,5 +1,3 @@
-from pprint import pprint
-
 import pandas as pd
 import pytorch_lightning as pl
 
@@ -14,6 +12,7 @@ import numpy as np
 import src.constants as cst
 import wandb
 from src.config import Configuration
+from src.utils.utilities import get_index_from_window
 
 
 class NNEngine(pl.LightningModule):
@@ -25,6 +24,7 @@ class NNEngine(pl.LightningModule):
         neural_architecture,
         optimizer,
         lr,
+        eps=None,
         weight_decay=0,
         loss_weights=None,
         remote_log=None,
@@ -45,6 +45,7 @@ class NNEngine(pl.LightningModule):
         self.optimizer = optimizer
         self.lr = lr
         self.weight_decay = weight_decay
+        self.eps = eps
 
     def forward(self, x):
         out = self.neural_architecture(x)
@@ -147,6 +148,17 @@ class NNEngine(pl.LightningModule):
             stock_names += stock_name_b
             # loss is single per batch
             losses += [loss_val.item()]
+
+        preds = np.array(preds)
+        truths = np.array(truths)
+        losses = np.array(losses)
+
+        if self.config.CHOSEN_MODEL == cst.Models.DEEPLOBATT:
+            truths = np.argmax(truths, axis=1)
+            index = get_index_from_window(self.config)
+            truths = truths[:, index]
+            preds = preds[:, index]
+
         return preds, truths, losses, stock_names
 
     def __log_wandb_cm(self, ys, predictions, model_step, si):
@@ -159,13 +171,15 @@ class NNEngine(pl.LightningModule):
                 title=name)},
             )
 
-    def __compute_sk_cm(self, truths, preds):
+    def __compute_sk_cm(self, truths, predictions):
         y_actu = pd.Series(truths, name='actual')
-        y_pred = pd.Series(preds, name='predicted')
+        y_pred = pd.Series(predictions, name='predicted')
         mat_confusion = confusion_matrix(y_actu, y_pred)
         return mat_confusion
 
     def __compute_metrics(self, ys, predictions, model_step, loss_vals, si):
+        ys = torch.Tensor(ys)
+        predictions = torch.Tensor(predictions)
 
         cr = classification_report(ys, predictions, output_dict=True, zero_division=0)
         accuracy = cr['accuracy']  # MICRO-F1
@@ -174,7 +188,6 @@ class NNEngine(pl.LightningModule):
         recall = cr['macro avg']['recall']  # MACRO-RECALL
 
         mcc = matthews_corrcoef(ys, predictions)
-
         val_dict = {
             model_step.value + f"_{si}_" + cst.Metrics.F1.value: float(f1score),
             model_step.value + f"_{si}_" + cst.Metrics.PRECISION.value: float(precision),
@@ -198,6 +211,6 @@ class NNEngine(pl.LightningModule):
             ], lr=self.lr)
 
         if self.optimizer == cst.Optimizers.ADAM.value:
-            return torch.optim.Adam(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
+            return torch.optim.Adam(self.parameters(), lr=self.lr, weight_decay=self.weight_decay, eps=self.eps)
         elif self.optimizer == cst.Optimizers.RMSPROP.value:
             return torch.optim.RMSprop(self.parameters(), lr=self.lr)

@@ -21,6 +21,7 @@ from src.models.dain.dain import DAIN
 from src.models.deeplob.deeplob import DeepLob
 from src.models.lstm.lstm import LSTM
 from src.models.binctabl.BinTabl import BiN_CTABL
+from src.models.deeplobatt.deeplobatt import DeepLobAtt
 
 
 def prepare_data_FI(config: Configuration):
@@ -31,6 +32,7 @@ def prepare_data_FI(config: Configuration):
         horizon=config.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON],
         window=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_SNAPSHOTS],
         train_val_split=config.TRAIN_SPLIT_VAL,
+        chosen_model=config.CHOSEN_MODEL
     )
 
     fi_val = FIDataBuilder(
@@ -38,7 +40,8 @@ def prepare_data_FI(config: Configuration):
         dataset_type=cst.DatasetType.VALIDATION,
         horizon=config.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON],
         window=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_SNAPSHOTS],
-        train_val_split=config.TRAIN_SPLIT_VAL
+        train_val_split=config.TRAIN_SPLIT_VAL,
+        chosen_model=config.CHOSEN_MODEL
     )
 
     # fi_test = FIDataBuilder(
@@ -51,18 +54,33 @@ def prepare_data_FI(config: Configuration):
 
     fi_test = fi_val
 
-    train_set = FIDataset(x=fi_train.get_samples_x(), y=fi_train.get_samples_y())
-    val_set   = FIDataset(x=fi_val.get_samples_x(),   y=fi_val.get_samples_y())
-    test_set  = FIDataset(x=fi_test.get_samples_x(),  y=fi_test.get_samples_y())
+    train_set = FIDataset(
+        x=fi_train.get_samples_x(),
+        y=fi_train.get_samples_y(),
+        chosen_model=config.CHOSEN_MODEL
+    )
+    val_set = FIDataset(
+        x=fi_val.get_samples_x(),
+        y=fi_val.get_samples_y(),
+        chosen_model=config.CHOSEN_MODEL
+    )
+    test_set = FIDataset(
+        x=fi_test.get_samples_x(),
+        y=fi_test.get_samples_y(),
+        chosen_model=config.CHOSEN_MODEL
+    )
 
     print()
     print("Samples in the splits:")
     print(len(train_set), len(val_set), len(test_set))
     print()
 
-    fi_dm = DataModule(train_set, val_set, test_set,
-                       config.HYPER_PARAMETERS[cst.LearningHyperParameter.BATCH_SIZE],
-                       config.HYPER_PARAMETERS[cst.LearningHyperParameter.IS_SHUFFLE_TRAIN_SET])
+    fi_dm = DataModule(
+        train_set, val_set, test_set,
+        config.HYPER_PARAMETERS[cst.LearningHyperParameter.BATCH_SIZE],
+        config.HYPER_PARAMETERS[cst.LearningHyperParameter.IS_SHUFFLE_TRAIN_SET]
+    )
+
     return fi_dm
 
 
@@ -183,6 +201,9 @@ def pick_model(config: Configuration, data_module):
         net_architecture = BiN_CTABL(60, 40, 10, 10, 120, 5, 3, 1)
         loss_weights = data_module.train_set.loss_weights
 
+    elif config.CHOSEN_MODEL == cst.Models.DEEPLOBATT:
+        net_architecture = DeepLobAtt()
+
     engine = NNEngine(
         config=config,
         model_type=config.CHOSEN_MODEL,
@@ -190,7 +211,9 @@ def pick_model(config: Configuration, data_module):
         optimizer=config.HYPER_PARAMETERS[cst.LearningHyperParameter.OPTIMIZER],
         lr=config.HYPER_PARAMETERS[cst.LearningHyperParameter.LEARNING_RATE],
         weight_decay=config.HYPER_PARAMETERS[cst.LearningHyperParameter.WEIGHT_DECAY],
+        eps=config.HYPER_PARAMETERS[cst.LearningHyperParameter.EPS],
         loss_weights=loss_weights,
-        remote_log=config.WANDB_INSTANCE).to(cst.DEVICE_TYPE)
+        remote_log=config.WANDB_INSTANCE
+    ).to(cst.DEVICE_TYPE)
 
     return engine

@@ -28,7 +28,7 @@ class Configuration:
 
         self.CHOSEN_DATASET = cst.DatasetFamily.FI
         self.CHOSEN_PERIOD = cst.Periods.FI
-        self.CHOSEN_MODEL = cst.Models.MLP
+        self.CHOSEN_MODEL = cst.Models.DEEPLOBATT
 
         self.CHOSEN_STOCKS = {
             cst.STK_OPEN.TRAIN: cst.Stocks.FI,
@@ -57,6 +57,7 @@ class Configuration:
         self.HYPER_PARAMETERS[LearningHyperParameter.EPOCHS_UB] = 100
         self.HYPER_PARAMETERS[LearningHyperParameter.OPTIMIZER] = cst.Optimizers.ADAM.value
         self.HYPER_PARAMETERS[LearningHyperParameter.WEIGHT_DECAY] = 0.0
+        self.HYPER_PARAMETERS[LearningHyperParameter.EPS] = 1e-08  # default value for ADAM
 
         self.HYPER_PARAMETERS[LearningHyperParameter.NUM_SNAPSHOTS] = 100
         # LOBSTER way to label to measure percentage change LOBSTER = HORIZON
@@ -86,6 +87,10 @@ class Configuration:
             self.HYPER_PARAMETERS[cst.LearningHyperParameter.FORWARD_WINDOW],
             self.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON],
         )
+
+        # TODO: controllare
+        if not self.IS_TUNE_H_PARAMS and not self.IS_WANDB:
+            self.WANDB_RUN_NAME = self.WANDB_SWEEP_NAME
 
     @staticmethod
     def cf_name_format(ext=""):
