@@ -1,16 +1,13 @@
 
 
 import os
-import pickle
 import src.data_preprocessing.preprocessing_utils as ppu
 import src.utils.utilities as util
 import src.utils.lob_util as lbu
 
-from enum import Enum
 import tqdm
 import collections
 import numpy as np
-from datetime import datetime
 from src.config import Configuration
 import src.constants as cst
 
@@ -129,7 +126,6 @@ class LOBSTERDataBuilder:
                     self.label_dynamic_scaler
                 )
                 self.__data = self.__data.rename(columns={'y': f'y{winsize.value}'})
-
             self.__data['y'] = self.__data[[f'y{winsize.value}' for winsize in cst.WinSize if winsize.value is not None]].values.tolist()
 
         else:

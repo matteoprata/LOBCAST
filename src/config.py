@@ -4,7 +4,7 @@ import os
 
 from src.constants import LearningHyperParameter
 import src.constants as cst
-from src.metrics_log.Metrics import Metrics
+from src.metrics.metrics_log import Metrics
 from datetime import date, datetime
 
 np.set_printoptions(suppress=True)
@@ -14,8 +14,10 @@ class Configuration:
 
     def __init__(self, now=None):
 
-        self.NOW = datetime.now().strftime("%Y-%m-%d+%H-%M-%S") if now is None else now
-        self.setup_all_directories()
+        self.IS_DEBUG = False
+        self.NOW = self.assign_now(now=now, is_debug=self.IS_DEBUG)
+
+        self.setup_all_directories(self.NOW, self.IS_DEBUG)
 
         self.SEED = 0
         self.RANDOM_GEN_DATASET = None
@@ -96,12 +98,23 @@ class Configuration:
     def cf_name_format(ext=""):
         return "model={}-trst={}-test={}-data={}-peri={}-bw={}-fw={}-fiw={}" + ext
 
-    def setup_all_directories(self):
-        cst.PROJECT_NAME = cst.PROJECT_NAME.format(self.NOW)
-        cst.DIR_SAVED_MODEL = cst.DIR_SAVED_MODEL.format(self.NOW) + "/"
-        cst.DIR_EXPERIMENTS = cst.DIR_EXPERIMENTS.format(self.NOW) + "/"
+    @staticmethod
+    def setup_all_directories(now, is_debug):
+
+        cst.PROJECT_NAME = cst.PROJECT_NAME.format(now)
+        cst.DIR_SAVED_MODEL = cst.DIR_SAVED_MODEL.format(now) + "/"
+        cst.DIR_EXPERIMENTS = cst.DIR_EXPERIMENTS.format(now) + "/"
 
         paths = ["data", cst.DIR_SAVED_MODEL, cst.DIR_EXPERIMENTS]
         for p in paths:
             if not os.path.exists(p):
                 os.makedirs(p)
+
+    @staticmethod
+    def assign_now(now, is_debug):
+        if is_debug:
+            return "debug"
+        elif now is not None:
+            return now
+        else:
+            return datetime.now().strftime("%Y-%m-%d+%H-%M-%S")

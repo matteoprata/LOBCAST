@@ -13,15 +13,15 @@ HP_CNNLSTM = {
     cst.LearningHyperParameter.P_DROPOUT.value: {'values': [0.1]},
 }
 
-
+# DONE FIXED 21-01-2023
 HP_CNNLSTM_FI_FIXED = {
     cst.LearningHyperParameter.EPOCHS_UB.value: 100,
     cst.LearningHyperParameter.OPTIMIZER.value: cst.Optimizers.RMSPROP.value,
-    cst.LearningHyperParameter.LEARNING_RATE.value: 0.01,
-    cst.LearningHyperParameter.BATCH_SIZE.value: 32,
+    cst.LearningHyperParameter.LEARNING_RATE.value: 0.0006005,
+    cst.LearningHyperParameter.BATCH_SIZE.value: 16,
     cst.LearningHyperParameter.LSTM_HIDDEN.value: 32,
     cst.LearningHyperParameter.LSTM_N_HIDDEN.value: 1,
-    cst.LearningHyperParameter.MLP_HIDDEN.value: 64,
+    cst.LearningHyperParameter.MLP_HIDDEN.value: 32,
     cst.LearningHyperParameter.P_DROPOUT.value: 0.1
 }
 

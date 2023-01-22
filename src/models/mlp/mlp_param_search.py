@@ -11,10 +11,12 @@ HP_MLP = {
     cst.LearningHyperParameter.P_DROPOUT.value: {'values': [0]},  # [0.1, 0.25, 0.5]
 }
 
+
+# DONE FIXED 21-01-2023
 HP_MLP_FI_FIXED = {
     cst.LearningHyperParameter.EPOCHS_UB.value: 100,
     cst.LearningHyperParameter.OPTIMIZER.value: cst.Optimizers.ADAM.value,
-    cst.LearningHyperParameter.LEARNING_RATE.value: 0.0001,
+    cst.LearningHyperParameter.LEARNING_RATE.value: 0.0001557,
     cst.LearningHyperParameter.BATCH_SIZE.value: 32,
-    cst.LearningHyperParameter.MLP_HIDDEN.value: 128,
+    cst.LearningHyperParameter.MLP_HIDDEN.value: 256,
 }

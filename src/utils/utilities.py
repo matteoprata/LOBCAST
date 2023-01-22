@@ -4,6 +4,7 @@ import os
 import json
 import platform, socket, re, uuid, psutil, logging
 import src.constants as cst
+import matplotlib.pyplot as plt
 
 
 def read_data(fname):
@@ -28,6 +29,8 @@ def read_json(fname):
     if os.path.exists(fname):
         with open(fname, 'r') as fp:
             data = json.load(fp)
+    else:
+        print("File", fname, "does not exist.")
     return data
 
 
@@ -62,3 +65,16 @@ def get_index_from_window(config):
         return cst.HORIZONS_MAPPINGS_FI[config.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON]]
     elif config.CHOSEN_DATASET == cst.DatasetFamily.LOBSTER:
         return cst.HORIZONS_MAPPINGS_LOBSTER[config.HYPER_PARAMETERS[cst.LearningHyperParameter.FORWARD_WINDOW]]
+
+
+def sample_color(index, cmap='tab10'):
+    # 1. Choose your desired colormap
+    cmap = plt.get_cmap(cmap)
+
+    # 2. Segmenting the whole range (from 0 to 1) of the color map into multiple segments
+    colors = [cmap(x) for x in range(cmap.N)]
+    assert index < cmap.N
+
+    # 3. Color the i-th line with the i-th color, i.e. slicedCM[i]
+    color = colors[index]
+    return color

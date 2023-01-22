@@ -20,7 +20,7 @@ from src.models.cnnlstm.cnnlstm import CNNLSTM
 from src.models.dain.dain import DAIN
 from src.models.deeplob.deeplob import DeepLob
 from src.models.lstm.lstm import LSTM
-from src.models.binctabl.BinTabl import BiN_CTABL
+from src.models.binctabl.bin_tabl import BiN_CTABL
 from src.models.deeplobatt.deeplobatt import DeepLobAtt
 
 

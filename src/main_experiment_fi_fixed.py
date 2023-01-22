@@ -11,7 +11,7 @@ from src.main_single import *
 from src.utils.utilities import get_sys_mac
 
 
-def experiment_FI():
+def experiment_FI(now):
 
     parser = argparse.ArgumentParser(description='Stock Price Trend Prediction Fixed FI:')
     parser.add_argument('-now', '--now', default=None)
@@ -31,7 +31,7 @@ def experiment_FI():
             print("Running FI experiment on {}, with K={}".format(mod, k))
 
             try:
-                now = args["now"]
+                now = args["now"] if now is None else now
                 cf: Configuration = Configuration(now)
                 set_seeds(cf)
 
@@ -52,4 +52,6 @@ def experiment_FI():
                 sys.exit()
 
 
-experiment_FI()
+now = "2023-01-21+13-18-47"
+experiment_FI(now)
+

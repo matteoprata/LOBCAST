@@ -8,12 +8,12 @@ HP_DEEP = {
     cst.LearningHyperParameter.BATCH_SIZE.value: {'values': [32, 64, 128]},  # [32, 64, 128]
 }
 
-
+# DONE FIXED 21-01-2023
 HP_DEEP_FI_FIXED = {
     cst.LearningHyperParameter.EPOCHS_UB.value: 100,
     cst.LearningHyperParameter.OPTIMIZER.value: cst.Optimizers.ADAM.value,
-    cst.LearningHyperParameter.LEARNING_RATE.value: 0.0001,
-    cst.LearningHyperParameter.BATCH_SIZE.value: 64,
+    cst.LearningHyperParameter.LEARNING_RATE.value: 0.0008033,
+    cst.LearningHyperParameter.BATCH_SIZE.value: 32,
 }
 
 HP_DEEP_LOBSTER_FIXED = {
