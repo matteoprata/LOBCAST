@@ -50,12 +50,12 @@ class NNEngine(pl.LightningModule):
     def forward(self, x):
         out = self.neural_architecture(x)
         logits = self.softmax(out)
-        return logits
+        return out, logits
 
     def training_step(self, batch, batch_idx):
         x, y, _ = batch
-        prediction = self(x)
-        loss = self.loss_fn(prediction, y)
+        out, logits = self(x)
+        loss = self.loss_fn(out, y)
         return loss
 
     def validation_step(self, batch, batch_idx):
@@ -132,11 +132,11 @@ class NNEngine(pl.LightningModule):
     # COMMON
     def __validation_and_testing(self, batch):
         x, y, stock_names = batch
-        prediction = self(x)
-        loss_val = self.loss_fn(prediction, y)
+        out, logits = self(x)
+        loss_val = self.loss_fn(out, y)
 
         # deriving prediction from softmax probs
-        prediction_ind = torch.argmax(prediction, dim=1)
+        prediction_ind = torch.argmax(logits, dim=1)
 
         return prediction_ind, y, loss_val, stock_names
 
