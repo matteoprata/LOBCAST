@@ -22,6 +22,7 @@ from src.models.deeplob.deeplob import DeepLob
 from src.models.lstm.lstm import LSTM
 from src.models.binctabl.bin_tabl import BiN_CTABL
 from src.models.deeplobatt.deeplobatt import DeepLobAtt
+from src.models.dla.dla import DLA
 
 
 def prepare_data_FI(config: Configuration):
@@ -158,9 +159,9 @@ def pick_model(config: Configuration, data_module):
         net_architecture = LSTM(
             x_shape=data_module.x_shape[1],  # 40, wind is the time
             num_classes=data_module.num_classes,
-            hidden_layer_dim=config.HYPER_PARAMETERS[cst.LearningHyperParameter.LSTM_HIDDEN],
+            hidden_layer_dim=config.HYPER_PARAMETERS[cst.LearningHyperParameter.RNN_HIDDEN],
             hidden_mlp=config.HYPER_PARAMETERS[cst.LearningHyperParameter.MLP_HIDDEN],
-            num_layers=config.HYPER_PARAMETERS[cst.LearningHyperParameter.LSTM_N_HIDDEN],
+            num_layers=config.HYPER_PARAMETERS[cst.LearningHyperParameter.RNN_N_HIDDEN],
             p_dropout=config.HYPER_PARAMETERS[cst.LearningHyperParameter.P_DROPOUT],
         )
 
@@ -170,8 +171,8 @@ def pick_model(config: Configuration, data_module):
             num_classes=data_module.num_classes,
             batch_size=config.HYPER_PARAMETERS[cst.LearningHyperParameter.BATCH_SIZE],
             seq_len=data_module.x_shape[0],
-            hidden_size=config.HYPER_PARAMETERS[cst.LearningHyperParameter.LSTM_HIDDEN],
-            num_layers=config.HYPER_PARAMETERS[cst.LearningHyperParameter.LSTM_N_HIDDEN],
+            hidden_size=config.HYPER_PARAMETERS[cst.LearningHyperParameter.RNN_HIDDEN],
+            num_layers=config.HYPER_PARAMETERS[cst.LearningHyperParameter.RNN_N_HIDDEN],
             hidden_mlp=config.HYPER_PARAMETERS[cst.LearningHyperParameter.MLP_HIDDEN],
             p_dropout=config.HYPER_PARAMETERS[cst.LearningHyperParameter.P_DROPOUT],
         )
@@ -205,6 +206,14 @@ def pick_model(config: Configuration, data_module):
 
     elif config.CHOSEN_MODEL == cst.Models.DEEPLOBATT:
         net_architecture = DeepLobAtt()
+
+    elif config.CHOSEN_MODEL == cst.Models.DLA:
+        num_snapshots, num_features = data_module.x_shape
+        net_architecture = DLA(
+            num_snapshots=num_snapshots,
+            num_features=num_features,
+            hidden_size=config.HYPER_PARAMETERS[cst.LearningHyperParameter.RNN_HIDDEN]
+        )
 
     engine = NNEngine(
         config=config,

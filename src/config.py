@@ -30,7 +30,7 @@ class Configuration:
 
         self.CHOSEN_DATASET = cst.DatasetFamily.FI
         self.CHOSEN_PERIOD = cst.Periods.FI
-        self.CHOSEN_MODEL = cst.Models.DEEPLOBATT
+        self.CHOSEN_MODEL = cst.Models.DLA
 
         self.CHOSEN_STOCKS = {
             cst.STK_OPEN.TRAIN: cst.Stocks.FI,
@@ -70,8 +70,8 @@ class Configuration:
         self.HYPER_PARAMETERS[LearningHyperParameter.FI_HORIZON] = 10  # in FI = FORWARD_WINDOW  = k in papers
 
         self.HYPER_PARAMETERS[LearningHyperParameter.MLP_HIDDEN] = 128
-        self.HYPER_PARAMETERS[LearningHyperParameter.LSTM_HIDDEN] = 32
-        self.HYPER_PARAMETERS[LearningHyperParameter.LSTM_N_HIDDEN] = 1
+        self.HYPER_PARAMETERS[LearningHyperParameter.RNN_HIDDEN] = 32
+        self.HYPER_PARAMETERS[LearningHyperParameter.RNN_N_HIDDEN] = 1
         self.HYPER_PARAMETERS[LearningHyperParameter.DAIN_LAYER_MODE] = 'full'
         self.HYPER_PARAMETERS[LearningHyperParameter.P_DROPOUT] = 0
 

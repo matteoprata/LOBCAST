@@ -12,8 +12,8 @@ class LearningHyperParameter(str, Enum):
     IS_SHUFFLE_TRAIN_SET = "is_shuffle"
     BATCH_SIZE = "batch_size"
     MLP_HIDDEN = "hidden_mlp"
-    LSTM_HIDDEN = "lstm_hidden"
-    LSTM_N_HIDDEN = "lstm_n_hidden"
+    RNN_HIDDEN = "rnn_hidden"
+    RNN_N_HIDDEN = "rnn_n_hidden"
     DAIN_LAYER_MODE = "dain_layer_mode"
     P_DROPOUT = "p_dropout"
     BACKWARD_WINDOW = "window_size_backward"
@@ -103,6 +103,8 @@ class Models(str, Enum):
 
     DEEPLOB = "DeepLob"
     TRANSLOB = "TransLob"
+
+    DLA = "DLA"
 
 
 
@@ -202,7 +204,7 @@ class ExpIndependentVariables(Enum):
 
 N_LOB_LEVELS = 10
 
-NUM_GPUS = 1 if torch.cuda.is_available() else 0
+NUM_GPUS = 1 if torch.cuda.is_available() else None
 DEVICE_TYPE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 PROJECT_NAME = "LOB-CLASSIFIERS-({})"
