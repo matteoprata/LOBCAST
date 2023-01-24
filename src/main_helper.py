@@ -59,11 +59,13 @@ def prepare_data_FI(config: Configuration):
         y=fi_train.get_samples_y(),
         chosen_model=config.CHOSEN_MODEL
     )
+
     val_set = FIDataset(
         x=fi_val.get_samples_x(),
         y=fi_val.get_samples_y(),
         chosen_model=config.CHOSEN_MODEL
     )
+
     test_set = FIDataset(
         x=fi_test.get_samples_x(),
         y=fi_test.get_samples_y(),

@@ -11,7 +11,7 @@ from src.main_single import *
 from src.utils.utilities import get_sys_mac
 
 
-def experiment_FI(now):
+def experiment_FI(now=None, models=None):
 
     parser = argparse.ArgumentParser(description='Stock Price Trend Prediction Fixed FI:')
     parser.add_argument('-now', '--now', default=None)
@@ -26,7 +26,8 @@ def experiment_FI(now):
         print("This SERVER is not handled for the experiment.")
         exit()
 
-    for mod in list(cst.Models)[server.value::len(cst.ServersMAC)]:
+    models = list(cst.Models)[server.value::len(cst.ServersMAC)] if models is None else models
+    for mod in models:
         for k in cst.FI_Horizons:
             print("Running FI experiment on {}, with K={}".format(mod, k))
 
@@ -52,6 +53,7 @@ def experiment_FI(now):
                 sys.exit()
 
 
-now = "2023-01-21+13-18-47"
-experiment_FI(now)
+# now = "2023-01-21+13-18-47"
+models = [cst.Models.CNN2]
+experiment_FI()
 

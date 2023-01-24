@@ -22,14 +22,14 @@ def experiment_FI(sweep_time=None, models_todo=None):
 
     if mac in cst.ServerMACIDs:
         server = cst.ServerMACIDs[mac]
-        print("Running on server", server.name)
+        print("Running on server", server.name, mac)
     else:
-        print("This SERVER is not handled for the experiment.")
+        print("This SERVER is not handled for the experiment ({})".format(mac))
         exit()
 
     models_todo = models_todo if models_todo is not None else cst.Models
     for mod in list(models_todo)[server.value::len(cst.ServersMAC)]:
-        k = cst.FI_Horizons.K10
+        k = cst.FI_Horizons.K3
         print("Running FI experiment on {}, with K={}".format(mod, k))
 
         try:
@@ -54,6 +54,5 @@ def experiment_FI(sweep_time=None, models_todo=None):
             sys.exit()
 
 
-sweep_time = "2023-01-18+14-23-21"
-models_todo = [cst.Models.DEEPLOBATT]
-experiment_FI(sweep_time, models_todo)
+now = "2023-01-24+00-00-00"
+experiment_FI(now)
