@@ -30,7 +30,7 @@ class Configuration:
 
         self.CHOSEN_DATASET = cst.DatasetFamily.FI
         self.CHOSEN_PERIOD = cst.Periods.FI
-        self.CHOSEN_MODEL = cst.Models.DLA
+        self.CHOSEN_MODEL = cst.Models.NBoF
 
         self.CHOSEN_STOCKS = {
             cst.STK_OPEN.TRAIN: cst.Stocks.FI,

@@ -3,6 +3,7 @@ import numpy as np
 import src.constants as cst
 from src.config import Configuration
 from src.models.model_executor import NNEngine
+from src.models.nbof.nbof_centers import get_nbof_centers
 
 # DATASETS
 from src.data_preprocessing.FI.FIDataBuilder import FIDataBuilder
@@ -23,6 +24,7 @@ from src.models.lstm.lstm import LSTM
 from src.models.binctabl.bin_tabl import BiN_CTABL
 from src.models.deeplobatt.deeplobatt import DeepLobAtt
 from src.models.dla.dla import DLA
+from src.models.nbof.nbof import NBoF
 
 
 def prepare_data_FI(config: Configuration):
@@ -213,6 +215,14 @@ def pick_model(config: Configuration, data_module):
             num_snapshots=num_snapshots,
             num_features=num_features,
             hidden_size=config.HYPER_PARAMETERS[cst.LearningHyperParameter.RNN_HIDDEN]
+        )
+
+    elif config.CHOSEN_MODEL == cst.Models.NBoF:
+        num_snapshots, num_features = data_module.x_shape
+        net_architecture = NBoF(
+            num_snapshots=num_snapshots,
+            num_features=num_features,
+            centers=get_nbof_centers(data_module),
         )
 
     engine = NNEngine(

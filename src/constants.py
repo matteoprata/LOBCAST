@@ -105,6 +105,7 @@ class Models(str, Enum):
     TRANSLOB = "TransLob"
 
     DLA = "DLA"
+    NBoF = "NBoF"
 
 
 
