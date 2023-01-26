@@ -234,15 +234,14 @@ def pick_model(config: Configuration, data_module):
         num_snapshots, num_features = data_module.x_shape
         loss_weights = data_module.train_set.loss_weights
 
-        net_architecture = ATNBoF(  # models.ANBoF
+        net_architecture = ATNBoF(
             in_channels=1,
             series_length=num_snapshots*num_features,
             n_codeword=config.HYPER_PARAMETERS[cst.LearningHyperParameter.MLP_HIDDEN],
             att_type='temporal',            # ['temporal', 'spatial']
             n_class=data_module.num_classes,
-            dropout=0.2
+            dropout=config.HYPER_PARAMETERS[cst.LearningHyperParameter.P_DROPOUT]
         )
-
 
     engine = NNEngine(
         config=config,

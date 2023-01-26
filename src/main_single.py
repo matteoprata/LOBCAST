@@ -40,7 +40,7 @@ from src.models.binctabl.binctabl_param_search import HP_BINTABL, HP_BINTABL_FI_
 from src.models.deeplobatt.dlbatt_param_search import HP_DEEPATT, HP_DEEPATT_FI_FIXED, HP_DEEPATT_LOBSTER_FIXED
 from src.models.dla.dla_param_search import HP_DLA, HP_DLA_FI_FIXED
 from src.models.nbof.nbof_param_search import HP_NBoF, HP_NBoF_FI_FIXED
-from src.models.bof.anbof_param_search import HP_ATNBoF, HP_ATNBoF_FI_FIXED
+from src.models.bof.atnbof_param_search import HP_ATNBoF, HP_ATNBoF_FI_FIXED
 
 
 from src.main_helper import pick_model, pick_dataset
