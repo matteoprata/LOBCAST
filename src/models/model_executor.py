@@ -210,7 +210,15 @@ class NNEngine(pl.LightningModule):
                 {'params': self.neural_architecture.dean.gating_layer.parameters(), 'lr': self.lr*self.neural_architecture.dean.gate_lr},
             ], lr=self.lr)
 
+        if self.model_type == cst.Models.NBoF:
+            return torch.optim.Adam([
+                {'params': self.neural_architecture.base.parameters()},
+                {'params': self.neural_architecture.V, 'lr': self.lr},
+                {'params': self.neural_architecture.W, 'lr': self.neural_architecture.lr_W},
+            ], lr=self.lr)
+
         if self.optimizer == cst.Optimizers.ADAM.value:
             return torch.optim.Adam(self.parameters(), lr=self.lr, weight_decay=self.weight_decay, eps=self.eps)
+
         elif self.optimizer == cst.Optimizers.RMSPROP.value:
             return torch.optim.RMSprop(self.parameters(), lr=self.lr)

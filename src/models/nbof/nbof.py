@@ -8,10 +8,11 @@ import torch
 
 
 class NBoF(pl.LightningModule):
-    def __init__(self, num_snapshots, num_features, num_rbf_neurons, hidden_mlp, centers=None):
+    def __init__(self, num_snapshots, num_features, num_rbf_neurons, hidden_mlp, centers=None, lr_W=None):
         super().__init__()
         self.num_snapshots = num_snapshots
         self.num_rbf_neurons = num_rbf_neurons
+        self.lr_W = lr_W
 
         # initialize with centers
         centers = centers if centers is not None else torch.Tensor(num_rbf_neurons, num_features)
@@ -24,10 +25,16 @@ class NBoF(pl.LightningModule):
 
         self.softmax = nn.Softmax(dim=0)
 
-        self.W_h = nn.Linear(num_rbf_neurons, hidden_mlp)
-        self.W_o = nn.Linear(hidden_mlp, 3)
+        # self.W_h = nn.Linear(num_rbf_neurons, hidden_mlp)  # MLP
+        # self.W_o = nn.Linear(hidden_mlp, 3)                # MLP
+        #
+        # self.elu = nn.ELU()
 
-        self.elu = nn.ELU()
+        self.base = nn.Sequential(
+            nn.Linear(num_rbf_neurons, hidden_mlp),
+            nn.ELU(),
+            nn.Linear(hidden_mlp, 3)
+        )
 
     def forward(self, x):
         batch_size = x.shape[0]
@@ -54,14 +61,9 @@ class NBoF(pl.LightningModule):
         s = torch.mean(phi, dim=2)
         # s.shape = [batch_size, num_rbf_neurons]
 
-        phi = self.W_h(s)
+        out = self.base(s)
         # phi.shape = [batch_size, hidden_mlp]
-
-        phi = self.elu(phi)
         # phi.shape = [batch_size, hidden_mlp]
-
-        out = self.W_o(phi)
         # phi.shape = [batch_size, 3]
 
         return out
-

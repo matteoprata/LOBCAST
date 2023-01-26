@@ -1,6 +1,6 @@
 import src.constants as cst
 
-HP_NBoF = {
+HP_ATNBoF = {
     cst.LearningHyperParameter.EPOCHS_UB.value: {'values': [100]},
     cst.LearningHyperParameter.OPTIMIZER.value: {'values': [cst.Optimizers.ADAM.value]},
     cst.LearningHyperParameter.LEARNING_RATE.value: {'max': 0.01, 'min': 0.0001}, # 0.01 in the paper
@@ -10,7 +10,7 @@ HP_NBoF = {
 
 }
 
-HP_NBoF_FI_FIXED = {
+HP_ATNBoF_FI_FIXED = {
     cst.LearningHyperParameter.EPOCHS_UB.value: 100,
     cst.LearningHyperParameter.OPTIMIZER.value: cst.Optimizers.ADAM.value,
     cst.LearningHyperParameter.LEARNING_RATE.value: 0.001,
@@ -19,6 +19,6 @@ HP_NBoF_FI_FIXED = {
     cst.LearningHyperParameter.NUM_RBF_NEURONS.value: 16
 }
 
-HP_NBoF_LOBSTER_FIXED = {
+HP_ATNBoF_LOBSTER_FIXED = {
 
 }

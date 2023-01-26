@@ -19,6 +19,7 @@ class DLA(pl.LightningModule):
             hidden_size=hidden_size,
             num_layers=2,
             batch_first=True,
+            dropout=0.5
         )
 
         self.W2 = nn.Linear(hidden_size, hidden_size, bias=False)

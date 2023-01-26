@@ -25,6 +25,7 @@ from src.models.binctabl.bin_tabl import BiN_CTABL
 from src.models.deeplobatt.deeplobatt import DeepLobAtt
 from src.models.dla.dla import DLA
 from src.models.nbof.nbof import NBoF
+from src.models.anbof.anbof import ATNBoF, ANBoF
 
 
 def prepare_data_FI(config: Configuration):
@@ -224,8 +225,23 @@ def pick_model(config: Configuration, data_module):
             num_features=num_features,
             num_rbf_neurons=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_RBF_NEURONS],
             hidden_mlp=config.HYPER_PARAMETERS[cst.LearningHyperParameter.MLP_HIDDEN],
-            centers=get_nbof_centers(data_module),
+            centers=get_nbof_centers(data_module, k=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_RBF_NEURONS]),
+            lr_W=0.01,
         )
+
+    elif config.CHOSEN_MODEL == cst.Models.ANBoF:
+        num_snapshots, num_features = data_module.x_shape
+        loss_weights = data_module.train_set.loss_weights
+
+        net_architecture = ATNBoF(  # models.ANBoF
+            in_channels=1,
+            series_length=num_snapshots,
+            n_codeword=config.HYPER_PARAMETERS[cst.LearningHyperParameter.MLP_HIDDEN],
+            att_type='temporal',            # ['temporal', 'spatial']
+            n_class=data_module.num_classes,
+            dropout=0.2
+        )
+
 
     engine = NNEngine(
         config=config,
