@@ -107,7 +107,7 @@ class Models(str, Enum):
 
     DLA = "DLA"
     NBoF = "NBoF"
-    ANBoF = "ANBoF"
+    ATNBoF = "ATNBoF"
 
 
 
