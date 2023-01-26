@@ -35,6 +35,7 @@ class STK_OPEN(str, Enum):
 class Optimizers(Enum):
     ADAM = "Adam"
     RMSPROP = "RMSprop"
+    SGD = "SGD"
 
 
 class Metrics(Enum):
@@ -108,6 +109,9 @@ class Models(str, Enum):
     DLA = "DLA"
     NBoF = "NBoF"
     ATNBoF = "ATNBoF"
+    TLONBoF = "TLONBoF"
+
+    AXIALLOB = "AXIALLOB"
 
 
 
@@ -220,19 +224,19 @@ DATASET_FI = "FI-2010/BenchmarkDatasets"
 DATA_PICKLES = "data/pickles/"
 
 
-WANDB_SWEEP_MAX_RUNS = 15
+WANDB_SWEEP_MAX_RUNS = 20
 
 
 class ServersMAC(Enum):
     ALIEN1 = 0
     ALIEN2 = 1
-    # FISSO1 = 2
+    FISSO1 = 2
 
 
 ServerMACIDs = {
-    '3b:5a:48:6f:c3:0e': ServersMAC.ALIEN1,
+    'cf:a8:49:cb:e6:fb': ServersMAC.ALIEN1,
     '91:29:87:cc:61:09': ServersMAC.ALIEN2,
-    # '7e:13:de:f1:f2:a1': ServersMAC.FISSO1
+    'ea:82:88:8a:79:89': ServersMAC.FISSO1
 }
 
 

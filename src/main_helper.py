@@ -25,8 +25,9 @@ from src.models.binctabl.bin_tabl import BiN_CTABL
 from src.models.deeplobatt.deeplobatt import DeepLobAtt
 from src.models.dla.dla import DLA
 from src.models.nbof.nbof import NBoF
-from src.models.bof.anbof import ANBoF
-from src.models.bof.atnbof import ATNBoF
+from src.models.tlonbof.atnbof import ATNBoF
+from src.models.nbof.tlonbof import TLONBoF
+from src.models.axial.axiallob import AxialLOB
 
 
 def prepare_data_FI(config: Configuration):
@@ -221,19 +222,20 @@ def pick_model(config: Configuration, data_module):
 
     elif config.CHOSEN_MODEL == cst.Models.NBoF:
         num_snapshots, num_features = data_module.x_shape
-        net_architecture = NBoF(
-            num_snapshots=num_snapshots,
-            num_features=num_features,
-            num_rbf_neurons=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_RBF_NEURONS],
-            hidden_mlp=config.HYPER_PARAMETERS[cst.LearningHyperParameter.MLP_HIDDEN],
-            centers=get_nbof_centers(data_module, k=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_RBF_NEURONS]),
-            lr_W=0.01,
-        )
+        net_architecture = TLONBoF(window=num_snapshots, split_horizon=5, use_scaling=True)
+
+        # net_architecture = NBoF(
+        #     num_snapshots=num_snapshots,
+        #     num_features=num_features,
+        #     num_rbf_neurons=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_RBF_NEURONS],
+        #     hidden_mlp=config.HYPER_PARAMETERS[cst.LearningHyperParameter.MLP_HIDDEN],
+        #     centers=get_nbof_centers(data_module, k=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_RBF_NEURONS]),
+        #     lr_W=0.01,
+        # )
 
     elif config.CHOSEN_MODEL == cst.Models.ATNBoF:
         num_snapshots, num_features = data_module.x_shape
         loss_weights = data_module.train_set.loss_weights
-
         net_architecture = ATNBoF(
             in_channels=1,
             series_length=num_snapshots*num_features,
@@ -242,6 +244,20 @@ def pick_model(config: Configuration, data_module):
             n_class=data_module.num_classes,
             dropout=config.HYPER_PARAMETERS[cst.LearningHyperParameter.P_DROPOUT]
         )
+
+    elif config.CHOSEN_MODEL == cst.Models.AXIALLOB:
+        num_snapshots, num_features = data_module.x_shape
+        net_architecture = AxialLOB(
+            W=40,
+            H=40,
+            c_in=32,
+            c_out=32,
+            c_final=4,
+            n_heads=4,
+            pool_kernel=(1, 4),
+            pool_stride=(1, 4)
+        )
+
 
     engine = NNEngine(
         config=config,

@@ -54,5 +54,6 @@ def experiment_FI(sweep_time=None, models_todo=None):
             sys.exit()
 
 
-now = "2023-01-24+00-00-00"
-experiment_FI(now)
+now = "DEBUG-SWEEP"
+models_todo = [cst.Models.AXIALLOB]
+experiment_FI(now, models_todo)
