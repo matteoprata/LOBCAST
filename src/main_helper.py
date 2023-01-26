@@ -222,6 +222,8 @@ def pick_model(config: Configuration, data_module):
         net_architecture = NBoF(
             num_snapshots=num_snapshots,
             num_features=num_features,
+            num_rbf_neurons=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_RBF_NEURONS],
+            hidden_mlp=config.HYPER_PARAMETERS[cst.LearningHyperParameter.MLP_HIDDEN],
             centers=get_nbof_centers(data_module),
         )
 

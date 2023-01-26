@@ -15,6 +15,7 @@ class LearningHyperParameter(str, Enum):
     RNN_HIDDEN = "rnn_hidden"
     RNN_N_HIDDEN = "rnn_n_hidden"
     DAIN_LAYER_MODE = "dain_layer_mode"
+    NUM_RBF_NEURONS = "num_rbf_neurons"
     P_DROPOUT = "p_dropout"
     BACKWARD_WINDOW = "window_size_backward"
     FORWARD_WINDOW = "window_size_forward"

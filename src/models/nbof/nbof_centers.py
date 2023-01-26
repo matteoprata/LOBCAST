@@ -8,7 +8,7 @@ def get_nbof_centers(data_module, k=16, perc=0.3):
     data_v = data_v.view(*data_v.shape[:0], -1, *data_v.shape[2:])  # torch.Size([203700 * 100, 40])
     data_v = data_v.clone().detach().numpy()
 
-    # select pec% random rows in the dataset to compute k-means
+    # select perc% random rows in the dataset to compute k-means
     data_v = data_v[np.random.randint(0, data_v.shape[0], int(data_v.shape[0]*perc)), :]
 
     print("Computing the clusters for a mat", data_v.shape)

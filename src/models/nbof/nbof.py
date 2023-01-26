@@ -6,7 +6,7 @@ import torch
 
 
 class NBoF(pl.LightningModule):
-    def __init__(self, num_snapshots, num_features, num_rbf_neurons=16, hidden_mlp=512, centers=None):
+    def __init__(self, num_snapshots, num_features, num_rbf_neurons, hidden_mlp, centers=None):
         super().__init__()
         self.num_snapshots = num_snapshots
         self.num_rbf_neurons = num_rbf_neurons

@@ -74,6 +74,7 @@ class Configuration:
         self.HYPER_PARAMETERS[LearningHyperParameter.RNN_N_HIDDEN] = 1
         self.HYPER_PARAMETERS[LearningHyperParameter.DAIN_LAYER_MODE] = 'full'
         self.HYPER_PARAMETERS[LearningHyperParameter.P_DROPOUT] = 0
+        self.HYPER_PARAMETERS[LearningHyperParameter.NUM_RBF_NEURONS] = 16
 
     def dynamic_config_setup(self):
         # sets the name of the metric to optimize
