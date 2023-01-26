@@ -1,3 +1,5 @@
+# Time-series classification using neural bag-of-features
+# Source: https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=8081217&casa_token=XxAI2VwaYlcAAAAA:caTIvkUR3wIrhqg00IJVogdyhG_lq988lY7e9Frbqv2SmCgoHZrrpp-bLB1ZpOmyCZ0gdUwLGw&tag=1
 
 import src.constants as cst
 import pytorch_lightning as pl
