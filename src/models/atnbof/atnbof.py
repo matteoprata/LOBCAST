@@ -1,38 +1,47 @@
+# Attention-Based Neural Bag-of-Features Learning for Sequence Data
+# Source: https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=9762322
+
 import torch
 import torch.nn as nn
 
-from src.models.tlonbof.layers import ResNetPreprocessing, Attention
-from src.models.tlonbof.nbof import NBoF
+from src.models.atnbof.layers import ResNetPreprocessing, Attention
+from src.models.atnbof.tnbof import TNBoF
 
-
-class ANBoF(nn.Module):
+class ATNBoF(nn.Module):
     """
-    Attention Neural Bag of Feature model
+    Attention Temporal Neural Bag of Feature model
     """
 
     def __init__(self, in_channels, series_length, n_codeword, att_type, n_class, dropout):
-        super(ANBoF, self).__init__()
+        super(ATNBoF, self).__init__()
+
         # resnet preprocessing block
         self.resnet_block = ResNetPreprocessing(in_channels=in_channels)
 
-        # nbof block
+        # tnbof block
         in_channels, series_length = self.compute_intermediate_dimensions(in_channels, series_length)
-        self.quantization_block = NBoF(in_channels, n_codeword)
+        self.quantization_block = TNBoF(in_channels, n_codeword)
 
         # attention block
-        self.attention_block = Attention(n_codeword, series_length, att_type)
+        self.short_attention_block = Attention(n_codeword, int(series_length / 2), att_type)
+        self.long_attention_block = Attention(n_codeword, series_length, att_type)
 
         # classifier
         self.classifier = nn.Sequential(
-            nn.Linear(in_features=n_codeword, out_features=512),
+            nn.Linear(in_features=n_codeword * 2, out_features=512),
             nn.ReLU(),
             nn.Dropout(dropout),
             nn.Linear(in_features=512, out_features=n_class)
         )
 
     def forward(self, x):
+        x = x[:, None, :, :]
+        x = torch.flatten(x, start_dim=2)
         x = self.resnet_block(x)
-        x = self.quantization_block(x).mean(-1)
+        x_short, x_long = self.quantization_block(x)
+        x_short = x_short.mean(-1)
+        x_long = x_long.mean(-1)
+        x = torch.cat([x_short, x_long], dim=-1)
         x = self.classifier(x)
         return x
 
@@ -47,8 +56,7 @@ class ANBoF(nn.Module):
     def get_parameters(self):
         bn_params, other_params = self.resnet_block.get_parameters()
         other_params.extend(list(self.quantization_block.parameters()))
-        other_params.extend(list(self.attention_block.parameters()))
+        other_params.extend(list(self.short_attention_block.parameters()))
+        other_params.extend(list(self.long_attention_block.parameters()))
         other_params.extend(list(self.classifier.parameters()))
         return bn_params, other_params
-
-

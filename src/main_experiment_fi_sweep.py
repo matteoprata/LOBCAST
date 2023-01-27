@@ -55,5 +55,5 @@ def experiment_FI(sweep_time=None, models_todo=None):
 
 
 now = "DEBUG-SWEEP"
-models_todo = [cst.Models.AXIALLOB]
+models_todo = [cst.Models.ATNBoF]
 experiment_FI(now, models_todo)

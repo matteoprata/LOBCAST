@@ -1,4 +1,4 @@
-from src.models.tlonbof.nbof import NBoF
+from src.models.atnbof.nbof import NBoF
 
 
 class TNBoF(NBoF):

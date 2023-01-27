@@ -30,7 +30,7 @@ class Configuration:
 
         self.CHOSEN_DATASET = cst.DatasetFamily.FI
         self.CHOSEN_PERIOD = cst.Periods.FI
-        self.CHOSEN_MODEL = cst.Models.AXIALLOB
+        self.CHOSEN_MODEL = cst.Models.TLONBoF
 
         self.CHOSEN_STOCKS = {
             cst.STK_OPEN.TRAIN: cst.Stocks.FI,

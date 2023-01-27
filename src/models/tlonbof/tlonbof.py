@@ -1,3 +1,7 @@
+# Temporal Logistic Neural Bag-of-Features for Financial Time series Forecasting leveraging Limit Order Book Data
+# Source: https://www.sciencedirect.com/science/article/pii/S0167865520302245?ref=pdf_download&fr=RR-2&rr=79004ee86d9b5a43
+
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -39,15 +43,18 @@ class TLONBoF(nn.Module):
         self.input_conv = nn.Conv1d(40, n_conv, kernel_size=5, padding=2)
         self.bn_cnv = nn.BatchNorm1d(n_conv)
 
+        self.dropout = nn.Dropout(p=0.5)
+        self.relu = nn.ReLU()
+
     def apply_temporal_bof_input(self, x):
         # Step 1: Measure the similarity with each codeword
         x = self.bof_conv2(x)
 
         # Step 2: Scale to ensure that the resulting value encodes the similarity
         if self.use_scaling:
-            x = F.tanh(self.a2.expand_as(x)*x + self.c2.expand_as(x))
+            x = torch.tanh(self.a2.expand_as(x)*x + self.c2.expand_as(x))
         else:
-            x = F.tanh(x)
+            x = torch.tanh(x)
         x = (x + 1) / 2.0
 
         # Step 3: Create the similarity vectors for each of the input feature vector
@@ -67,9 +74,9 @@ class TLONBoF(nn.Module):
 
         # Step 2: Scale to ensure that the resulting value encodes the similarity
         if self.use_scaling:
-            x = F.tanh(self.a.expand_as(x)*x + self.c.expand_as(x))
+            x = torch.tanh(self.a.expand_as(x)*x + self.c.expand_as(x))
         else:
-            x = F.tanh(x)
+            x = torch.tanh(x)
         x = (x + 1) / 2.0
 
         # Step 3: Create the similarity vectors for each of the input feature vector
@@ -91,7 +98,7 @@ class TLONBoF(nn.Module):
         histogram2 = self.apply_temporal_bof_input(x)  # *0
         # Apply a convolutional layer
         x = self.input_conv(x)
-        x = F.tanh(x)
+        x = torch.tanh(x)
 
         # Apply a temporal BoF
         temporal_histogram = self.apply_temporal_bof(x)
@@ -99,8 +106,8 @@ class TLONBoF(nn.Module):
         temporal_histogram = torch.cat([temporal_histogram, histogram2], dim=1)
 
         # Classifier
-        x = F.relu(self.fc1(temporal_histogram))
-        x = F.dropout(x, p=0.5, training=self.training)
+        x = self.relu(self.fc1(temporal_histogram))
+        x = self.dropout(x)
         x = self.fc2(x)
 
         return x
