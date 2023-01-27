@@ -26,12 +26,21 @@ class NNEngine(pl.LightningModule):
         lr,
         eps=None,
         weight_decay=0,
+        momentum=None,
         loss_weights=None,
         remote_log=None,
+        n_samples=None,
+        n_epochs=None,
+        n_batch_size=None,
     ):
         super().__init__()
 
         self.config = config
+
+        self.n_samples = n_samples
+        self.n_epochs = n_epochs
+        self.n_batch_size = n_batch_size
+
         self.remote_log = remote_log
 
         self.model_type = model_type
@@ -45,6 +54,8 @@ class NNEngine(pl.LightningModule):
         self.lr = lr
         self.weight_decay = weight_decay
         self.eps = eps
+        self.momentum = momentum
+
 
     def forward(self, x):
         out = self.neural_architecture(x)
@@ -209,13 +220,6 @@ class NNEngine(pl.LightningModule):
                 {'params': self.neural_architecture.dean.gating_layer.parameters(), 'lr': self.lr*self.neural_architecture.dean.gate_lr},
             ], lr=self.lr)
 
-        # if self.model_type == cst.Models.NBoF:
-        #     return torch.optim.Adam([
-        #         {'params': self.neural_architecture.base.parameters()},
-        #         {'params': self.neural_architecture.V, 'lr': self.lr},
-        #         {'params': self.neural_architecture.W, 'lr': self.neural_architecture.lr_W},
-        #   ], lr=self.lr)
-
         if self.optimizer == cst.Optimizers.ADAM.value:
             return torch.optim.Adam(self.parameters(), lr=self.lr, weight_decay=self.weight_decay, eps=self.eps)
 
@@ -223,4 +227,9 @@ class NNEngine(pl.LightningModule):
             return torch.optim.RMSprop(self.parameters(), lr=self.lr)
 
         elif self.optimizer == cst.Optimizers.SGD.value:
-            return torch.optim.SGD(self.parameters(), lr=self.lr)
+            if self.config.CHOSEN_MODEL == cst.Models.AXIALLOB:
+                opt = torch.optim.SGD(self.parameters(), lr=self.lr, momentum=self.momentum)
+                sch = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=int((self.n_samples / self.n_batch_size) * self.n_epochs))
+                return [opt], [{"scheduler": sch,
+                                "interval": "step",
+                                "frequency": 1}]

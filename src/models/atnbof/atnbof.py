@@ -7,6 +7,7 @@ import torch.nn as nn
 from src.models.atnbof.layers import ResNetPreprocessing, Attention
 from src.models.atnbof.tnbof import TNBoF
 
+
 class ATNBoF(nn.Module):
     """
     Attention Temporal Neural Bag of Feature model

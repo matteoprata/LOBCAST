@@ -45,7 +45,7 @@ from src.models.nbof.nbof_param_search import HP_NBoF, HP_NBoF_FI_FIXED
 from src.models.atnbof.atnbof_param_search import HP_ATNBoF, HP_ATNBoF_FI_FIXED
 from src.models.tlonbof.tlonbof_param_search import HP_TLONBoF, HP_TLONBoF_FI_FIXED
 
-
+from src.utils.utilities import get_sys_mac
 from src.main_helper import pick_model, pick_dataset
 from collections import namedtuple
 
@@ -239,6 +239,29 @@ def set_configuration():
     parser_cl_arguments(cf)
     cf.dynamic_config_setup()
     return cf
+
+
+def experiment_preamble(now, servers):
+    if now is None:
+        parser = argparse.ArgumentParser(description='Stock Price Experiment FI:')
+        parser.add_argument('-now', '--now', default=None)
+        args = vars(parser.parse_args())
+        now = args["now"]
+
+    mac = get_sys_mac()
+
+    n_servers = len(cst.ServerMACIDs) if servers is None else len(servers)
+    servers = cst.ServerMACIDs if servers is None else servers  # list of server
+    servers_mac = [cst.ServerMACIDs[s] for s in servers]  # list of macs
+
+    if mac in servers_mac:
+        server_name = cst.MACIDsServer[mac]
+        server_id = servers_mac.index(mac)
+        print("Running on server", server_name.name)
+    else:
+        raise "This SERVER is not handled for the experiment."
+
+    return now, server_name, server_id, n_servers
 
 
 if __name__ == "__main__":

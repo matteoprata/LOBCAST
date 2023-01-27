@@ -11,28 +11,16 @@ from src.main_single import *
 from src.utils.utilities import get_sys_mac
 
 
-def experiment_FI(now=None, models=None):
+def experiment_FI(now=None, models=None, servers=None):
 
-    parser = argparse.ArgumentParser(description='Stock Price Trend Prediction Fixed FI:')
-    parser.add_argument('-now', '--now', default=None)
-    args = vars(parser.parse_args())
+    now, server_name, server_id, n_servers = experiment_preamble(now, servers)
 
-    mac = get_sys_mac()
-
-    if mac in cst.ServerMACIDs:
-        server = cst.ServerMACIDs[mac]
-        print("Running on server", server.name)
-    else:
-        print("This SERVER is not handled for the experiment.")
-        exit()
-
-    models = list(cst.Models)[server.value::len(cst.ServersMAC)] if models is None else models
+    models = list(cst.Models)[server_id::len(servers)] if models is None else models
     for mod in models:
         for k in cst.FI_Horizons:
             print("Running FI experiment on {}, with K={}".format(mod, k))
 
             try:
-                now = args["now"] if now is None else now
                 cf: Configuration = Configuration(now)
                 set_seeds(cf)
 
@@ -49,11 +37,11 @@ def experiment_FI(now=None, models=None):
                 launch_wandb(cf)
 
             except KeyboardInterrupt:
-                print("There was a problem running on", server.name, "FI experiment on {}, with K={}".format(mod, k))
+                print("There was a problem running on", server_name.name, "FI experiment on {}, with K={}".format(mod, k))
                 sys.exit()
 
 
-# now = "2023-01-21+13-18-47"
 models = [cst.Models.CNN2]
+servers = [cst.Servers.ALIEN2]
 experiment_FI()
 

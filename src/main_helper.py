@@ -269,8 +269,12 @@ def pick_model(config: Configuration, data_module):
         lr=config.HYPER_PARAMETERS[cst.LearningHyperParameter.LEARNING_RATE],
         weight_decay=config.HYPER_PARAMETERS[cst.LearningHyperParameter.WEIGHT_DECAY],
         eps=config.HYPER_PARAMETERS[cst.LearningHyperParameter.EPS],
+        momentum=config.HYPER_PARAMETERS[cst.LearningHyperParameter.MOMENTUM],
         loss_weights=loss_weights,
-        remote_log=config.WANDB_INSTANCE
+        remote_log=config.WANDB_INSTANCE,
+        n_samples=len(data_module.train_set.x),
+        n_epochs=config.HYPER_PARAMETERS[cst.LearningHyperParameter.EPOCHS_UB],
+        n_batch_size=config.HYPER_PARAMETERS[cst.LearningHyperParameter.BATCH_SIZE],
     ).to(cst.DEVICE_TYPE)
 
     return engine

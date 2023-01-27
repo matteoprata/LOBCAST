@@ -8,6 +8,7 @@ class LearningHyperParameter(str, Enum):
     LEARNING_RATE = "lr"
     WEIGHT_DECAY = "weight_decay"
     EPS = "eps"
+    MOMENTUM = "momentum"
     EPOCHS_UB = "epochs"
     IS_SHUFFLE_TRAIN_SET = "is_shuffle"
     BATCH_SIZE = "batch_size"
@@ -226,18 +227,19 @@ DATA_PICKLES = "data/pickles/"
 WANDB_SWEEP_MAX_RUNS = 20
 
 
-class ServersMAC(Enum):
-    # ALIEN1 = 0
-    ALIEN2 = 0
-    # FISSO1 = 2
+class Servers(Enum):
+    ALIEN1 = 1
+    ALIEN2 = 2
+    FISSO1 = 3
 
 
-ServerMACIDs = {
-    # 'cf:a8:49:cb:e6:fb': ServersMAC.ALIEN1,
-    '91:29:87:cc:61:09': ServersMAC.ALIEN2,
-    # 'ea:82:88:8a:79:89': ServersMAC.FISSO1
+MACIDsServer = {
+    'cf:a8:49:cb:e6:fb': Servers.ALIEN1,
+    '91:29:87:cc:61:09': Servers.ALIEN2,
+    'ea:82:88:8a:79:89': Servers.FISSO1
 }
 
+ServerMACIDs = {v: k for k, v in MACIDsServer.items()}
 
 metrics_name = ['F1 Score (%)', 'Precision (%)', 'Recall (%)', 'Accuracy (%)', 'MCC']
 
