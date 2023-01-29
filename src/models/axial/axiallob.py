@@ -1,3 +1,6 @@
+# Axial-LOB: High-Frequency Trading with Axial Attention
+# Source: https://arxiv.org/pdf/2212.01807.pdf
+
 import math
 import torch
 import torch.nn as nn

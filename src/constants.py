@@ -244,6 +244,8 @@ ServerMACIDs = {v: k for k, v in MACIDsServer.items()}
 metrics_name = ['F1 Score (%)', 'Precision (%)', 'Recall (%)', 'Accuracy (%)', 'MCC']
 
 DECLARED_PERF = {
+    # F1 PRECISION RECALL ACCURACY MCC
+
     Models.MLP: [
         # https://ieeexplore.ieee.org/abstract/document/8081663
         [48.27, 60.78, 47.81, None, None],  # k = 10
@@ -309,7 +311,7 @@ DECLARED_PERF = {
 
     Models.DAIN: [
         # https://arxiv.org/pdf/1902.07892.pdf
-        [68.26, 46.0, 71.58, 78.83, None],   # k = 10
+        [68.26, 65.67, 71.58, 78.83, None],   # k = 10
         [65.31, 62.10, 70.48, 78.59, None],  # k = 20
         [None, None, None, None, None],      # k = 30
         [None, None, None, None, None],      # k = 50
@@ -342,6 +344,43 @@ DECLARED_PERF = {
         [79.38, 79.51, 79.49, 79.49, None],  # k = 50
         [81.49, 81.62, 81.45, 81.45, None]   # k = 100
     ],
+
+    # Models.ATNBoF: [
+    #     # https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=9762322
+    #     [None, None, None, None, None],  # k = 10
+    #     [None, None, None, None, None],  # k = 20
+    #     [None, None, None, None, None],   # k = 30
+    #     [None, None, None, None, None],  # k = 50
+    #     [None, None, None, None, None]    # k = 100
+    # ],
+
+    Models.AXIALLOB: [
+        # https://arxiv.org/pdf/2212.01807.pdf
+        [85.14, 84.93, 85.43, None, None],  # k = 10
+        [75.78, 76.32, 76.98, None, None],  # k = 20
+        [80.08, 80.54, 80.69, None, None],  # k = 30
+        [83.27, 83.31, 83.38, None, None],  # k = 50
+        [85.93, 86.04, 85.92, None, None]   # k = 100
+    ],
+
+    # Models.DLA: [
+    #     # https://link.springer.com/content/pdf/10.1007/s13369-022-07197-3.pdf?pdf=button
+    #     [None, None, None, None, None],  # k = 10
+    #     [None, None, None, None, None],  # k = 20
+    #     [None, None, None, None, None],  # k = 30
+    #     [None, None, None, None, None],  # k = 50
+    #     [None, None, None, None, None]   # k = 100
+    # ],
+
+    # Models.TLONBoF: [
+    #     # https://www.sciencedirect.com/science/article/pii/S0167865520302245
+    #     [None, None, None, None, None],  # k = 10
+    #     [None, None, None, None, None],  # k = 20
+    #     [None, None, None, None, None],  # k = 30
+    #     [None, None, None, None, None],  # k = 50
+    #     [None, None, None, None, None]   # k = 100
+    # ]
+
 }
 
 

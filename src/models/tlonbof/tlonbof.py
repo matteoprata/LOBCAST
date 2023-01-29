@@ -1,5 +1,5 @@
 # Temporal Logistic Neural Bag-of-Features for Financial Time series Forecasting leveraging Limit Order Book Data
-# Source: https://www.sciencedirect.com/science/article/pii/S0167865520302245?ref=pdf_download&fr=RR-2&rr=79004ee86d9b5a43
+# Source: https://www.sciencedirect.com/science/article/pii/S0167865520302245
 
 
 import torch
