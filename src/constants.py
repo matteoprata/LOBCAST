@@ -292,7 +292,7 @@ DECLARED_PERF = {
     ],
 
     Models.CNN2: [
-        # https://www.sciencedirect.com/science/article/pii/S1568494620303410?ref=cra_js_challenge&fr=RR-1
+        # https://www.sciencedirect.com/science/article/pii/S1568494620303410
         [46.0, 46.0, 53.0, None, None],  # k = 10
         [None, None, None, None, None],  # k = 20
         [None, None, None, None, None],  # k = 30
@@ -301,7 +301,7 @@ DECLARED_PERF = {
     ],
 
     Models.CNNLSTM: [
-        # https://www.sciencedirect.com/science/article/pii/S1568494620303410?ref=cra_js_challenge&fr=RR-1
+        # https://www.sciencedirect.com/science/article/pii/S1568494620303410
         [47.0, 46.0, 55.0, None, None],  # k = 10
         [None, None, None, None, None],  # k = 20
         [None, None, None, None, None],  # k = 30
@@ -345,14 +345,14 @@ DECLARED_PERF = {
         [81.49, 81.62, 81.45, 81.45, None]   # k = 100
     ],
 
-    # Models.ATNBoF: [
-    #     # https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=9762322
-    #     [None, None, None, None, None],  # k = 10
-    #     [None, None, None, None, None],  # k = 20
-    #     [None, None, None, None, None],   # k = 30
-    #     [None, None, None, None, None],  # k = 50
-    #     [None, None, None, None, None]    # k = 100
-    # ],
+    Models.ATNBoF: [
+        # https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=9762322
+        [67.88, None, None, None, None],  # k = 10
+        [60.04, None, None, None, None],  # k = 20
+        [None, None, None, None, None],   # k = 30
+        [73.40, None, None, None, None],  # k = 50
+        [None, None, None, None, None]    # k = 100
+    ],
 
     Models.AXIALLOB: [
         # https://arxiv.org/pdf/2212.01807.pdf
@@ -363,28 +363,29 @@ DECLARED_PERF = {
         [85.93, 86.04, 85.92, None, None]   # k = 100
     ],
 
-    # Models.DLA: [
-    #     # https://link.springer.com/content/pdf/10.1007/s13369-022-07197-3.pdf?pdf=button
-    #     [None, None, None, None, None],  # k = 10
-    #     [None, None, None, None, None],  # k = 20
-    #     [None, None, None, None, None],  # k = 30
-    #     [None, None, None, None, None],  # k = 50
-    #     [None, None, None, None, None]   # k = 100
-    # ],
+    Models.DLA: [
+        # https://link.springer.com/content/pdf/10.1007/s13369-022-07197-3.pdf
+        [77.76, 74.34, 79.71, 82.64, None],  # k = 10
+        [None, None, None, None, None],  # k = 20
+        [79.38, 78.88, 80.16, 80.94, None],  # k = 30
+        [78.96, 78.89, 79.20, 79.40, None],  # k = 50
+        [None, None, None, None, None]   # k = 100
+    ],
 
-    # Models.TLONBoF: [
-    #     # https://www.sciencedirect.com/science/article/pii/S0167865520302245
-    #     [None, None, None, None, None],  # k = 10
-    #     [None, None, None, None, None],  # k = 20
-    #     [None, None, None, None, None],  # k = 30
-    #     [None, None, None, None, None],  # k = 50
-    #     [None, None, None, None, None]   # k = 100
-    # ]
+    Models.TLONBoF: [
+        # https://www.sciencedirect.com/science/article/pii/S0167865520302245
+        # Anchored evaluation setup
+        [None, None, None, None, None],  # k = 10
+        [None, None, None, None, None],  # k = 20
+        [None, None, None, None, None],  # k = 30
+        [None, None, None, None, None],  # k = 50
+        [None, None, None, None, None]   # k = 100
+    ]
 
 }
 
 
-MODELS_YEAR = [2017, 2017, 2020, 2017, 2020, 2019, 2019, 2020, 2018, 2021, 2021]  # add at the end
+MODELS_YEAR = [2017, 2017, 2020, 2017, 2020, 2019, 2019, 2020, 2018, 2021, 2021, 2022, 2022, 2022, 2020]
 MODELS_YEAR_DICT = {mod.name: y for mod, y in zip(Models, MODELS_YEAR)}
 MODELS_YEAR_DICT = {k: v for k, v in sorted(MODELS_YEAR_DICT.items(), key=lambda a: a[1])}
 
