@@ -40,6 +40,6 @@ def experiment_FI(now=None, models_todo=None, servers=None):
             sys.exit()
 
 
-servers = [cst.Servers.ALIEN2, cst.Servers.ALIEN1]
-models_todo = [cst.Models.AXIALLOB, cst.Models.ATNBoF]
-experiment_FI(models_todo=models_todo)
+servers = [cst.Servers.FISSO1]
+models_todo = [cst.Models.ATNBoF]
+experiment_FI(servers=servers, models_todo=models_todo)

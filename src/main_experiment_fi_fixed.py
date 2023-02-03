@@ -41,7 +41,7 @@ def experiment_FI(now=None, models=None, servers=None):
                 sys.exit()
 
 
-models = [cst.Models.CNN2]
-servers = [cst.Servers.ALIEN2]
-experiment_FI()
+servers = [cst.Servers.FISSO1, cst.Servers.ALIEN1, cst.Servers.ALIEN2]
+now = "02-02-2023-FI-FINAL"
+experiment_FI(now=now, servers=servers)
 

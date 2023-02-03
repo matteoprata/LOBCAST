@@ -14,7 +14,7 @@ class Configuration:
 
     def __init__(self, now=None):
 
-        self.IS_DEBUG = True
+        self.IS_DEBUG = False
         self.NOW = self.assign_now(now=now, is_debug=self.IS_DEBUG)
 
         self.setup_all_directories(self.NOW, self.IS_DEBUG)

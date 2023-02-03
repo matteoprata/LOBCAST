@@ -22,11 +22,10 @@ HP_DAIN = {
     cst.LearningHyperParameter.P_DROPOUT.value: {'values': [0.5]}
 }
 
-# DONE FIXED 21-01-2023
 HP_DAIN_FI_FIXED = {
     cst.LearningHyperParameter.EPOCHS_UB.value: 100,
     cst.LearningHyperParameter.OPTIMIZER.value: cst.Optimizers.RMSPROP.value,
-    cst.LearningHyperParameter.LEARNING_RATE.value: 0.00024,
+    cst.LearningHyperParameter.LEARNING_RATE.value: 0.0002169,
     cst.LearningHyperParameter.BATCH_SIZE.value: 32,
     cst.LearningHyperParameter.DAIN_LAYER_MODE.value: "full",
     cst.LearningHyperParameter.MLP_HIDDEN.value: 512,

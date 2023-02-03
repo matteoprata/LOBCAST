@@ -94,25 +94,25 @@ class Predictions(Enum):
 # to use in the future
 class Models(str, Enum):
     MLP = "MLP"
-    CNN1 = "CNN1"
-    CNN2 = "CNN2"
-    LSTM = "LSTM"
-    CNNLSTM = "CNNLSTM"
-    DAIN = "DAIN"
-
-    CTABL = "CTABL"
     BINCTABL = "BINCTABL"
-    DEEPLOBATT = "DEEPLOBATT"
+    CTABL = "CTABL"
 
-    DEEPLOB = "DeepLob"
-    TRANSLOB = "TransLob"
-
-    DLA = "DLA"
-    AXIALLOB = "AXIALLOB"
-
-    NBoF = "NBoF"  # do not use
+    CNN1 = "CNN1"
+    CNNLSTM = "CNNLSTM"
     ATNBoF = "ATNBoF"
+
+    CNN2 = "CNN2"
     TLONBoF = "TLONBoF"
+    DLA = "DLA"
+
+    LSTM = "LSTM"
+    DEEPLOBATT = "DEEPLOBATT"
+    DEEPLOB = "DeepLob"
+
+    DAIN = "DAIN"
+    AXIALLOB = "AXIALLOB"
+    TRANSLOB = "TransLob"
+    # NBoF = "NBoF"  # do not use
 
 
 class DatasetFamily(str, Enum):
@@ -375,15 +375,15 @@ DECLARED_PERF = {
     Models.TLONBoF: [
         # https://www.sciencedirect.com/science/article/pii/S0167865520302245
         # Anchored evaluation setup
-        [None, None, None, None, None],  # k = 10
+        [52.98, 50.20, 58.19, None, None],  # k = 10
         [None, None, None, None, None],  # k = 20
         [None, None, None, None, None],  # k = 30
         [None, None, None, None, None],  # k = 50
         [None, None, None, None, None]   # k = 100
     ]
-
 }
 
+# metrics_name = ['F1 Score (%)', 'Precision (%)', 'Recall (%)', 'Accuracy (%)', 'MCC']
 
 MODELS_YEAR = [2017, 2017, 2020, 2017, 2020, 2019, 2019, 2020, 2018, 2021, 2021, 2022, 2022, 2022, 2020]
 MODELS_YEAR_DICT = {mod.name: y for mod, y in zip(Models, MODELS_YEAR)}

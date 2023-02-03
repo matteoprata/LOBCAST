@@ -9,11 +9,10 @@ HP_DEEPATT = {
     cst.LearningHyperParameter.NUM_SNAPSHOTS.value: {'values': [50]},  # [50, 100]
 }
 
-# DONE FIXED 21-01-2023
 HP_DEEPATT_FI_FIXED = {
     cst.LearningHyperParameter.EPOCHS_UB.value: 100,
     cst.LearningHyperParameter.OPTIMIZER.value: cst.Optimizers.ADAM.value,
-    cst.LearningHyperParameter.LEARNING_RATE.value: 0.0002754,
+    cst.LearningHyperParameter.LEARNING_RATE.value: 0.0008267,
     cst.LearningHyperParameter.EPS.value: 1e-07,
     cst.LearningHyperParameter.BATCH_SIZE.value: 128,
     cst.LearningHyperParameter.NUM_SNAPSHOTS.value: 50,

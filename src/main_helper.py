@@ -220,17 +220,17 @@ def pick_model(config: Configuration, data_module):
             hidden_size=config.HYPER_PARAMETERS[cst.LearningHyperParameter.RNN_HIDDEN]
         )
 
-    elif config.CHOSEN_MODEL == cst.Models.NBoF:
-        raise AssertionError("Do not use this model!")
-        num_snapshots, num_features = data_module.x_shape
-        net_architecture = NBoF(
-            num_snapshots=num_snapshots,
-            num_features=num_features,
-            num_rbf_neurons=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_RBF_NEURONS],
-            hidden_mlp=config.HYPER_PARAMETERS[cst.LearningHyperParameter.MLP_HIDDEN],
-            centers=get_nbof_centers(data_module, k=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_RBF_NEURONS]),
-            lr_W=0.01,
-        )
+    # elif config.CHOSEN_MODEL == cst.Models.NBoF:
+    #     raise AssertionError("Do not use this model!")
+    #     num_snapshots, num_features = data_module.x_shape
+    #     net_architecture = NBoF(
+    #         num_snapshots=num_snapshots,
+    #         num_features=num_features,
+    #         num_rbf_neurons=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_RBF_NEURONS],
+    #         hidden_mlp=config.HYPER_PARAMETERS[cst.LearningHyperParameter.MLP_HIDDEN],
+    #         centers=get_nbof_centers(data_module, k=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_RBF_NEURONS]),
+    #         lr_W=0.01,
+    #     )
 
     elif config.CHOSEN_MODEL == cst.Models.TLONBoF:
         num_snapshots, num_features = data_module.x_shape

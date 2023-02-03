@@ -12,11 +12,10 @@ HP_LSTM = {
     cst.LearningHyperParameter.P_DROPOUT.value: {'values': [0]},
 }
 
-# DONE FIXED 21-01-2023
 HP_LSTM_FI_FIXED = {
     cst.LearningHyperParameter.EPOCHS_UB.value: 100,
     cst.LearningHyperParameter.OPTIMIZER.value: cst.Optimizers.ADAM.value,
-    cst.LearningHyperParameter.LEARNING_RATE.value: 0.0007805,
+    cst.LearningHyperParameter.LEARNING_RATE.value: 0.0007426,
     cst.LearningHyperParameter.BATCH_SIZE.value: 64,
     cst.LearningHyperParameter.MLP_HIDDEN.value: 64,
     cst.LearningHyperParameter.RNN_HIDDEN.value: 40,

@@ -221,7 +221,15 @@ class NNEngine(pl.LightningModule):
             ], lr=self.lr)
 
         if self.optimizer == cst.Optimizers.ADAM.value:
-            return torch.optim.Adam(self.parameters(), lr=self.lr, weight_decay=self.weight_decay, eps=self.eps)
+
+            if self.config.CHOSEN_MODEL == cst.Models.ATNBoF:
+                opt = torch.optim.Adam(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
+                sch = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=int((self.n_samples / self.n_batch_size) * self.n_epochs))
+                return [opt], [{"scheduler": sch,
+                                "interval": "step",
+                                "frequency": 1}]
+            else:
+                return torch.optim.Adam(self.parameters(), lr=self.lr, weight_decay=self.weight_decay, eps=self.eps)
 
         elif self.optimizer == cst.Optimizers.RMSPROP.value:
             return torch.optim.RMSprop(self.parameters(), lr=self.lr)
@@ -233,3 +241,11 @@ class NNEngine(pl.LightningModule):
                 return [opt], [{"scheduler": sch,
                                 "interval": "step",
                                 "frequency": 1}]
+
+    @staticmethod
+    def get_cosine_lr_scheduler(init_lr, final_lr):
+        """ From ATNBOF """
+        def lr_scheduler(n_epoch, epoch_idx):
+            lr = final_lr + 0.5 * (init_lr - final_lr) * (1 + np.cos(np.pi * epoch_idx / n_epoch))
+            return lr
+        return lr_scheduler
