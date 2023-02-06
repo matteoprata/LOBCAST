@@ -4,7 +4,8 @@ import src.constants as cst
 HP_DEEP = {
     cst.LearningHyperParameter.EPOCHS_UB.value: {'values': [100]},
     cst.LearningHyperParameter.OPTIMIZER.value: {'values': [cst.Optimizers.ADAM.value]},
-    cst.LearningHyperParameter.LEARNING_RATE.value: {'max': 0.001, 'min': 0.0001},  # 'max': 0.001, 'min': 0.0001
+
+    cst.LearningHyperParameter.LEARNING_RATE.value: {'values': [0.001, 0.00325, 0.0055, 0.00775, 0.01]},  # {'max': 0.01, 'min': 0.001},  # 'max': 0.001, 'min': 0.0001
     cst.LearningHyperParameter.BATCH_SIZE.value: {'values': [32, 64, 128]},  # [32, 64, 128]
 }
 

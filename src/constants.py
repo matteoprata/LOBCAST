@@ -224,7 +224,7 @@ DATASET_FI = "FI-2010/BenchmarkDatasets"
 DATA_PICKLES = "data/pickles/"
 
 
-WANDB_SWEEP_MAX_RUNS = 20
+WANDB_SWEEP_MAX_RUNS = 30
 
 
 class Servers(Enum):
@@ -385,7 +385,22 @@ DECLARED_PERF = {
 
 # metrics_name = ['F1 Score (%)', 'Precision (%)', 'Recall (%)', 'Accuracy (%)', 'MCC']
 
-MODELS_YEAR = [2017, 2017, 2020, 2017, 2020, 2019, 2019, 2020, 2018, 2021, 2021, 2022, 2022, 2022, 2020]
-MODELS_YEAR_DICT = {mod.name: y for mod, y in zip(Models, MODELS_YEAR)}
+MODELS_YEAR_DICT = {
+    Models.MLP: 2017,
+    Models.LSTM: 2017,
+    Models.CNN1: 2017,
+    Models.CTABL: 2018,
+    Models.DEEPLOB: 2019,
+    Models.DAIN: 2019,
+    Models.CNNLSTM: 2020,
+    Models.CNN2: 2020,
+    Models.TRANSLOB: 2020,
+    Models.TLONBoF: 2020,
+    Models.BINCTABL: 2021,
+    Models.DEEPLOBATT: 2021,
+    Models.DLA: 2022,
+    Models.ATNBoF: 2022,
+    Models.AXIALLOB: 2022
+}
 MODELS_YEAR_DICT = {k: v for k, v in sorted(MODELS_YEAR_DICT.items(), key=lambda a: a[1])}
 

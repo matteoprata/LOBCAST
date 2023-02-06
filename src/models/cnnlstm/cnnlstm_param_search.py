@@ -5,12 +5,13 @@ HP_CNNLSTM = {
 
     cst.LearningHyperParameter.EPOCHS_UB.value: {'values': [100]},
     cst.LearningHyperParameter.OPTIMIZER.value: {'values': [cst.Optimizers.RMSPROP.value]},
-    cst.LearningHyperParameter.LEARNING_RATE.value: {'max': 0.001, 'min': 0.0001},  # 'max': 0.001, 'min': 0.0001
-    cst.LearningHyperParameter.BATCH_SIZE.value: {'values': [16, 32, 64]},  # [32, 64, 128]
     cst.LearningHyperParameter.RNN_HIDDEN.value: {'values': [32]},
     cst.LearningHyperParameter.RNN_N_HIDDEN.value: {'values': [1]},
-    cst.LearningHyperParameter.MLP_HIDDEN.value: {'values': [32, 64]},
+    cst.LearningHyperParameter.MLP_HIDDEN.value: {'values': [32]},
     cst.LearningHyperParameter.P_DROPOUT.value: {'values': [0.1]},
+
+    cst.LearningHyperParameter.LEARNING_RATE.value: {'values': [0.001, 0.00325, 0.0055, 0.00775, 0.01]}, # {'max': 0.01, 'min': 0.001},  # 'max': 0.001, 'min': 0.0001
+    cst.LearningHyperParameter.BATCH_SIZE.value: {'values': [16, 32, 64]},  # [32, 64, 128]
 }
 
 HP_CNNLSTM_FI_FIXED = {

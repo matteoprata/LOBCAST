@@ -85,6 +85,9 @@ class NNEngine(pl.LightningModule):
         if self.remote_log is not None:
             self.remote_log.log({var_name: sum_losses})
 
+        # self.config.METRICS_JSON.add_testing_metrics(self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, val_dict)
+        # self.remote_log({"current_epoch": self.current_epoch})
+
     def validation_epoch_end(self, validation_step_outputs):
         preds, truths, loss_vals, stock_names = self.get_prediction_vectors(validation_step_outputs)
 

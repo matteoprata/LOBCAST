@@ -40,7 +40,7 @@ class Configuration:
         self.IS_WANDB = 0
         self.IS_TUNE_H_PARAMS = False
 
-        self.SWEEP_METHOD = 'bayes'
+        self.SWEEP_METHOD = 'grid'  # 'bayes'
 
         self.WANDB_INSTANCE = None
         self.WANDB_RUN_NAME = None
@@ -83,6 +83,7 @@ class Configuration:
 
         self.WANDB_SWEEP_NAME = self.cf_name_format().format(
             self.CHOSEN_MODEL.name,
+            self.SEED,
             self.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name,
             self.CHOSEN_STOCKS[cst.STK_OPEN.TEST].name,
             self.CHOSEN_DATASET.value,
@@ -98,7 +99,7 @@ class Configuration:
 
     @staticmethod
     def cf_name_format(ext=""):
-        return "model={}-trst={}-test={}-data={}-peri={}-bw={}-fw={}-fiw={}" + ext
+        return "model={}-seed={}-trst={}-test={}-data={}-peri={}-bw={}-fw={}-fiw={}" + ext
 
     @staticmethod
     def setup_all_directories(now, is_debug):

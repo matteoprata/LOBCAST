@@ -44,12 +44,19 @@ class ResidualBlock(nn.Module):
         self.pooling = pooling
 
     def forward(self, x):
+        # print("in:", x.shape)
+
         if self.right_branch is not None:
+            # print("here")
             left = self.left_branch(x)
+            # print("1w:", left.shape)
             right = self.right_branch(x)
+            # print("2w:", right.shape)
             x = left + right
         else:
+            # print("there")
             x = self.left_branch(x) + x
+            # print("3w:", x.shape)
 
         return x
 
@@ -78,6 +85,17 @@ class ResidualBlock(nn.Module):
 class ResNetPreprocessing(nn.Module):
     def __init__(self, in_channels, n_filter=64, kernel_size=15, padding=7, dropout=0.5):
         super(ResNetPreprocessing, self).__init__()
+
+        self.financial_block = nn.Sequential(
+            nn.Conv1d(in_channels=in_channels, out_channels=n_filter, kernel_size=kernel_size, padding=padding),
+            nn.BatchNorm1d(n_filter),
+            nn.ReLU(),
+            nn.Conv1d(in_channels=n_filter, out_channels=n_filter, kernel_size=kernel_size, padding=padding),
+            nn.MaxPool1d(kernel_size=2, stride=2),
+            nn.BatchNorm1d(n_filter),
+            nn.ReLU()
+        )
+
         self.block1 = nn.Sequential(
             nn.Conv1d(in_channels=in_channels, out_channels=n_filter, kernel_size=kernel_size, padding=padding),
             nn.BatchNorm1d(n_filter),
@@ -124,8 +142,7 @@ class ResNetPreprocessing(nn.Module):
         self.residual_blocks = nn.Sequential(*residual_blocks)
 
     def forward(self, x):
-        x = self.block1(x)
-        x = self.block2_1(x) + self.block2_2(x)
+        x = self.financial_block(x)
         x = self.residual_blocks(x)
         return x
 

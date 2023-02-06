@@ -7,6 +7,9 @@ import src.constants as cst
 import numpy as np
 import collections
 
+LOSS_WEIGHTS_DICT = {m: 1e6 for m in cst.Models}
+LOSS_WEIGHTS_DICT[cst.Models.ATNBoF] = 1e3
+
 
 class FIDataset(data.Dataset):
     """ Characterizes a dataset for PyTorch. """
@@ -19,15 +22,14 @@ class FIDataset(data.Dataset):
         self.x = torch.from_numpy(x).type(torch.FloatTensor)
         self.y = torch.from_numpy(y).type(torch.LongTensor)
 
-        if not chosen_model == cst.Models.DEEPLOBATT:
-            self.ys_occurrences = collections.Counter(y)
-            occs = np.array([self.ys_occurrences[k] for k in sorted(self.ys_occurrences)])
-            self.loss_weights = torch.Tensor(occs / np.sum(occs))
-            self.loss_weights *= 1e3 if chosen_model == cst.Models.ATNBoF else 1e6
-        else:
+        if chosen_model == cst.Models.DEEPLOBATT:  # TODO answer WHY?
             self.y = F.one_hot(self.y.to(torch.int64), num_classes=self.num_classes).float()
             self.y = torch.permute(self.y, (0, 2, 1))
             # y.shape = (n_samples, num_classes, num_horizons)
+        else:
+            self.ys_occurrences = collections.Counter(y)
+            occs = np.array([self.ys_occurrences[k] for k in sorted(self.ys_occurrences)])
+            self.loss_weights = torch.Tensor(LOSS_WEIGHTS_DICT[chosen_model] / occs)
 
         self.x_shape = tuple(self.x[0].shape)
 

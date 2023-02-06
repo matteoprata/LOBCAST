@@ -29,6 +29,7 @@ class Metrics:
 
             fname = self._config.cf_name_format('.json').format(
                 self._config.CHOSEN_MODEL.name,
+                self._config.SEED,
                 self._config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name,
                 sym,
                 self._config.CHOSEN_DATASET.value,

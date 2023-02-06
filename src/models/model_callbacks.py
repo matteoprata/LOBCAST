@@ -39,5 +39,8 @@ def early_stopping(config):
         min_delta=0.00,
         patience=15,
         verbose=True,
-        mode='max'
+        mode='max',
+        # |v stops when if after epoch 1, the
+        # check_on_train_epoch_end=True,
+        # divergence_threshold=1/3,
     )
