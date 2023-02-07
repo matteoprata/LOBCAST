@@ -11,12 +11,14 @@ from src.main_single import *
 from src.utils.utilities import get_sys_mac
 
 
-def experiment_FI(now=None, models=None, servers=None, horizons=None, seeds=[1]):
+def experiment_FI(now=None, models=None, servers=None, horizons=None, seeds=None):
 
     now, server_name, server_id, n_servers = experiment_preamble(now, servers)
 
     models = list(cst.Models)[server_id::len(servers)] if models is None else models
     horizons = cst.FI_Horizons if horizons is None else horizons
+    seeds = [1] if seeds is None else seeds
+
     for mod in models:
         for k in horizons:
             for s in seeds:
@@ -47,8 +49,8 @@ def experiment_FI(now=None, models=None, servers=None, horizons=None, seeds=[1])
 seeds = range(50, 56)
 servers = [cst.Servers.ALIEN1]
 horizons = [cst.FI_Horizons.K1]
-models = [cst.Models.ATNBoF]
-now = "deb" #"02-02-2023-FI-FINAL"
-experiment_FI(now=now, servers=servers, horizons=horizons, models=models, seeds=seeds)
+models = [cst.Models.AXIALLOB]
+now = "deb"  # "02-02-2023-FI-FINAL"
+experiment_FI(now=now, servers=servers, horizons=horizons, models=models, seeds=None)
 
 

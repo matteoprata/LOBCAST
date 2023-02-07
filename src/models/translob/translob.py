@@ -8,74 +8,84 @@ import src.constants as cst
 
 
 class TransLob(pl.LightningModule):
-
-    def __init__(self):
+    def __init__(self, seq_len, in_c=40, out_c=14, n_attlayers=2, n_heads=3, dim_linear=64, dim_feedforward=60, dropout=.1):
         super().__init__()
 
-        # self.transformer = nn.Transformer(d_model=15, nhead=3,
-        # num_encoder_layers=2, num_decoder_layers=2,
-        # dim_feedforward=3000, dropout=0.0, norm_first=True,
-        # batch_first=True, device=device)
+        '''
+        Args:
+          in_c: the number of input channels for the first Conv1d layer in the CNN
+          out_c: the number of output channels for all Conv1d layers in the CNN
+          seq_len: the sequence length of the input data
+          n_attlayers: the number of attention layers in the transformer encoder
+          n_heads: the number of attention heads in the transformer encoder
+          dim_linear: the number of neurons in the first linear layer (fc1)
+          dim_feedforward: the number of neurons in the feed-forward layer of the transformer encoder layer
+          dropout: the dropout rate for the Dropout layer
+        '''
 
         self.conv = nn.Sequential(
-            nn.Conv1d(in_channels=40, out_channels=14, kernel_size=2, stride=1, padding=1),
+            nn.Conv1d(in_channels=in_c, out_channels=out_c, kernel_size=2, stride=1, padding="same"),
             nn.ReLU(),
-            nn.Conv1d(in_channels=14, out_channels=14, kernel_size=2, dilation=2, padding=2),
+            nn.Conv1d(in_channels=out_c, out_channels=out_c, kernel_size=2, dilation=2, padding="same"),
             nn.ReLU(),
-            nn.Conv1d(in_channels=14, out_channels=14, kernel_size=2, dilation=4, padding=4),
+            nn.Conv1d(in_channels=out_c, out_channels=out_c, kernel_size=2, dilation=4, padding="same"),
             nn.ReLU(),
-            nn.Conv1d(in_channels=14, out_channels=14, kernel_size=2, dilation=8, padding=8),
+            nn.Conv1d(in_channels=out_c, out_channels=out_c, kernel_size=2, dilation=8, padding="same"),
             nn.ReLU(),
-            nn.Conv1d(in_channels=14, out_channels=14, kernel_size=2, dilation=16, padding=16),
+            nn.Conv1d(in_channels=out_c, out_channels=out_c, kernel_size=2, dilation=16, padding="same"),
             nn.ReLU(),
-            nn.BatchNorm1d(14),
         )
 
         self.dropout = nn.Dropout(0.1)
 
         self.activation = nn.ReLU()
 
-        self.encoder_layer = nn.TransformerEncoderLayer(15, 3, 60, 0.0, batch_first=True)
-        self.norm = nn.BatchNorm1d(100)
+        d_model = out_c + 1
+        self.encoder_layer = nn.TransformerEncoderLayer(d_model=d_model, nhead=n_heads,
+                                                        dim_feedforward=dim_feedforward,
+                                                        dropout=0.0, batch_first=True, device=cst.DEVICE_TYPE)
 
-        self.transformer = nn.TransformerEncoder(self.encoder_layer, 2, norm=self.norm)
+        self.layer_norm = nn.LayerNorm([seq_len, out_c])
 
-        self.fc1 = nn.Linear(1500, 64)
-        self.fc2 = nn.Linear(64, 3)
+        self.transformer = nn.TransformerEncoder(self.encoder_layer, n_attlayers)
+
+        self.fc1 = nn.Linear(seq_len * d_model, dim_linear)
+        self.fc2 = nn.Linear(dim_linear, 3)
 
     def forward(self, x):
-        '''
-        np_tensor = x.cpu().numpy()
-        tf_tensor = tf.convert_to_tensor(np_tensor)
+        x = torch.permute(x, (0, 2, 1))   # batch, 100, 40
 
-        x = lob_dilated(tf_tensor)
-        '''
-
-        x = torch.permute(x, (0, 2, 1))
+        # Pass the input tensor through a series of convolutional layers
         x = self.conv(x)
-        x = x[:, :, :-31]
-        x = x.permute(0, 2, 1)
-        # np_tensor = x.cpu().detach().numpy()
-        # tf_tensor = tf.convert_to_tensor(np_tensor)
 
+        # Permute the dimensions of the output from the convolutional layers so that the second dimension becomes the first
+        x = x.permute(0, 2, 1)
+
+        # Normalize the output from the convolutional layers
+        x = self.layer_norm(x)
+
+        # Apply positional encoding to the output from the layer normalization
         x = self.positional_encoding(x)
 
-        # np_tensor = x.cpu().numpy()
-        # np_tensor = np.squeeze(np_tensor)
-
-        # x = torch.tensor(np_tensor).to(device)
-
+        # Pass the output from the previous steps through the transformer encoder
         x = self.transformer(x)
-        # print(x.shape)
+
+        # Reshape the output from the transformer encoder to have only two dimensions
         x = torch.reshape(x, (x.shape[0], x.shape[1] * x.shape[2]))
 
+        # Apply dropout and activation function to the output from the previous step, then pass it through the first linear layer
         x = self.dropout(self.activation(self.fc1(x)))
-        # x = self.dropout(self.norm2(self.activation(self.fc2(x))))
+
+        # Pass the output from the previous step through the second linear layer
         x = self.fc2(x)
 
-        return x
+        # Apply softmax activation to the output from the second linear layer
+        forecast_y = torch.softmax(x, dim=1)
 
-    def positional_encoding(self, x):
+        return forecast_y
+
+    @staticmethod
+    def positional_encoding(x):
         n_levels = 100
         pos = torch.arange(0, n_levels, 1, dtype=torch.float32) / (n_levels - 1)
         pos = (pos + pos) - 1
@@ -86,5 +96,4 @@ class TransLob(pl.LightningModule):
                 pos_final[i, j, 0] = pos[j]
 
         x = torch.cat((x, pos_final), 2)
-
         return x

@@ -116,18 +116,24 @@ class AxialLOB(nn.Module):
         """
 
         # channel output of the CNN_in is the channel input for the axial layer
+
         self.c_in = c_in
         self.c_out = c_out
         self.c_final = c_final
 
         self.CNN_in = nn.Conv2d(in_channels=1, out_channels=c_in, kernel_size=1)
         self.CNN_out = nn.Conv2d(in_channels=c_out, out_channels=c_final, kernel_size=1)
-        self.CNN_res = nn.Conv2d(in_channels=1, out_channels=c_final, kernel_size=1)
+        self.CNN_res2 = nn.Conv2d(in_channels=c_out, out_channels=c_final, kernel_size=1)
+        self.CNN_res1 = nn.Conv2d(in_channels=1, out_channels=c_out, kernel_size=1)
 
         self.norm = nn.BatchNorm2d(c_in)
+        self.res_norm2 = nn.BatchNorm2d(c_final)
+        self.res_norm1 = nn.BatchNorm2d(c_out)
         self.norm2 = nn.BatchNorm2d(c_final)
+
         self.axial_height_1 = GatedAxialAttention(c_out, c_out, n_heads, H, flag=False)
         self.axial_width_1 = GatedAxialAttention(c_out, c_out, n_heads, W, flag=True)
+
         self.axial_height_2 = GatedAxialAttention(c_out, c_out, n_heads, H, flag=False)
         self.axial_width_2 = GatedAxialAttention(c_out, c_out, n_heads, W, flag=True)
 
@@ -138,6 +144,7 @@ class AxialLOB(nn.Module):
     def forward(self, x):
         x = x[:, None, :, :]
 
+        # up branch
         # first convolution before the attention
         y = self.CNN_in(x)
         y = self.norm(y)
@@ -146,19 +153,32 @@ class AxialLOB(nn.Module):
         # attention mechanism through gated multi head axial layer
         y = self.axial_width_1(y)
         y = self.axial_height_1(y)
+
+        # lower branch
+        x = self.CNN_res1(x)
+        x = self.res_norm1(x)
+        x = self.activation(x)
+
+        # first residual
+        y = y + x
+        z = y.detach().clone()
+
+        # second axial layer
         y = self.axial_width_2(y)
         y = self.axial_height_2(y)
 
         # second convolution
         y = self.CNN_out(y)
-        y = self.norm2(y)
+        y = self.res_norm2(y)
         y = self.activation(y)
 
-        # residual connection
-        x = self.CNN_res(x)
-        x = self.norm2(x)
-        x = self.activation(x)
-        y = y + x
+        # lower branch
+        z = self.CNN_res2(z)
+        z = self.norm2(z)
+        z = self.activation(z)
+
+        # second res connection
+        y = y + z
 
         # final part
         y = self.pooling(y)

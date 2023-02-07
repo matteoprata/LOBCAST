@@ -199,7 +199,7 @@ def pick_model(config: Configuration, data_module):
         net_architecture = DeepLob(num_classes=data_module.num_classes)
 
     elif config.CHOSEN_MODEL == cst.Models.TRANSLOB:
-        net_architecture = TransLob()
+        net_architecture = TransLob(seq_len=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_SNAPSHOTS])
 
     elif config.CHOSEN_MODEL == cst.Models.CTABL:
         net_architecture = CTABL(60, 40, 10, 10, 120, 5, 3, 1)

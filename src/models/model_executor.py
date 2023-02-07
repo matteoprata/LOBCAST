@@ -142,6 +142,8 @@ class NNEngine(pl.LightningModule):
         if self.remote_log is not None:  # log to wandb
             self.remote_log.log(val_dict)
 
+        self.remote_log({"current_epoch": self.current_epoch})
+
     # COMMON
     def __validation_and_testing(self, batch):
         x, y, stock_names = batch

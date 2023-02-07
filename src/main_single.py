@@ -98,6 +98,7 @@ def _wandb_exe(config: Configuration):
     with wandb.init(project=cst.PROJECT_NAME, name=run_name) as wandb_instance:
         wandb_instance.log_code("src/")
         wandb_instance.log({"model": config.CHOSEN_MODEL.name})
+        wandb_instance.log({"seed": config.SEED})
         wandb_instance.log({"fi-k":  config.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON]})
 
         config.WANDB_RUN_NAME = wandb_instance.name
