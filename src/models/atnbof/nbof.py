@@ -6,9 +6,13 @@ import torch.nn.functional as F
 class NBoF(nn.Module):
     def __init__(self, in_channels, n_codeword):
         super(NBoF, self).__init__()
-        self.codebook = nn.Parameter(torch.Tensor(n_codeword, in_channels))
-        self.scaling_a = nn.Parameter(torch.Tensor(1))
-        self.scaling_b = nn.Parameter(torch.Tensor(1))
+
+        self.codebook = nn.Parameter(
+            data=torch.Tensor(n_codeword, in_channels),
+            requires_grad=True
+        )
+        self.scaling_a = nn.Parameter(data=torch.Tensor(1), requires_grad=True)
+        self.scaling_b = nn.Parameter(data=torch.Tensor(1), requires_grad=True)
 
         nn.init.kaiming_uniform_(self.codebook)
         nn.init.constant_(self.scaling_a, 1.0)
@@ -29,3 +33,4 @@ class NBoF(nn.Module):
         similarity = similarity.transpose(-1, -2)
 
         return similarity
+
