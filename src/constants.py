@@ -211,7 +211,7 @@ class ExpIndependentVariables(Enum):
 
 N_LOB_LEVELS = 10
 
-NUM_GPUS = 1 if torch.cuda.is_available() else None
+NUM_GPUS = torch.cuda.device_count()
 DEVICE_TYPE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 PROJECT_NAME = "LOB-CLASSIFIERS-({})"
@@ -404,3 +404,4 @@ MODELS_YEAR_DICT = {
 }
 MODELS_YEAR_DICT = {k: v for k, v in sorted(MODELS_YEAR_DICT.items(), key=lambda a: a[1])}
 
+print(FI_Horizons['K1'].value)

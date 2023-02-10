@@ -24,7 +24,6 @@ from src.models.lstm.lstm import LSTM
 from src.models.binctabl.bin_tabl import BiN_CTABL
 from src.models.deeplobatt.deeplobatt import DeepLobAtt
 from src.models.dla.dla import DLA
-from src.models.nbof.nbof import NBoF
 from src.models.atnbof.atnbof import ATNBoF
 from src.models.tlonbof.tlonbof import TLONBoF
 from src.models.axial.axiallob import AxialLOB

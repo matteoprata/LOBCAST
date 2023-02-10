@@ -10,11 +10,13 @@ if module_path not in sys.path:
 from src.main_single import *
 
 
-def experiment_FI(kset, now=None, models_todo=None, servers=None):
+def experiment_FI(kset=None, now=None, models_todo=None, servers=None):
 
     now, server_name, server_id, n_servers = experiment_preamble(now, servers)
 
+    kset = kset if kset is not None else cst.FI_Horizons
     models_todo = models_todo if models_todo is not None else cst.Models
+
     for mod in list(models_todo)[server_id::n_servers]:
         for k in kset:
             print("Running FI experiment on {}, with K={}".format(mod, k))
@@ -40,9 +42,9 @@ def experiment_FI(kset, now=None, models_todo=None, servers=None):
                 sys.exit()
 
 
-servers = [cst.Servers.ALIEN1]
-models_todo = [cst.Models.MLP]
+servers = [cst.Servers.ALIEN1, cst.Servers.ALIEN2]
+models_todo = [cst.Models.MLP, cst.Models.CNN1, cst.Models.CNN2, cst.Models.LSTM, cst.Models.CNNLSTM, cst.Models.BINCTABL, cst.Models.CTABL, cst.Models.DLA, cst.Models.DAIN]
 kset = [cst.FI_Horizons.K2]
-now = "BINCTABL, ATNBoF, K1, K2, sweep"
+now = "FI-2010-Sweep-ALL"
 
-experiment_FI(kset, servers=servers, models_todo=None, now=now)
+experiment_FI(now=now,  models_todo=models_todo, servers=servers)

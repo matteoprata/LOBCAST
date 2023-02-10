@@ -49,7 +49,7 @@ def experiment_FI(now=None, models=None, servers=None, horizons=None, seeds=None
 seeds = range(50, 56)
 servers = [cst.Servers.ALIEN1]
 horizons = [cst.FI_Horizons.K1]
-models = [cst.Models.MLP]
+models = [cst.Models.AXIALLOB]
 now = "deb"  # "02-02-2023-FI-FINAL"
 experiment_FI(now=now, servers=servers, horizons=horizons, models=models, seeds=None)
 
