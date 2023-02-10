@@ -40,8 +40,8 @@ def experiment_FI(kset, now=None, models_todo=None, servers=None):
                 sys.exit()
 
 
-servers = [cst.Servers.ALIEN1, cst.Servers.ALIEN2]
-# models_todo = [cst.Models.ATNBoF]
+servers = [cst.Servers.ALIEN1]
+models_todo = [cst.Models.MLP]
 kset = [cst.FI_Horizons.K2]
 now = "BINCTABL, ATNBoF, K1, K2, sweep"
 
