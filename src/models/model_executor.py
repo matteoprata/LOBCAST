@@ -20,10 +20,10 @@ class NNEngine(pl.LightningModule):
     def __init__(
         self,
         config: Configuration,
-        model_type,
-        neural_architecture,
-        optimizer,
-        lr,
+        model_type=None,
+        neural_architecture=None,
+        optimizer=None,
+        lr=None,
         eps=None,
         weight_decay=0,
         momentum=None,
@@ -143,6 +143,10 @@ class NNEngine(pl.LightningModule):
             self.remote_log.log(val_dict)
 
         self.remote_log({"current_epoch": self.current_epoch})
+
+        print("DAJEEEEEEEEEEEE")
+        print("DAJEEEEEEEEEEEE")
+        print("DAJEEEEEEEEEEEE")
 
     # COMMON
     def __validation_and_testing(self, batch):
