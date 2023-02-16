@@ -1,5 +1,4 @@
 
-
 from torch.utils import data
 import torch.nn.functional as F
 import torch
@@ -22,7 +21,8 @@ class FIDataset(data.Dataset):
         self.x = torch.from_numpy(x).type(torch.FloatTensor)
         self.y = torch.from_numpy(y).type(torch.LongTensor)
 
-        if chosen_model == cst.Models.DEEPLOBATT:  # TODO answer WHY?
+        # DEEPLOBATT, unlike the others models, does the predictions for all the horizons, using an encoder-decoder
+        if chosen_model == cst.Models.DEEPLOBATT:
             self.y = F.one_hot(self.y.to(torch.int64), num_classes=self.num_classes).float()
             self.y = torch.permute(self.y, (0, 2, 1))
             # y.shape = (n_samples, num_classes, num_horizons)

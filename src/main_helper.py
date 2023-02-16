@@ -2,8 +2,9 @@ import numpy as np
 
 import src.constants as cst
 from src.config import Configuration
+from src.data_preprocessing.METACLASS.meta_data_builder import create_datasets_meta_classifier
+from src.data_preprocessing.METACLASS.meta_data_builder import load_predictions
 from src.models.model_executor import NNEngine
-from src.models.nbof.nbof_centers import get_nbof_centers
 
 # DATASETS
 from src.data_preprocessing.FI.FIDataBuilder import FIDataBuilder
@@ -27,12 +28,13 @@ from src.models.dla.dla import DLA
 from src.models.atnbof.atnbof import ATNBoF
 from src.models.tlonbof.tlonbof import TLONBoF
 from src.models.axial.axiallob import AxialLOB
+from src.models.metaclass.meta_classifier import MetaLOB
 
 
 def prepare_data_FI(config: Configuration):
-
     fi_train = FIDataBuilder(
-        cst.DATA_SOURCE + cst.DATASET_FI,
+        # cst.DATA_SOURCE + cst.DATASET_FI,
+        cst.DATASET_FI,
         dataset_type=cst.DatasetType.TRAIN,
         horizon=config.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON],
         window=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_SNAPSHOTS],
@@ -41,21 +43,14 @@ def prepare_data_FI(config: Configuration):
     )
 
     fi_val = FIDataBuilder(
-        cst.DATA_SOURCE + cst.DATASET_FI,
+        # cst.DATA_SOURCE + cst.DATASET_FI,
+        cst.DATASET_FI,
         dataset_type=cst.DatasetType.VALIDATION,
         horizon=config.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON],
         window=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_SNAPSHOTS],
         train_val_split=config.TRAIN_SPLIT_VAL,
         chosen_model=config.CHOSEN_MODEL
     )
-
-    # fi_test = FIDataBuilder(
-    #     cst.DATA_SOURCE + cst.DATASET_FI,
-    #     dataset_type=cst.DatasetType.TEST,
-    #     horizon=config.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON],
-    #     window=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_SNAPSHOTS],
-    #     train_val_split=config.TRAIN_SPLIT_VAL
-    # )
 
     fi_test = fi_val
 
@@ -92,7 +87,6 @@ def prepare_data_FI(config: Configuration):
 
 
 def prepare_data_LOBSTER(config: Configuration):
-
     train_set = LOBDataset(
         config=config,
         dataset_type=cst.DatasetType.TRAIN,
@@ -128,11 +122,52 @@ def prepare_data_LOBSTER(config: Configuration):
     return lob_dm
 
 
+def prepare_data_META(config: Configuration):
+
+    pred = load_predictions(
+        num_classes=3,
+        n_models=cst.N_MODELS
+    )
+
+    fi_test = FIDataBuilder(
+        # cst.DATA_SOURCE + cst.DATASET_FI,
+        cst.DATASET_FI,
+        dataset_type=cst.DatasetType.TEST,
+        horizon=config.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON],
+        window=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_SNAPSHOTS],
+        train_val_split=config.TRAIN_SPLIT_VAL,
+        chosen_model=config.CHOSEN_MODEL
+    )
+
+    y_test = fi_test.get_samples_y()
+
+    train_set, val_set, test_set = create_datasets_meta_classifier(
+        pred,
+        y_test,
+        num_classes=3,
+        n_models=cst.N_MODELS
+    )
+
+    print("Samples in the splits:")
+    print(len(train_set), len(val_set), len(test_set))
+    print()
+
+    meta_dm = DataModule(
+        train_set, val_set, test_set,
+        config.HYPER_PARAMETERS[cst.LearningHyperParameter.BATCH_SIZE],
+        config.HYPER_PARAMETERS[cst.LearningHyperParameter.IS_SHUFFLE_TRAIN_SET]
+    )
+
+
 def pick_dataset(config: Configuration):
     if config.CHOSEN_DATASET == cst.DatasetFamily.LOBSTER:
         return prepare_data_LOBSTER(config)
+
     elif config.CHOSEN_DATASET == cst.DatasetFamily.FI:
         return prepare_data_FI(config)
+
+    elif config.CHOSEN_DATASET == cst.DatasetFamily.META:
+        return prepare_data_META(config)
 
 
 def pick_model(config: Configuration, data_module):
@@ -240,9 +275,9 @@ def pick_model(config: Configuration, data_module):
         loss_weights = data_module.train_set.loss_weights
         net_architecture = ATNBoF(
             in_channels=1,
-            series_length=num_snapshots*num_features,
+            series_length=num_snapshots * num_features,
             n_codeword=config.HYPER_PARAMETERS[cst.LearningHyperParameter.MLP_HIDDEN],
-            att_type='temporal',            # ['temporal', 'spatial']
+            att_type='temporal',  # ['temporal', 'spatial']
             n_class=data_module.num_classes,
             dropout=config.HYPER_PARAMETERS[cst.LearningHyperParameter.P_DROPOUT]
         )
@@ -258,6 +293,13 @@ def pick_model(config: Configuration, data_module):
             n_heads=4,
             pool_kernel=(1, 4),
             pool_stride=(1, 4)
+        )
+
+    elif config.CHOSEN_MODEL == cst.Models.METALOB:
+        net_architecture = MetaLOB(
+            n_classifiers=15,
+            num_classes=3,
+            dim_midlayer=16
         )
 
     engine = NNEngine(

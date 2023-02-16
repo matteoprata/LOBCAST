@@ -7,6 +7,7 @@ import os
 
 from enum import Enum
 
+import seaborn
 import tqdm
 from matplotlib import pyplot as plt
 from matplotlib import colors
@@ -16,12 +17,13 @@ from plotly import graph_objs as go
 
 import src.constants as cst
 
+
 # ---- DATASET CONVERTION ----
 
 # txt to lob
 
 
-def f1_file_dataset_to_lob_df(dataset_filename : str, label_type : int =4):
+def f1_file_dataset_to_lob_df(dataset_filename: str, label_type: int = 4):
     """ The function load the data from dataset_filename
         as np.darray in F1 format (see here: https://arxiv.org/pdf/1705.03233.pdf) 
         and convert them to a simple dataframe with 41 columns (4features x 10 level + label).
@@ -35,7 +37,7 @@ def f1_file_dataset_to_lob_df(dataset_filename : str, label_type : int =4):
     return f1_dataset_to_lob_df(array_data)
 
 
-def f1_dataset_to_lob_df(array_data : np.ndarray, label_type : int = 4) -> pd.DataFrame:
+def f1_dataset_to_lob_df(array_data: np.ndarray, label_type: int = 4) -> pd.DataFrame:
     """ The function load the data as np.darray in F1 format (see here: https://arxiv.org/pdf/1705.03233.pdf) 
         and convert them to a simple dataframe with 41 columns (4features x 10 level + label).
         
@@ -46,9 +48,9 @@ def f1_dataset_to_lob_df(array_data : np.ndarray, label_type : int = 4) -> pd.Da
     nfeatures = 40
     label_pos = -5
     col_base_names = ["psell", "vsell", "pbuy", "vbuy"]
-    col_names  = [c + str(i) for i in range(1, 11) for c in col_base_names]
+    col_names = [c + str(i) for i in range(1, 11) for c in col_base_names]
     y_name = "y"
-    
+
     # extract data correctly
     raw_df_features = array_data[:nfeatures, :].horizon
     raw_lob_label = array_data[label_pos:, :].horizon
@@ -61,9 +63,10 @@ def f1_dataset_to_lob_df(array_data : np.ndarray, label_type : int = 4) -> pd.Da
 
     return df_features
 
-# lob to txt 
 
-def lob_df_to_f1_dataset_file(df_lob : pd.DataFrame, filename : str):
+# lob to txt
+
+def lob_df_to_f1_dataset_file(df_lob: pd.DataFrame, filename: str):
     """ The function save the data as np.darray in F1 format but with only 41 rows.
         (see here: https://arxiv.org/pdf/1705.03233.pdf) 
         The other rows are fake data.
@@ -73,11 +76,11 @@ def lob_df_to_f1_dataset_file(df_lob : pd.DataFrame, filename : str):
     """
     # convert data 
     df_lob = df_lob.copy()
-    base_data = lob_df_to_f1_dataset(df_lob) 
+    base_data = lob_df_to_f1_dataset(df_lob)
     np.savetxt(filename, base_data)
-    
-              
-def lob_df_to_f1_dataset(df_lob : pd.DataFrame) -> np.ndarray:
+
+
+def lob_df_to_f1_dataset(df_lob: pd.DataFrame) -> np.ndarray:
     """ The function return the data as np.darray in F1 format but with only 41 rows.
         (see here: https://arxiv.org/pdf/1705.03233.pdf) 
         The other rows are fake data.
@@ -88,22 +91,21 @@ def lob_df_to_f1_dataset(df_lob : pd.DataFrame) -> np.ndarray:
     nfeatures = 40
     extra_fake_features = 108
     label_name = "y"
-    
+
     # add extra dummy data 
     for i in range(extra_fake_features):
         df_lob.insert(nfeatures, 'dummy_col' + str(i), np.nan)
-    
+
     # change the goal format
     df_lob[label_name] = df_lob[label_name] + 1
-    
+
     # extract data correctly
     base_data = df_lob.values
-    
-    #Transpose data
-    base_data = base_data.T
-    
-    return base_data
 
+    # Transpose data
+    base_data = base_data.T
+
+    return base_data
 
 
 #  ---- plot stuff ----- #
@@ -267,12 +269,12 @@ def gradient_color(lenght: int, cmap: str = "brg") -> list:
     return t_colors
 
 
-
 pd.options.mode.chained_assignment = None
 pd.set_option('display.max_columns', None)
 
 COLUMNS_NAMES = {"orderbook": ["sell", "vsell", "buy", "vbuy"],
                  "message": ["time", "event_type", "order_id", "size", "price", "direction", "unk"]}
+
 
 def message_columns():
     """ return the message columns for the LOBSTER orderbook """
@@ -290,7 +292,7 @@ def orderbook_columns(level: int):
 def from_folder_to_unique_df(
         file_7z: str,
         first_date: str = "1990-01-01",
-        last_date:  str = "2100-01-01",
+        last_date: str = "2100-01-01",
         plot: bool = False, level: int = 10,
         path: str = "",
         granularity: cst.Granularity = cst.Granularity.Sec1,
@@ -308,7 +310,6 @@ def from_folder_to_unique_df(
     assert list(message_dfs.keys()) == list(orderbook_dfs.keys()), "the messages and orderbooks have different days!!"
     print("Iterating over trading days...")
     for d in tqdm.tqdm(message_dfs.keys()):
-
         tmp_df = lobster_to_gran_df(
             message_dfs[d],
             orderbook_dfs[d],
@@ -402,7 +403,7 @@ def lobster_to_gran_df(
         level: int = 10,
         add_messages=False,
         boundaries_purge=0
-    ):
+):
     """ create a dataframe with midprices, sell and buy for each second
 
         message_df : a csv df with the messages (lobster old_data format) without initial start lob
@@ -426,7 +427,8 @@ def lobster_to_gran_df(
 
     if 'Events' in granularity.name or (add_messages and granularity is None):
         orderbook_df[message_df.columns] = message_df[message_df.columns]
-        accepted_orders = [o.value for o in (cst.OrderEvent.EXECUTION, cst.OrderEvent.SUBMISSION, cst.OrderEvent.HIDDEN_EXECUTION)]
+        accepted_orders = [o.value for o in
+                           (cst.OrderEvent.EXECUTION, cst.OrderEvent.SUBMISSION, cst.OrderEvent.HIDDEN_EXECUTION)]
         orderbook_df = orderbook_df[orderbook_df["event_type"].isin(accepted_orders)]
 
     if 'Events' in granularity.name:
@@ -450,8 +452,7 @@ def lobster_to_gran_df(
     return orderbook_df
 
 
-
-# Threshold dinamica 
+# Threshold dinamica
 
 # ------------------ **/**   (sarà un trend positivo)
 # /\/\/\/\/\/\/\/\/  **/** (sarà un trend stable) 
@@ -467,7 +468,7 @@ def lobster_to_gran_df(
 # /\/\/\/\/\/\/\/\/  **/** (sarà un trend ***POSITIVE***)
 
 
-def add_lob_labels_rolling(df : pd.DataFrame, rolling_tu : int, ratio_rolling_window : int = 3600):
+def add_lob_labels_rolling(df: pd.DataFrame, rolling_tu: int, ratio_rolling_window: int = 3600):
     """    
         The new label with dynamic threshold (rooling based on 1 h)
 
@@ -485,15 +486,17 @@ def add_lob_labels_rolling(df : pd.DataFrame, rolling_tu : int, ratio_rolling_wi
     df['midprice'] = (df['pbuy1'] + df['psell1']) / 2
 
     # added for class
-    df["m+t"] = df["midprice"].rolling(rolling_tu).mean().shift(-rolling_tu + 1)  # round(df["midprice"].rolling(rolling_tu).mean().shift(-rolling_tu + 1))
+    df["m+t"] = df["midprice"].rolling(rolling_tu).mean().shift(
+        -rolling_tu + 1)  # round(df["midprice"].rolling(rolling_tu).mean().shift(-rolling_tu + 1))
     # BE AWARE on GAN! 
-    df = df[0:len(df) - (rolling_tu-1)]
+    df = df[0:len(df) - (rolling_tu - 1)]
     df["ratio_y"] = (df["m+t"] - df["midprice"]) / df["midprice"]  # return
 
     if ratio_rolling_window == -1:  # this means that we are disabling the rolling ratio 
         ratio_y_rolled_std = df["ratio_y"].std()
         ratio_y_rolled_mean = df["ratio_y"].mean()
-        df["y"] = np.where((df["ratio_y"] - ratio_y_rolled_mean) <= -ratio_y_rolled_std, -1, (np.where((df["ratio_y"] - ratio_y_rolled_mean) >= ratio_y_rolled_std, 1, 0)))
+        df["y"] = np.where((df["ratio_y"] - ratio_y_rolled_mean) <= -ratio_y_rolled_std, -1,
+                           (np.where((df["ratio_y"] - ratio_y_rolled_mean) >= ratio_y_rolled_std, 1, 0)))
     else:
         df["ratio_y_rolled_std"] = df["ratio_y"].rolling(ratio_rolling_window).std().shift(-ratio_rolling_window + 1)
         df["ratio_y_rolled_mean"] = df["ratio_y"].rolling(ratio_rolling_window).mean().shift(-ratio_rolling_window + 1)
@@ -503,10 +506,10 @@ def add_lob_labels_rolling(df : pd.DataFrame, rolling_tu : int, ratio_rolling_wi
         df = df[df["ratio_y_rolled_mean"].notna()]  # removes the last 'rolling_tu' nan rows
 
         df["y"] = np.where((df["ratio_y"] - df["ratio_y_rolled_mean"]) <= -df["ratio_y_rolled_std"], -1,
-                        (np.where((df["ratio_y"] - df["ratio_y_rolled_mean"]) >= df["ratio_y_rolled_std"], 1, 0)))
+                           (np.where((df["ratio_y"] - df["ratio_y_rolled_mean"]) >= df["ratio_y_rolled_std"], 1, 0)))
 
     df["y"] += 1
-    
+
     # pd.set_option('float_format', '{:f}'.format)
     # from collections import Counter
     # df = df.reset_index(drop=True)
@@ -514,9 +517,9 @@ def add_lob_labels_rolling(df : pd.DataFrame, rolling_tu : int, ratio_rolling_wi
     # plt.savefig("pippo.png")
     # print(Counter(df["y"].values))
     # exit()
-    #print(df[["m+t", "midprice", "ratio_y", "ratio_y_rolled_mean", "y"]].to_string())
-    #exit()
-    
+    # print(df[["m+t", "midprice", "ratio_y", "ratio_y_rolled_mean", "y"]].to_string())
+    # exit()
+
     return df
 
 
@@ -534,3 +537,56 @@ def add_lob_labels(df: pd.DataFrame, rolling_tu: int, sign_threshold: float):
     df["y"] = np.where(df["ratio_y"] < -sign_threshold, -1, df["y"])
     df["y"] += 1
     return df
+
+
+def plot_corr_matrix(all_predictions, n_models):
+    if (all_predictions.shape[0] != n_models):
+        raise Exception("dimensions of all_predictions are wrong. They have to be [n_models, n_instances]")
+
+    # collect data
+    data = {
+        'BiN-CTABL': all_predictions[0],
+        'CTABL': all_predictions[1]
+    }
+
+    # form dataframe
+    dataframe = pd.DataFrame(data, columns=['BiN-CTABL', 'CTABL'])
+
+    # form correlation matrix
+    corr_matrix = dataframe.corr()
+
+    heatmap = seaborn.heatmap(corr_matrix, annot=True)
+    heatmap.set(title="Correlation matrix")
+    plt.show()
+
+
+def plot_agreement_matrix(all_predictions, n_models):
+    n_predictions = all_predictions.shape[1]
+    agreement_matrix = np.zeros((n_models, n_models))
+    list_names = ["BiN_CTABL", "CTABL"]
+    for i in range(n_models):
+        for j in range(n_models):
+            agr = 0
+            for pred in range(n_predictions):
+                if (all_predictions[i, pred] == all_predictions[j, pred]):
+                    agr += 1
+            agreement_matrix[i, j] = agr / n_predictions
+
+    fig, ax = plt.subplots()
+    print("Agreement_Matrix is : ")
+    ax.matshow(agreement_matrix, cmap=plt.cm.Reds)
+
+    # Set number of ticks for x-axis
+    ax.set_xticks(np.arange(0, n_models, 1))
+    # Set ticks labels for x-axis
+    ax.set_xticklabels(list_names, fontsize=18)
+
+    # Set number of ticks for x-axis
+    ax.set_yticks(np.arange(0, n_models, 1))
+    # Set ticks labels for x-axis
+    ax.set_yticklabels(list_names, fontsize=18)
+
+    for i in range(n_models):
+        for j in range(n_models):
+            c = agreement_matrix[j, i]
+            ax.text(i, j, str(round(c, 5)), va='center', ha='center')

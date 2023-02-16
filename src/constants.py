@@ -112,12 +112,15 @@ class Models(str, Enum):
     DAIN = "DAIN"
     AXIALLOB = "AXIALLOB"
     TRANSLOB = "TransLob"
+
+    METALOB = "MetaLOB"
     # NBoF = "NBoF"  # do not use
 
 
 class DatasetFamily(str, Enum):
     FI = "FI"
     LOBSTER = "Lobster"
+    META = "Meta"
 
 
 HORIZONS_MAPPINGS_FI = {
@@ -210,6 +213,7 @@ class ExpIndependentVariables(Enum):
 
 
 N_LOB_LEVELS = 10
+N_MODELS = 15
 
 NUM_GPUS = torch.cuda.device_count()
 DEVICE_TYPE = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -220,7 +224,7 @@ DIR_SAVED_MODEL = "data/saved_models/" + PROJECT_NAME
 
 DATA_SOURCE = "data/"
 DATASET_LOBSTER = "LOBSTER_6/unzipped/"
-DATASET_FI = "FI-2010/BenchmarkDatasets"
+DATASET_FI = "C:/Users/leona/Documents/BenchmarkDatasets/Auction"
 DATA_PICKLES = "data/pickles/"
 
 
