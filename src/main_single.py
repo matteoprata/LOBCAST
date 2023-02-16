@@ -193,7 +193,6 @@ def parser_cl_arguments(config: Configuration):
 
     parser.add_argument('-iw',  '--is_wandb',   default=config.IS_WANDB, type=int)
     parser.add_argument('-ih',  '--is_tune',    default=config.IS_TUNE_H_PARAMS, type=int)
-
     parser.add_argument('-d',   '--data',        default=config.CHOSEN_DATASET.name)
     parser.add_argument('-m',   '--model',       default=config.CHOSEN_MODEL.name)
     parser.add_argument('-p',   '--period',      default=config.CHOSEN_PERIOD.name)
@@ -277,13 +276,9 @@ if __name__ == "__main__":
 
     # python src/main_single.py -iw 1 -ih 1 -d LOBSTER -m MLP -p JULY2021 -str NFLX -ste NFLX
     # python src/main_single.py -iw 0 -ih 0 -d FI -m MLP
-
     # python src/main_single.py -iw 0 -ih 0 -d FI -m MLP -FI_HORIZON 1
     # python src/main_single.py -iw 0 -ih 0 -d FI -m MLP -FI_HORIZON 2
     # python src/main_single.py -iw 0 -ih 0 -d FI -m MLP -FI_HORIZON 3
     # python src/main_single.py -iw 0 -ih 0 -d FI -m MLP -FI_HORIZON 5
     # python src/main_single.py -iw 0 -ih 0 -d FI -m MLP -FI_HORIZON 10
-
     # python -m src.main_single -iw 0 -ih 0 -d LOBSTER -p JULY2021 -m DEEPLOBATT -str ALL -ste ALL
-
-
