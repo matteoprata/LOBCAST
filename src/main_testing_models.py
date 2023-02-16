@@ -16,13 +16,20 @@ from src.models.model_executor import NNEngine
 kset, mset = cst.FI_Horizons, cst.Models
 seed = 0
 stock_dataset = "FI"
-src_data = "data/saved_models/LOB-CLASSIFIERS-(FI-2010-Sweep-ALL)/"
+src_data = "data/saved_models/IODIVENTOPAZZO/"
 dirs = [d + '/' for d in os.listdir(src_data) if not d.startswith('.')]
 
-
+skip = [cst.Models.ATNBoF, cst.Models.AXIALLOB, cst.Models.CNN1, cst.Models.CNN2, cst.Models.CNNLSTM, cst.Models.DAIN, cst.Models.TRANSLOB]
 def launch_test(cf: Configuration):
+
     for k in kset:
+
         for model in mset:
+            if model in skip:
+                continue
+            print()
+            print(model, k)
+
             cf.CHOSEN_MODEL = model
             cf.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON] = k.value
 
@@ -38,21 +45,23 @@ def launch_test(cf: Configuration):
                 cf.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON],
             )
 
-            files =  [f for f in os.listdir(src_data + dir_name) if not f.startswith('.')]
+            files = [f for f in os.listdir(src_data + dir_name) if not f.startswith('.')]
             assert len(files) == 1, 'We expect that in the folder there is only the checkpoint with the highest F1-score'
             file_name = files[0]
 
-            checkpoint_file_path = src_data + dir_name + file_name
+            model_params = HP_DICT_MODEL[cf.CHOSEN_MODEL].fixed_fi
+            for param in cst.LearningHyperParameter:
+                if param.value in model_params:
+                    cf.HYPER_PARAMETERS[param] = model_params[param.value]
 
             datamodule = pick_dataset(cf)
-            model = NNEngine(cf)
+            model = pick_model(cf, datamodule)
             trainer = Trainer(accelerator=cst.DEVICE_TYPE, devices=cst.NUM_GPUS)
 
+            checkpoint_file_path = src_data + dir_name + file_name
             trainer.test(model=model, datamodule=datamodule, ckpt_path=checkpoint_file_path)
 
-            cf.METRICS_JSON.close()
-
-            break
+            cf.METRICS_JSON.close(cst.DIR_FI_FINAL_JSONS)
 
 
 

@@ -217,6 +217,7 @@ DEVICE_TYPE = 'cuda' if torch.cuda.is_available() else 'cpu'
 PROJECT_NAME = "LOB-CLASSIFIERS-({})"
 DIR_EXPERIMENTS = "data/experiments/" + PROJECT_NAME
 DIR_SAVED_MODEL = "data/saved_models/" + PROJECT_NAME
+DIR_FI_FINAL_JSONS = "data/experiments/fi_final_jsons/"
 
 DATA_SOURCE = "data/"
 DATASET_LOBSTER = "LOBSTER_6/unzipped/"

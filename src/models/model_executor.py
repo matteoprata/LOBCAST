@@ -69,12 +69,12 @@ class NNEngine(pl.LightningModule):
         return loss
 
     def validation_step(self, batch, batch_idx):
-        prediction_ind, y, loss_val, stock_names = self.__validation_and_testing(batch)
-        return prediction_ind, y, loss_val, stock_names
+        prediction_ind, y, loss_val, stock_names, logits = self.__validation_and_testing(batch)
+        return prediction_ind, y, loss_val, stock_names, logits
 
     def test_step(self, batch, batch_idx):
-        prediction_ind, y, loss_val, stock_names = self.__validation_and_testing(batch)
-        return prediction_ind, y, loss_val, stock_names
+        prediction_ind, y, loss_val, stock_names, logits = self.__validation_and_testing(batch)
+        return prediction_ind, y, loss_val, stock_names, logits
 
     def training_epoch_end(self, validation_step_outputs):
         losses = [el["loss"].item() for el in validation_step_outputs]
@@ -89,7 +89,7 @@ class NNEngine(pl.LightningModule):
         # self.remote_log({"current_epoch": self.current_epoch})
 
     def validation_epoch_end(self, validation_step_outputs):
-        preds, truths, loss_vals, stock_names = self.get_prediction_vectors(validation_step_outputs)
+        preds, truths, loss_vals, stock_names, logits = self.get_prediction_vectors(validation_step_outputs)
 
         model_step = cst.ModelSteps.VALIDATION
 
@@ -105,7 +105,7 @@ class NNEngine(pl.LightningModule):
             self.remote_log.log(val_dict)
 
     def test_epoch_end(self, test_step_outputs):
-        preds, truths, loss_vals, stock_names = self.get_prediction_vectors(test_step_outputs)
+        preds, truths, loss_vals, stock_names, logits = self.get_prediction_vectors(test_step_outputs)
 
         model_step = cst.ModelSteps.TESTING
 
@@ -113,6 +113,7 @@ class NNEngine(pl.LightningModule):
         self.__log_wandb_cm(truths, preds, model_step, self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name)  # cm to log
 
         val_dict = self.__compute_metrics(truths, preds, model_step, loss_vals, self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name)  # dict to log
+        val_dict['LOGITS'] = str(logits.tolist())
         self.config.METRICS_JSON.add_testing_metrics(self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, val_dict)
 
         cm = self.__compute_sk_cm(truths, preds)
@@ -141,12 +142,7 @@ class NNEngine(pl.LightningModule):
 
         if self.remote_log is not None:  # log to wandb
             self.remote_log.log(val_dict)
-
-        self.remote_log({"current_epoch": self.current_epoch})
-
-        print("DAJEEEEEEEEEEEE")
-        print("DAJEEEEEEEEEEEE")
-        print("DAJEEEEEEEEEEEE")
+            self.remote_log({"current_epoch": self.current_epoch})
 
     # COMMON
     def __validation_and_testing(self, batch):
@@ -157,19 +153,21 @@ class NNEngine(pl.LightningModule):
         # deriving prediction from softmax probs
         prediction_ind = torch.argmax(logits, dim=1)
 
-        return prediction_ind, y, loss_val, stock_names
+        return prediction_ind, y, loss_val, stock_names, logits
 
     def get_prediction_vectors(self, model_output):
-        preds, truths, losses, stock_names = [], [], [], []
-        for preds_b, y_b, loss_val, stock_name_b in model_output:
+        preds, truths, losses, stock_names, logits = [], [], [], [], []
+        for preds_b, y_b, loss_val, stock_name_b, logits_b in model_output:
             preds += preds_b.tolist()
             truths += y_b.tolist()
+            logits += logits_b.tolist()
             stock_names += stock_name_b
             # loss is single per batch
             losses += [loss_val.item()]
 
         preds = np.array(preds)
         truths = np.array(truths)
+        logits = np.array(logits)
         losses = np.array(losses)
 
         if self.config.CHOSEN_MODEL == cst.Models.DEEPLOBATT:
@@ -178,7 +176,7 @@ class NNEngine(pl.LightningModule):
             truths = truths[:, index]
             preds = preds[:, index]
 
-        return preds, truths, losses, stock_names
+        return preds, truths, losses, stock_names, logits
 
     def __log_wandb_cm(self, ys, predictions, model_step, si):
         if self.remote_log is not None:  # log to wandb

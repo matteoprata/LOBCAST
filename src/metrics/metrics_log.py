@@ -17,7 +17,7 @@ class Metrics:
     def add_testing_cfm(self, symbol, testing_cf):
         self._testing_cf += [(symbol, testing_cf)]
 
-    def dump(self):
+    def dump(self, dir):
         for isym in range(len(self._testing_metrics)):
             sym, cm = self._testing_cf[isym]
             _, met = self._testing_metrics[isym]
@@ -38,9 +38,9 @@ class Metrics:
                 self._config.HYPER_PARAMETERS[cst.LearningHyperParameter.FORWARD_WINDOW],
                 self._config.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON],
             )
-            write_json(compound_dict, cst.DIR_EXPERIMENTS + fname)
-            print("DUMPING", cst.DIR_EXPERIMENTS + fname)
+            write_json(compound_dict, dir + fname)
+            # print("DUMPING", dir + fname)
 
-    def close(self):
+    def close(self, dir=cst.DIR_EXPERIMENTS):
         self._config_dict = self._config.__dict__
-        self.dump()
+        self.dump(dir)

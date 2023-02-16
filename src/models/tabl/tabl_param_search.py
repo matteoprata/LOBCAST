@@ -17,6 +17,6 @@ HP_TABL_FI_FIXED = {
     cst.LearningHyperParameter.EPOCHS_UB.value: 200,
     cst.LearningHyperParameter.OPTIMIZER.value: cst.Optimizers.ADAM.value,
     cst.LearningHyperParameter.LEARNING_RATE.value: 0.000867,
-    cst.LearningHyperParameter.BATCH_SIZE.value: 128,
+    # cst.LearningHyperParameter.BATCH_SIZE.value: 128,
     cst.LearningHyperParameter.NUM_SNAPSHOTS.value: 10,
 }

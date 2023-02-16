@@ -15,7 +15,7 @@ HP_AXIALLOB_FI_FIXED = {
     cst.LearningHyperParameter.EPOCHS_UB.value: 50,
     cst.LearningHyperParameter.OPTIMIZER.value: cst.Optimizers.SGD.value,
     cst.LearningHyperParameter.LEARNING_RATE.value: 0.009316,
-    cst.LearningHyperParameter.BATCH_SIZE.value: 64,
+    # cst.LearningHyperParameter.BATCH_SIZE.value: 64,
     cst.LearningHyperParameter.NUM_SNAPSHOTS.value: 40,
     cst.LearningHyperParameter.MOMENTUM.value: 0.9
 }

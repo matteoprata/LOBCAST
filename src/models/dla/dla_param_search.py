@@ -14,7 +14,7 @@ HP_DLA_FI_FIXED = {
     cst.LearningHyperParameter.EPOCHS_UB.value: 100,
     cst.LearningHyperParameter.OPTIMIZER.value: cst.Optimizers.ADAM.value,
     cst.LearningHyperParameter.LEARNING_RATE.value: 0.002795,
-    cst.LearningHyperParameter.BATCH_SIZE.value: 64,
+    # cst.LearningHyperParameter.BATCH_SIZE.value: 64,
     cst.LearningHyperParameter.RNN_HIDDEN.value: 100,
     cst.LearningHyperParameter.NUM_SNAPSHOTS.value: 5,
 }
