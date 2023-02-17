@@ -6,7 +6,7 @@ HP_DLA = {
     cst.LearningHyperParameter.RNN_HIDDEN.value: {'values': [100]},  # [32, 40, 48]
     cst.LearningHyperParameter.NUM_SNAPSHOTS.value: {'values': [5]},
 
-    cst.LearningHyperParameter.BATCH_SIZE.value: {'values': [32, 64, 256]},  # [32, 64, 128]
+    cst.LearningHyperParameter.BATCH_SIZE.value: {'values': [256]},
     cst.LearningHyperParameter.LEARNING_RATE.value: {'values': [0.0001, 0.002575, 0.00505, 0.007525, 0.01]}, # 'max': 0.001, 'min': 0.0001
 }
 
