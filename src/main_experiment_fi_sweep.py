@@ -42,13 +42,9 @@ def experiment_FI(kset=None, now=None, models_todo=None, servers=None):
                 sys.exit()
 
 
-servers = [cst.Servers.ALIEN2]
-# models_todo = [cst.Models.MLP, cst.Models.CNN1, cst.Models.CNN2, cst.Models.LSTM, cst.Models.CNNLSTM, cst.Models.BINCTABL, cst.Models.CTABL, cst.Models.DLA, cst.Models.DAIN]
-# models_todo = [cst.Models.ATNBoF, cst.Models.TLONBoF, cst.Models.AXIALLOB]
-# models_todo = [cst.Models.DEEPLOBATT, cst.Models.DEEPLOB, cst.Models.TRANSLOB]
-models_todo = [cst.Models.AXIALLOB]
+servers = [cst.Servers.ALIEN1, cst.Servers.ALIEN2, cst.Servers.FISSO1]
+models_todo = cst.Models
+kset = cst.FI_Horizons
 
-kset = [cst.FI_Horizons.K10]
-now = "FI-2010-Sweep-ALL"
-
-experiment_FI(kset=kset, now=now,  models_todo=models_todo, servers=servers)
+now = "FI-2010-SWEEP-ALL-FINAL"
+experiment_FI(kset=kset, now=now, models_todo=models_todo, servers=servers)
