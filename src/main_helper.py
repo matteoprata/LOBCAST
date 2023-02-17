@@ -49,15 +49,12 @@ def prepare_data_FI(config: Configuration):
         chosen_model=config.CHOSEN_MODEL
     )
 
-    # fi_test = FIDataBuilder(
-    #     cst.DATA_SOURCE + cst.DATASET_FI,
-    #     dataset_type=cst.DatasetType.TEST,
-    #     horizon=config.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON],
-    #     window=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_SNAPSHOTS],
-    #     train_val_split=config.TRAIN_SPLIT_VAL
-    # )
-
-    fi_test = fi_val
+    fi_test = FIDataBuilder(
+        cst.DATA_SOURCE + cst.DATASET_FI,
+        dataset_type=cst.DatasetType.TEST,
+        horizon=config.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON],
+        window=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_SNAPSHOTS],
+    )
 
     train_set = FIDataset(
         x=fi_train.get_samples_x(),
