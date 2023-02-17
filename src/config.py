@@ -15,9 +15,11 @@ class Configuration:
     def __init__(self, now=None):
 
         self.IS_DEBUG = False
+        self.IS_TEST_ONLY = False
+
         self.NOW = self.assign_now(now=now, is_debug=self.IS_DEBUG)
 
-        self.setup_all_directories(self.NOW, self.IS_DEBUG)
+        self.setup_all_directories(self.NOW, self.IS_DEBUG, self.IS_TEST_ONLY)
 
         self.SEED = 0
         self.RANDOM_GEN_DATASET = None
@@ -54,7 +56,7 @@ class Configuration:
         self.METRICS_JSON = Metrics(self)
         self.HYPER_PARAMETERS = {lp: None for lp in LearningHyperParameter}
 
-        self.HYPER_PARAMETERS[LearningHyperParameter.BATCH_SIZE] = 32
+        self.HYPER_PARAMETERS[LearningHyperParameter.BATCH_SIZE] = 128
         self.HYPER_PARAMETERS[LearningHyperParameter.LEARNING_RATE] = 0.0001
         self.HYPER_PARAMETERS[LearningHyperParameter.EPOCHS_UB] = 100
         self.HYPER_PARAMETERS[LearningHyperParameter.OPTIMIZER] = cst.Optimizers.ADAM.value
@@ -102,16 +104,16 @@ class Configuration:
         return "model={}-seed={}-trst={}-test={}-data={}-peri={}-bw={}-fw={}-fiw={}" + ext
 
     @staticmethod
-    def setup_all_directories(now, is_debug):
+    def setup_all_directories(now, is_debug, is_test):
+        if not is_test:
+            cst.PROJECT_NAME = cst.PROJECT_NAME.format(now)
+            cst.DIR_SAVED_MODEL = cst.DIR_SAVED_MODEL.format(now) + "/"
+            cst.DIR_EXPERIMENTS = cst.DIR_EXPERIMENTS.format(now) + "/"
 
-        cst.PROJECT_NAME = cst.PROJECT_NAME.format(now)
-        cst.DIR_SAVED_MODEL = cst.DIR_SAVED_MODEL.format(now) + "/"
-        cst.DIR_EXPERIMENTS = cst.DIR_EXPERIMENTS.format(now) + "/"
-
-        paths = ["data", cst.DIR_SAVED_MODEL, cst.DIR_EXPERIMENTS]
-        for p in paths:
-            if not os.path.exists(p):
-                os.makedirs(p)
+            paths = ["data", cst.DIR_SAVED_MODEL, cst.DIR_EXPERIMENTS]
+            for p in paths:
+                if not os.path.exists(p):
+                    os.makedirs(p)
 
     @staticmethod
     def assign_now(now, is_debug):
