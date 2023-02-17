@@ -13,9 +13,9 @@ HP_TRANS = {
 HP_TRANS_FI_FIXED = {
     cst.LearningHyperParameter.EPOCHS_UB.value: 100,
     cst.LearningHyperParameter.OPTIMIZER.value: cst.Optimizers.ADAM.value,
-    cst.LearningHyperParameter.LEARNING_RATE.value: 0.0007931,
+    cst.LearningHyperParameter.LEARNING_RATE.value: 1e-4,
     cst.LearningHyperParameter.WEIGHT_DECAY.value: 0.00001,
-    # cst.LearningHyperParameter.BATCH_SIZE.value: 64,
+    cst.LearningHyperParameter.BATCH_SIZE.value: 32,
 }
 
 # TODO add dropout (hard encoded fn)

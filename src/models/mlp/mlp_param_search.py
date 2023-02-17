@@ -16,7 +16,7 @@ HP_MLP = {
 HP_MLP_FI_FIXED = {
     cst.LearningHyperParameter.EPOCHS_UB.value: 100,
     cst.LearningHyperParameter.OPTIMIZER.value: cst.Optimizers.ADAM.value,
-    cst.LearningHyperParameter.LEARNING_RATE.value: 0.0004883,
-    # cst.LearningHyperParameter.BATCH_SIZE.value: 16,
+    cst.LearningHyperParameter.LEARNING_RATE.value: 0.0001,
+    cst.LearningHyperParameter.BATCH_SIZE.value: 16,
     cst.LearningHyperParameter.MLP_HIDDEN.value: 256,
 }
