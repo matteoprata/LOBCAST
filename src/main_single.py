@@ -143,8 +143,8 @@ def launch_single(config: Configuration, model_params=None):
                 cbk.early_stopping(config)
             ]
         )
-        trainer. fit(model, data_module)
-        trainer.test(model, data_module, ckpt_path="best")
+        trainer.fit(model, data_module)
+        trainer.test(model, dataloaders=data_module.val_dataloader(), ckpt_path="best")
 
         if not config.IS_TUNE_H_PARAMS:
             config.METRICS_JSON.close()
