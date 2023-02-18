@@ -42,15 +42,14 @@ class FIDataBuilder:
         AUCTION = 'Auction' if self.auction else 'NoAuction'
         N = '1.' if self.normalization_type == cst.NormalizationType.Z_SCORE else '2.' if self.normalization_type == cst.NormalizationType.MINMAX else '3.'
         NORMALIZATION = 'Zscore' if self.normalization_type == cst.NormalizationType.Z_SCORE else 'MinMax' if self.normalization_type == cst.NormalizationType.MINMAX else 'DecPre'
-        DATASET_TYPE = 'Training' if self.dataset_type in [cst.DatasetType.TRAIN, cst.DatasetType.VALIDATION] else 'Testing'
-
+        DATASET_TYPE = 'Training' if self.dataset_type == cst.DatasetType.TRAIN or self.dataset_type == cst.DatasetType.VALIDATION else 'Testing'
         DIR = self.fi_data_dir + \
                  "/{}".format(AUCTION) + \
                  "/{}{}_{}".format(N, AUCTION, NORMALIZATION) + \
                  "/{}_{}_{}".format(AUCTION, NORMALIZATION, DATASET_TYPE)
 
-        # NORMALIZATION = 'ZScore' if self.normalization_type == cst.NormalizationType.Z_SCORE else 'MinMax' if self.normalization_type == cst.NormalizationType.MINMAX else 'DecPre'
-        # DATASET_TYPE = 'Train' if self.dataset_type == cst.DatasetType.TRAIN or self.dataset_type == cst.DatasetType.VALIDATION else 'Test'
+        NORMALIZATION = 'ZScore' if self.normalization_type == cst.NormalizationType.Z_SCORE else 'MinMax' if self.normalization_type == cst.NormalizationType.MINMAX else 'DecPre'
+        DATASET_TYPE = 'Train' if self.dataset_type == cst.DatasetType.TRAIN or self.dataset_type == cst.DatasetType.VALIDATION else 'Test'
 
         F_EXTENSION = '.txt'
 
@@ -64,12 +63,13 @@ class FIDataBuilder:
 
             out_df = np.loadtxt(F_NAME)
 
+            n_samples_train = int(np.floor(out_df.shape[1] * self.train_val_split))
             if self.dataset_type == cst.DatasetType.TRAIN:
-                out_df = out_df[:, :int(np.floor(out_df.shape[1] * self.train_val_split))]
+                out_df = out_df[:, :n_samples_train]
             elif self.dataset_type == cst.DatasetType.VALIDATION:
-                out_df = out_df[:, :int(np.floor(out_df.shape[1] * (1-self.train_val_split)))]
+                out_df = out_df[:, n_samples_train:]
 
-        elif self.dataset_type == cst.DatasetType.TRAIN:
+        else:
 
             F_NAMES = [
                 DIR + \
