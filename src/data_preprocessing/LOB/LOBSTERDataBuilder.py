@@ -59,6 +59,7 @@ class LOBSTERDataBuilder:
         # to store the datasets
         self.STOCK_NAME = stock_name
         self.F_NAME_PICKLE = "{}_{}_{}_{}.pickle".format(
+            self.config.CHOSEN_PERIOD.name,
             self.STOCK_NAME,
             self.start_end_trading_day[0],
             self.start_end_trading_day[1],

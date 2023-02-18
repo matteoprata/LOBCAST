@@ -5,6 +5,7 @@ from src.config import Configuration
 from src.data_preprocessing.METACLASS.meta_data_builder import create_datasets_meta_classifier
 from src.data_preprocessing.METACLASS.meta_data_builder import load_predictions
 from src.models.model_executor import NNEngine
+from src.models.nbof.nbof_centers import get_nbof_centers
 
 # DATASETS
 from src.data_preprocessing.FI.FIDataBuilder import FIDataBuilder
@@ -32,9 +33,9 @@ from src.models.metaclass.meta_classifier import MetaLOB
 
 
 def prepare_data_FI(config: Configuration):
+
     fi_train = FIDataBuilder(
-        # cst.DATA_SOURCE + cst.DATASET_FI,
-        cst.DATASET_FI,
+        cst.DATA_SOURCE + cst.DATASET_FI,
         dataset_type=cst.DatasetType.TRAIN,
         horizon=config.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON],
         window=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_SNAPSHOTS],
@@ -43,8 +44,7 @@ def prepare_data_FI(config: Configuration):
     )
 
     fi_val = FIDataBuilder(
-        # cst.DATA_SOURCE + cst.DATASET_FI,
-        cst.DATASET_FI,
+        cst.DATA_SOURCE + cst.DATASET_FI,
         dataset_type=cst.DatasetType.VALIDATION,
         horizon=config.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON],
         window=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_SNAPSHOTS],
@@ -52,7 +52,12 @@ def prepare_data_FI(config: Configuration):
         chosen_model=config.CHOSEN_MODEL
     )
 
-    fi_test = fi_val
+    fi_test = FIDataBuilder(
+        cst.DATA_SOURCE + cst.DATASET_FI,
+        dataset_type=cst.DatasetType.TEST,
+        horizon=config.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON],
+        window=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_SNAPSHOTS],
+    )
 
     train_set = FIDataset(
         x=fi_train.get_samples_x(),
@@ -87,6 +92,7 @@ def prepare_data_FI(config: Configuration):
 
 
 def prepare_data_LOBSTER(config: Configuration):
+
     train_set = LOBDataset(
         config=config,
         dataset_type=cst.DatasetType.TRAIN,
@@ -162,7 +168,6 @@ def prepare_data_META(config: Configuration):
 def pick_dataset(config: Configuration):
     if config.CHOSEN_DATASET == cst.DatasetFamily.LOBSTER:
         return prepare_data_LOBSTER(config)
-
     elif config.CHOSEN_DATASET == cst.DatasetFamily.FI:
         return prepare_data_FI(config)
 
@@ -277,7 +282,7 @@ def pick_model(config: Configuration, data_module):
             in_channels=1,
             series_length=num_snapshots * num_features,
             n_codeword=config.HYPER_PARAMETERS[cst.LearningHyperParameter.MLP_HIDDEN],
-            att_type='temporal',  # ['temporal', 'spatial']
+            att_type='temporal',            # ['temporal', 'spatial']
             n_class=data_module.num_classes,
             dropout=config.HYPER_PARAMETERS[cst.LearningHyperParameter.P_DROPOUT]
         )

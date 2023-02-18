@@ -32,10 +32,10 @@ class GatedAxialAttention(nn.Module):
         self.bn_output = nn.BatchNorm1d(self.heads * self.qkv_channels)
 
         # Gating mechanism
-        self.f_qr = nn.Parameter(torch.tensor(0.1), requires_grad=False)
-        self.f_kr = nn.Parameter(torch.tensor(0.1), requires_grad=False)
-        self.f_sve = nn.Parameter(torch.tensor(0.1), requires_grad=False)
-        self.f_sv = nn.Parameter(torch.tensor(0.5), requires_grad=False)
+        self.f_qr = nn.Parameter(torch.tensor(0.1), requires_grad=True)
+        self.f_kr = nn.Parameter(torch.tensor(0.1), requires_grad=True)
+        self.f_sve = nn.Parameter(torch.tensor(0.1), requires_grad=True)
+        self.f_sv = nn.Parameter(torch.tensor(0.5), requires_grad=True)
 
         # Position embedding
         self.relative = nn.Parameter(torch.randn(self.dim_head_v * 2, dim * 2 - 1), requires_grad=True)

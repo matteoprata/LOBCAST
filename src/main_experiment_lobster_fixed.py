@@ -29,10 +29,10 @@ def experiment_FI(now=None, models=None, servers=None, horizons=None, seeds=None
                     cf.SEED = s
                     set_seeds(cf)
 
-                    cf.CHOSEN_DATASET = cst.DatasetFamily.FI
-                    cf.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN] = cst.Stocks.FI
-                    cf.CHOSEN_STOCKS[cst.STK_OPEN.TEST] = cst.Stocks.FI
-                    cf.CHOSEN_PERIOD = cst.Periods.FI
+                    cf.CHOSEN_DATASET = cst.DatasetFamily.LOBSTER
+                    cf.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN] = cst.Stocks.ALL
+                    cf.CHOSEN_STOCKS[cst.STK_OPEN.TEST] = cst.Stocks.ALL
+                    cf.CHOSEN_PERIOD = cst.Periods.JULY2021
                     cf.CHOSEN_MODEL = mod
 
                     cf.IS_WANDB = 1

@@ -215,12 +215,13 @@ class ExpIndependentVariables(Enum):
 N_LOB_LEVELS = 10
 N_MODELS = 15
 
-NUM_GPUS = torch.cuda.device_count()
 DEVICE_TYPE = 'cuda' if torch.cuda.is_available() else 'cpu'
+NUM_GPUS = None if DEVICE_TYPE == 'cpu' else torch.cuda.device_count()
 
 PROJECT_NAME = "LOB-CLASSIFIERS-({})"
 DIR_EXPERIMENTS = "data/experiments/" + PROJECT_NAME
 DIR_SAVED_MODEL = "data/saved_models/" + PROJECT_NAME
+DIR_FI_FINAL_JSONS = "data/experiments/fi_final_jsons/"
 
 DATA_SOURCE = "data/"
 DATASET_LOBSTER = "LOBSTER_6/unzipped/"
