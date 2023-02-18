@@ -63,10 +63,12 @@ class FIDataBuilder:
 
             out_df = np.loadtxt(F_NAME)
 
+            n_samples_train = int(np.floor(out_df.shape[1] * self.train_val_split))
             if self.dataset_type == cst.DatasetType.TRAIN:
-                out_df = out_df[:, :int(np.floor(out_df.shape[1] * self.train_val_split))]
+                out_df = out_df[:, :n_samples_train]
             elif self.dataset_type == cst.DatasetType.VALIDATION:
-                out_df = out_df[:, :int(np.floor(out_df.shape[1] * (1-self.train_val_split)))]
+                out_df = out_df[:, n_samples_train:]
+
         else:
 
             F_NAMES = [
