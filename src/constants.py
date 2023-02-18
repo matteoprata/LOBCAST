@@ -41,16 +41,25 @@ class Optimizers(Enum):
 
 class Metrics(Enum):
     LOSS = 'loss'
+
     F1 = 'f1'
+    F1_W = 'f1_w'
+
     PRECISION = 'precision'
+    PRECISION_W = 'precision_w'
+
     RECALL = 'recall'
+    RECALL_W = 'recall_w'
+
     ACCURACY = 'accuracy'
     MCC = 'mcc'
+    COK = 'cohen-k'
 
 
 class ModelSteps(Enum):
     TRAINING = "training"
-    VALIDATION = "validation"
+    VALIDATION_EPOCH = "validation-epoch-last"
+    VALIDATION_MODEL = "validation-model"
     TESTING = "testing"
 
 

@@ -131,7 +131,7 @@ def launch_single(config: Configuration, model_params=None):
         config.dynamic_config_setup()
 
         data_module = pick_dataset(config)
-        model = pick_model(config, data_module)
+        nn_engine = pick_model(config, data_module)
 
         trainer = Trainer(
             accelerator=cst.DEVICE_TYPE,
@@ -143,8 +143,13 @@ def launch_single(config: Configuration, model_params=None):
                 cbk.early_stopping(config)
             ]
         )
-        trainer.fit(model, data_module)
-        trainer.test(model, dataloaders=data_module.val_dataloader(), ckpt_path="best")
+        trainer.fit(nn_engine, data_module)
+
+        nn_engine.testing_mode = cst.ModelSteps.VALIDATION_MODEL
+        trainer.test(nn_engine, dataloaders=data_module.val_dataloader(), ckpt_path="best")
+
+        nn_engine.testing_mode = cst.ModelSteps.TESTING
+        trainer.test(nn_engine, dataloaders=data_module.test_dataloader(), ckpt_path="best")
 
         if not config.IS_TUNE_H_PARAMS:
             config.METRICS_JSON.close()

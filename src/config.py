@@ -53,6 +53,8 @@ class Configuration:
             'name': None
         }
 
+        self.EARLY_STOPPING_METRIC = None
+
         self.METRICS_JSON = Metrics(self)
         self.HYPER_PARAMETERS = {lp: None for lp in LearningHyperParameter}
 
@@ -81,7 +83,8 @@ class Configuration:
 
     def dynamic_config_setup(self):
         # sets the name of the metric to optimize
-        self.SWEEP_METRIC['name'] = "{}_{}_{}".format(cst.ModelSteps.VALIDATION.value, self.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, cst.Metrics.F1.value)
+        self.SWEEP_METRIC['name'] = "{}_{}_{}".format(cst.ModelSteps.VALIDATION_MODEL.value, self.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, cst.Metrics.F1.value)
+        self.EARLY_STOPPING_METRIC = "{}_{}_{}".format(cst.ModelSteps.VALIDATION_EPOCH.value, self.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, cst.Metrics.F1.value)
 
         self.WANDB_SWEEP_NAME = self.cf_name_format().format(
             self.CHOSEN_MODEL.name,
