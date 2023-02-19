@@ -40,12 +40,12 @@ class BiN(nn.Module):
 
         # if the two scalars are negative then we setting them to 0
         if (self.y1[0] < 0):
-            y1 = torch.FloatTensor(1, ).to(cst.DEVICE_TYPE)
+            y1 = torch.cuda.FloatTensor(1, )
             self.y1 = nn.Parameter(y1)
             nn.init.constant_(self.y1, 0.01)
 
         if (self.y2[0] < 0):
-            y2 = torch.FloatTensor(1, ).to(cst.DEVICE_TYPE)
+            y2 = torch.cuda.FloatTensor(1, )
             self.y2 = nn.Parameter(y2)
             nn.init.constant_(self.y2, 0.01)
 
