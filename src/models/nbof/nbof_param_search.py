@@ -6,8 +6,9 @@ HP_NBoF = {
     cst.LearningHyperParameter.MLP_HIDDEN.value: {'values': [512]},
     cst.LearningHyperParameter.NUM_RBF_NEURONS.value: {'values': [16]},
     cst.LearningHyperParameter.NUM_SNAPSHOTS.value: {'values': [15]},
-    cst.LearningHyperParameter.BATCH_SIZE.value: {'values': [32]},  # [32, 64, 128]
-    cst.LearningHyperParameter.LEARNING_RATE.value: {'values': [0.0001, 0.00055, 0.001]},  # {'max': 0.01, 'min': 0.001},  # 'max': 0.001, 'min': 0.0001
+
+    cst.LearningHyperParameter.BATCH_SIZE.value: {'values': [32, 64, 128]},
+    cst.LearningHyperParameter.LEARNING_RATE.value: {'max': 0.01, 'min': 0.0001}
 }
 
 HP_NBoF_FI_FIXED = {

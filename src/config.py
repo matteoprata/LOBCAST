@@ -42,7 +42,7 @@ class Configuration:
         self.IS_WANDB = 0
         self.IS_TUNE_H_PARAMS = False
 
-        self.SWEEP_METHOD = 'grid'  # 'bayes'
+        self.SWEEP_METHOD = 'bayes'  # 'grid'
 
         self.WANDB_INSTANCE = None
         self.WANDB_RUN_NAME = None

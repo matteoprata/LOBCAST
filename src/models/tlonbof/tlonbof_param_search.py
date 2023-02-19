@@ -5,9 +5,8 @@ HP_TLONBoF = {
     cst.LearningHyperParameter.OPTIMIZER.value: {'values': [cst.Optimizers.ADAM.value]},
     cst.LearningHyperParameter.NUM_SNAPSHOTS.value: {'values': [15]},
 
-    cst.LearningHyperParameter.BATCH_SIZE.value: {'values': [128]},
-    cst.LearningHyperParameter.LEARNING_RATE.value: {'values': [0.0001, 0.00055, 0.001]}, # {'max': 0.01, 'min': 0.001},  # 'max': 0.001, 'min': 0.0001
-
+    cst.LearningHyperParameter.BATCH_SIZE.value:    {'values': [32, 64, 128]},
+    cst.LearningHyperParameter.LEARNING_RATE.value: {'max': 0.01, 'min': 0.0001}
 }
 
 HP_TLONBoF_FI_FIXED = {

@@ -234,7 +234,7 @@ DATASET_FI = "FI-2010/BenchmarkDatasets"
 DATA_PICKLES = "data/pickles/"
 
 
-WANDB_SWEEP_MAX_RUNS = 30
+WANDB_SWEEP_MAX_RUNS = 10
 
 
 class Servers(Enum):

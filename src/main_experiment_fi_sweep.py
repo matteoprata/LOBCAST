@@ -42,11 +42,11 @@ def experiment_FI(models_todo, kset=None, now=None, servers=None):
 
 servers = [cst.Servers.ALIEN1, cst.Servers.ALIEN2, cst.Servers.FISSO1]
 
-models_todo = {cst.Servers.ALIEN1: [cst.Models.MLP, cst.Models.CNN2, cst.Models.CNNLSTM, cst.Models.BINCTABL, cst.Models.AXIALLOB],
-               cst.Servers.ALIEN2: [cst.Models.DAIN, cst.Models.DEEPLOB, cst.Models.DEEPLOBATT, cst.Models.DLA, cst.Models.ATNBoF],
-               cst.Servers.FISSO1: [cst.Models.CNN1, cst.Models.TLONBoF, cst.Models.LSTM, cst.Models.CTABL, cst.Models.TRANSLOB]}
+models_todo = {cst.Servers.ALIEN1: [cst.Models.MLP, cst.Models.CNN2, cst.Models.CNNLSTM, cst.Models.CNN1, cst.Models.AXIALLOB],
+               cst.Servers.ALIEN2: [cst.Models.DLA, cst.Models.DEEPLOB, cst.Models.DEEPLOBATT, cst.Models.ATNBoF, cst.Models.DAIN],
+               cst.Servers.FISSO1: [cst.Models.BINCTABL, cst.Models.TLONBoF, cst.Models.LSTM, cst.Models.CTABL, cst.Models.TRANSLOB]}
 
-kset = cst.FI_Horizons
+kset = [cst.FI_Horizons.K1, cst.FI_Horizons.K5, cst.FI_Horizons.K10]
 
-now = "FI-2010-SWEEP-ALL-FINAL-180223"
+now = "FI-2010-SWEEP-ALL-FINAL-190223"
 experiment_FI(models_todo, kset=kset, now=now, servers=servers)
