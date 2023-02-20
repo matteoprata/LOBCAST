@@ -259,7 +259,7 @@ class NNEngine(pl.LightningModule):
             return torch.optim.RMSprop(self.parameters(), lr=self.lr)
 
         elif self.optimizer == cst.Optimizers.SGD.value:
-            if self.config.CHOSEN_MODEL == cst.Models.AXIALLOB:
+            if self.config.CHOSEN_MODEL == cst.Models.AXIALLOB or self.config.CHOSEN_MODEL == cst.Models.METALOB:
                 opt = torch.optim.SGD(self.parameters(), lr=self.lr, momentum=self.momentum)
                 sch = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=int((self.n_samples / self.n_batch_size) * self.n_epochs))
                 return [opt], [{"scheduler": sch,

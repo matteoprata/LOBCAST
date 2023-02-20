@@ -2,8 +2,8 @@ import numpy as np
 
 import src.constants as cst
 from src.config import Configuration
-from src.data_preprocessing.METACLASS.meta_data_builder import create_datasets_meta_classifier
-from src.data_preprocessing.METACLASS.meta_data_builder import load_predictions
+from src.data_preprocessing.METACLASS.meta_databuilder import MetaDataBuilder
+from src.data_preprocessing.METACLASS.meta_preprocessing import create_datasets_meta_classifier, load_predictions_fi
 from src.models.model_executor import NNEngine
 from src.models.nbof.nbof_centers import get_nbof_centers
 
@@ -30,6 +30,7 @@ from src.models.atnbof.atnbof import ATNBoF
 from src.models.tlonbof.tlonbof import TLONBoF
 from src.models.axial.axiallob import AxialLOB
 from src.models.metaclass.meta_classifier import MetaLOB
+from src.utils.lob_util import plot_corr_matrix, plot_agreement_matrix
 
 
 def prepare_data_FI(config: Configuration):
@@ -131,27 +132,27 @@ def prepare_data_LOBSTER(config: Configuration):
 
 def prepare_data_META(config: Configuration):
 
-    pred = load_predictions(
-        num_classes=3,
-        n_models=cst.N_MODELS
-    )
-
-    fi_test = FIDataBuilder(
+    dataset = MetaDataBuilder(
         # cst.DATA_SOURCE + cst.DATASET_FI,
         cst.DATASET_FI,
         dataset_type=cst.DatasetType.TEST,
         horizon=config.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON],
-        window=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_SNAPSHOTS],
         train_val_split=config.TRAIN_SPLIT_VAL,
-        chosen_model=config.CHOSEN_MODEL
+        chosen_model=config.CHOSEN_MODEL,
+        pred_data_path=cst.DIR_FI_FINAL_JSONS
     )
 
-    y_test = fi_test.get_samples_y()
+    y_test = dataset.get_samples_y()
+    all_prob = dataset.get_samples_x()
+    all_pred = dataset.get_all_pred()
+
+    plot_corr_matrix(all_pred, cst.N_MODELS)
+    plot_agreement_matrix(all_pred, cst.N_MODELS)
 
     train_set, val_set, test_set = create_datasets_meta_classifier(
-        pred,
+        all_prob,
         y_test,
-        num_classes=3,
+        num_classes=cst.NUM_CLASSES,
         n_models=cst.N_MODELS
     )
 
@@ -165,10 +166,13 @@ def prepare_data_META(config: Configuration):
         config.HYPER_PARAMETERS[cst.LearningHyperParameter.IS_SHUFFLE_TRAIN_SET]
     )
 
+    return meta_dm
+
 
 def pick_dataset(config: Configuration):
     if config.CHOSEN_DATASET == cst.DatasetFamily.LOBSTER:
         return prepare_data_LOBSTER(config)
+
     elif config.CHOSEN_DATASET == cst.DatasetFamily.FI:
         return prepare_data_FI(config)
 
@@ -260,18 +264,6 @@ def pick_model(config: Configuration, data_module):
             hidden_size=config.HYPER_PARAMETERS[cst.LearningHyperParameter.RNN_HIDDEN]
         )
 
-    # elif config.CHOSEN_MODEL == cst.Models.NBoF:
-    #     raise AssertionError("Do not use this model!")
-    #     num_snapshots, num_features = data_module.x_shape
-    #     net_architecture = NBoF(
-    #         num_snapshots=num_snapshots,
-    #         num_features=num_features,
-    #         num_rbf_neurons=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_RBF_NEURONS],
-    #         hidden_mlp=config.HYPER_PARAMETERS[cst.LearningHyperParameter.MLP_HIDDEN],
-    #         centers=get_nbof_centers(data_module, k=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_RBF_NEURONS]),
-    #         lr_W=0.01,
-    #     )
-
     elif config.CHOSEN_MODEL == cst.Models.TLONBoF:
         num_snapshots, num_features = data_module.x_shape
         net_architecture = TLONBoF(window=num_snapshots, split_horizon=5, use_scaling=True)
@@ -303,8 +295,8 @@ def pick_model(config: Configuration, data_module):
 
     elif config.CHOSEN_MODEL == cst.Models.METALOB:
         net_architecture = MetaLOB(
-            n_classifiers=15,
-            num_classes=3,
+            n_classifiers=cst.N_MODELS,
+            num_classes=cst.NUM_CLASSES,
             dim_midlayer=16
         )
 

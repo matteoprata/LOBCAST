@@ -24,7 +24,7 @@ class LearningHyperParameter(str, Enum):
     LABELING_SIGMA_SCALER = "labeling_sigma_scaler"
     FI_HORIZON = 'fi_horizon_k'
     NUM_SNAPSHOTS = 'num_snapshots'
-
+    META_DIM_LAYER = "meta_dim_layer"
 
 class STK_OPEN(str, Enum):
     """ The modalities associated to a list of stocks. """
@@ -223,6 +223,7 @@ class ExpIndependentVariables(Enum):
 
 N_LOB_LEVELS = 10
 N_MODELS = 15
+NUM_CLASSES = 3
 
 DEVICE_TYPE = 'cuda' if torch.cuda.is_available() else 'cpu'
 NUM_GPUS = None if DEVICE_TYPE == 'cpu' else torch.cuda.device_count()

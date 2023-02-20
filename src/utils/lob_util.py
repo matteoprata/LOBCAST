@@ -540,17 +540,30 @@ def add_lob_labels(df: pd.DataFrame, rolling_tu: int, sign_threshold: float):
 
 
 def plot_corr_matrix(all_predictions, n_models):
-    if (all_predictions.shape[0] != n_models):
+    if (all_predictions.shape[1] != n_models):
         raise Exception("dimensions of all_predictions are wrong. They have to be [n_models, n_instances]")
 
     # collect data
     data = {
-        'BiN-CTABL': all_predictions[0],
-        'CTABL': all_predictions[1]
+        "ATNBoF": all_predictions[:, 0],
+        "AXIAL-LOB": all_predictions[:, 1],
+        'BiN-CTABL': all_predictions[:, 2],
+        'CNN1': all_predictions[:, 3],
+        'CNN2': all_predictions[:, 4],
+        'CNN-LSTM': all_predictions[:, 5],
+        'CTABL': all_predictions[:, 6],
+        'DAIN-MLP': all_predictions[:, 7],
+        'DeepLOBATT': all_predictions[:, 8],
+        'DeepLOB': all_predictions[:, 9],
+        'DLA': all_predictions[:, 10],
+        'LSTM': all_predictions[:, 11],
+        'MLP': all_predictions[:, 12],
+        'TLONBoF': all_predictions[:, 13],
+        'TransLOB': all_predictions[:, 14]
     }
 
     # form dataframe
-    dataframe = pd.DataFrame(data, columns=['BiN-CTABL', 'CTABL'])
+    dataframe = pd.DataFrame(data, columns=list(data.keys()))
 
     # form correlation matrix
     corr_matrix = dataframe.corr()
@@ -561,14 +574,34 @@ def plot_corr_matrix(all_predictions, n_models):
 
 
 def plot_agreement_matrix(all_predictions, n_models):
+    all_predictions.permute(1, 0)
     n_predictions = all_predictions.shape[1]
+
+    data = {
+        "ATNBoF": all_predictions[:, 0],
+        "AXIAL-LOB": all_predictions[:, 1],
+        'BiN-CTABL': all_predictions[:, 2],
+        'CNN1': all_predictions[:, 3],
+        'CNN2': all_predictions[:, 4],
+        'CNN-LSTM': all_predictions[:, 5],
+        'CTABL': all_predictions[:, 6],
+        'DAIN-MLP': all_predictions[:, 7],
+        'DeepLOBATT': all_predictions[:, 8],
+        'DeepLOB': all_predictions[:, 9],
+        'DLA': all_predictions[:, 10],
+        'LSTM': all_predictions[:, 11],
+        'MLP': all_predictions[:, 12],
+        'TLONBoF': all_predictions[:, 13],
+        'TransLOB': all_predictions[:, 14]
+    }
+
     agreement_matrix = np.zeros((n_models, n_models))
-    list_names = ["BiN_CTABL", "CTABL"]
+    list_names = list(data.keys())
     for i in range(n_models):
         for j in range(n_models):
             agr = 0
             for pred in range(n_predictions):
-                if (all_predictions[i, pred] == all_predictions[j, pred]):
+                if all_predictions[i, pred] == all_predictions[j, pred]:
                     agr += 1
             agreement_matrix[i, j] = agr / n_predictions
 

@@ -30,9 +30,9 @@ class Configuration:
 
         self.TRAIN_SPLIT_VAL = .8  # FI only
 
-        self.CHOSEN_DATASET = cst.DatasetFamily.FI
+        self.CHOSEN_DATASET = cst.DatasetFamily.META
         self.CHOSEN_PERIOD = cst.Periods.FI
-        self.CHOSEN_MODEL = cst.Models.TLONBoF
+        self.CHOSEN_MODEL = cst.Models.METALOB
 
         self.CHOSEN_STOCKS = {
             cst.STK_OPEN.TRAIN: cst.Stocks.FI,
@@ -59,12 +59,12 @@ class Configuration:
         self.HYPER_PARAMETERS = {lp: None for lp in LearningHyperParameter}
 
         self.HYPER_PARAMETERS[LearningHyperParameter.BATCH_SIZE] = 128
-        self.HYPER_PARAMETERS[LearningHyperParameter.LEARNING_RATE] = 0.0001
+        self.HYPER_PARAMETERS[LearningHyperParameter.LEARNING_RATE] = 0.01
         self.HYPER_PARAMETERS[LearningHyperParameter.EPOCHS_UB] = 100
-        self.HYPER_PARAMETERS[LearningHyperParameter.OPTIMIZER] = cst.Optimizers.ADAM.value
+        self.HYPER_PARAMETERS[LearningHyperParameter.OPTIMIZER] = cst.Optimizers.SGD.value
         self.HYPER_PARAMETERS[LearningHyperParameter.WEIGHT_DECAY] = 0.0
         self.HYPER_PARAMETERS[LearningHyperParameter.EPS] = 1e-08  # default value for ADAM
-        self.HYPER_PARAMETERS[LearningHyperParameter.MOMENTUM] = 0
+        self.HYPER_PARAMETERS[LearningHyperParameter.MOMENTUM] = 0.9
 
         self.HYPER_PARAMETERS[LearningHyperParameter.NUM_SNAPSHOTS] = 100
         # LOBSTER way to label to measure percentage change LOBSTER = HORIZON
