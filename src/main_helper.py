@@ -297,7 +297,7 @@ def pick_model(config: Configuration, data_module):
         net_architecture = MetaLOB(
             n_classifiers=cst.N_MODELS,
             num_classes=cst.NUM_CLASSES,
-            dim_midlayer=16
+            dim_midlayer=config.HYPER_PARAMETERS[cst.LearningHyperParameter.META_HIDDEN],
         )
 
     engine = NNEngine(

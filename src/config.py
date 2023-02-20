@@ -76,6 +76,8 @@ class Configuration:
 
         self.HYPER_PARAMETERS[LearningHyperParameter.MLP_HIDDEN] = 128
         self.HYPER_PARAMETERS[LearningHyperParameter.RNN_HIDDEN] = 32
+        self.HYPER_PARAMETERS[LearningHyperParameter.META_HIDDEN] = 16
+
         self.HYPER_PARAMETERS[LearningHyperParameter.RNN_N_HIDDEN] = 1
         self.HYPER_PARAMETERS[LearningHyperParameter.DAIN_LAYER_MODE] = 'full'
         self.HYPER_PARAMETERS[LearningHyperParameter.P_DROPOUT] = 0

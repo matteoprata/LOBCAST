@@ -44,7 +44,7 @@ from src.models.axial.axiallob_param_search import HP_AXIALLOB, HP_AXIALLOB_FI_F
 from src.models.nbof.nbof_param_search import HP_NBoF, HP_NBoF_FI_FIXED
 from src.models.atnbof.atnbof_param_search import HP_ATNBoF, HP_ATNBoF_FI_FIXED
 from src.models.tlonbof.tlonbof_param_search import HP_TLONBoF, HP_TLONBoF_FI_FIXED
-from src.models.metaclass.meta_param_search import HP_META_FI_FIXED
+from src.models.metaclass.meta_param_search import HP_META_FI, HP_META_FI_FIXED
 from src.utils.utilities import get_sys_mac
 from src.main_helper import pick_model, pick_dataset
 from collections import namedtuple
@@ -68,12 +68,13 @@ HP_DICT_MODEL = {
     # cst.Models.NBoF: HPSearchTypes(HP_NBoF, HP_NBoF_FI_FIXED, None),
     cst.Models.ATNBoF: HPSearchTypes(HP_ATNBoF, HP_ATNBoF_FI_FIXED, None),
     cst.Models.TLONBoF: HPSearchTypes(HP_TLONBoF, HP_TLONBoF_FI_FIXED, None),
-    cst.Models.METALOB: HPSearchTypes(HP_META_FI_FIXED, HP_META_FI_FIXED, None)
+    cst.Models.METALOB: HPSearchTypes(HP_META_FI, HP_META_FI_FIXED, None)
 }
 
 HP_DICT_DATASET = {
     cst.DatasetFamily.FI:  {},
     cst.DatasetFamily.LOBSTER:  HP_LOBSTER,
+    cst.DatasetFamily.META: {},
 }
 
 
@@ -132,7 +133,6 @@ def launch_single(config: Configuration, model_params=None):
                 config.HYPER_PARAMETERS[param] = model_params[param.value]
 
         config.dynamic_config_setup()
-        print(config.CHOSEN_DATASET)
         data_module = pick_dataset(config)
         nn_engine = pick_model(config, data_module)
 

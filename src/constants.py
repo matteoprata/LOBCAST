@@ -24,7 +24,7 @@ class LearningHyperParameter(str, Enum):
     LABELING_SIGMA_SCALER = "labeling_sigma_scaler"
     FI_HORIZON = 'fi_horizon_k'
     NUM_SNAPSHOTS = 'num_snapshots'
-    META_DIM_LAYER = "meta_dim_layer"
+    META_HIDDEN = "meta_dim_layer"
 
 class STK_OPEN(str, Enum):
     """ The modalities associated to a list of stocks. """
