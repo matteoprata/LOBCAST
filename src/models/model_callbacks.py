@@ -4,7 +4,7 @@ import src.constants as cst
 
 
 def callback_save_model(config, run_name):
-    monitor_var = config.SWEEP_METRIC['name']
+    monitor_var = config.EARLY_STOPPING_METRIC
     check_point_callback = pl.callbacks.ModelCheckpoint(
         monitor=monitor_var,
         verbose=True,
@@ -18,7 +18,7 @@ def callback_save_model(config, run_name):
 
 def early_stopping(config):
     """ Stops if models stops improving. """
-    monitor_var = config.SWEEP_METRIC['name']
+    monitor_var = config.EARLY_STOPPING_METRIC
     return pl.callbacks.EarlyStopping(
         monitor=monitor_var,
         min_delta=0.00,

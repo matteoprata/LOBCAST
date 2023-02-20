@@ -10,14 +10,12 @@ if module_path not in sys.path:
 from src.main_single import *
 
 
-def experiment_FI(kset=None, now=None, models_todo=None, servers=None):
+def experiment_FI(models_todo, kset=None, now=None, servers=None):
 
     now, server_name, server_id, n_servers = experiment_preamble(now, servers)
-
     kset = kset if kset is not None else cst.FI_Horizons
-    models_todo = models_todo if models_todo is not None else cst.Models
 
-    for mod in list(models_todo)[server_id::n_servers]:
+    for mod in models_todo[server_name]:
         for k in kset:
             print("Running FI experiment on {}, with K={}".format(mod, k))
 
@@ -42,13 +40,13 @@ def experiment_FI(kset=None, now=None, models_todo=None, servers=None):
                 sys.exit()
 
 
-servers = [cst.Servers.ALIEN2]
-# models_todo = [cst.Models.MLP, cst.Models.CNN1, cst.Models.CNN2, cst.Models.LSTM, cst.Models.CNNLSTM, cst.Models.BINCTABL, cst.Models.CTABL, cst.Models.DLA, cst.Models.DAIN]
-# models_todo = [cst.Models.ATNBoF, cst.Models.TLONBoF, cst.Models.AXIALLOB]
-# models_todo = [cst.Models.DEEPLOBATT, cst.Models.DEEPLOB, cst.Models.TRANSLOB]
-models_todo = [cst.Models.AXIALLOB]
+servers = [cst.Servers.ALIEN1, cst.Servers.ALIEN2, cst.Servers.FISSO1]
 
-kset = [cst.FI_Horizons.K10]
-now = "FI-2010-Sweep-ALL"
+models_todo = {cst.Servers.ALIEN1: [cst.Models.MLP, cst.Models.CNN2, cst.Models.CNNLSTM, cst.Models.CNN1, cst.Models.AXIALLOB],
+               cst.Servers.ALIEN2: [cst.Models.DLA, cst.Models.DEEPLOB, cst.Models.DEEPLOBATT, cst.Models.ATNBoF, cst.Models.DAIN],
+               cst.Servers.FISSO1: [cst.Models.BINCTABL, cst.Models.TLONBoF, cst.Models.LSTM, cst.Models.CTABL, cst.Models.TRANSLOB]}
 
-experiment_FI(kset=kset, now=now,  models_todo=models_todo, servers=servers)
+kset = [cst.FI_Horizons.K1, cst.FI_Horizons.K5, cst.FI_Horizons.K10]
+
+now = "FI-2010-SWEEP-ALL-FINAL-190223"
+experiment_FI(models_todo, kset=kset, now=now, servers=servers)

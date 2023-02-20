@@ -6,6 +6,7 @@ import torch.nn as nn
 
 from sklearn.metrics import classification_report
 from sklearn.metrics import matthews_corrcoef
+from sklearn.metrics import cohen_kappa_score
 from sklearn.metrics import confusion_matrix
 
 import numpy as np
@@ -56,6 +57,7 @@ class NNEngine(pl.LightningModule):
         self.eps = eps
         self.momentum = momentum
 
+        self.testing_mode = cst.ModelSteps.TESTING
 
     def forward(self, x):
         out = self.neural_architecture(x)
@@ -85,13 +87,13 @@ class NNEngine(pl.LightningModule):
         if self.remote_log is not None:
             self.remote_log.log({var_name: sum_losses})
 
-        # self.config.METRICS_JSON.add_testing_metrics(self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, val_dict)
+        # self.config.METRICS_JSON.add_testing_metrics(self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, {'MAX-EPOCHS': self.current_epoch})
         # self.remote_log({"current_epoch": self.current_epoch})
 
     def validation_epoch_end(self, validation_step_outputs):
         preds, truths, loss_vals, stock_names, logits = self.get_prediction_vectors(validation_step_outputs)
 
-        model_step = cst.ModelSteps.VALIDATION
+        model_step = cst.ModelSteps.VALIDATION_EPOCH
 
         # COMPUTE CM (1) (SRC) - (SRC)
         self.__log_wandb_cm(truths, preds, model_step, self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name)  # cm to log
@@ -107,13 +109,14 @@ class NNEngine(pl.LightningModule):
     def test_epoch_end(self, test_step_outputs):
         preds, truths, loss_vals, stock_names, logits = self.get_prediction_vectors(test_step_outputs)
 
-        model_step = cst.ModelSteps.TESTING
+        model_step = self.testing_mode
 
         # COMPUTE CM (1) (SRC) - (SRC)
         self.__log_wandb_cm(truths, preds, model_step, self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name)  # cm to log
 
         val_dict = self.__compute_metrics(truths, preds, model_step, loss_vals, self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name)  # dict to log
         val_dict['LOGITS'] = str(logits.tolist())
+
         self.config.METRICS_JSON.add_testing_metrics(self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, val_dict)
 
         cm = self.__compute_sk_cm(truths, preds)
@@ -141,8 +144,8 @@ class NNEngine(pl.LightningModule):
                 self.config.METRICS_JSON.add_testing_cfm(si, cm)
 
         if self.remote_log is not None:  # log to wandb
+            val_dict["current_epoch"] = self.current_epoch
             self.remote_log.log(val_dict)
-            self.remote_log({"current_epoch": self.current_epoch})
 
     # COMMON
     def __validation_and_testing(self, batch):
@@ -200,19 +203,33 @@ class NNEngine(pl.LightningModule):
 
         cr = classification_report(ys, predictions, output_dict=True, zero_division=0)
         accuracy = cr['accuracy']  # MICRO-F1
+
         f1score = cr['macro avg']['f1-score']  # MACRO-F1
         precision = cr['macro avg']['precision']  # MACRO-PRECISION
         recall = cr['macro avg']['recall']  # MACRO-RECALL
 
+        f1score_w = cr['weighted avg']['f1-score']  # MACRO-F1
+        precision_w = cr['weighted avg']['precision']  # MACRO-PRECISION
+        recall_w = cr['weighted avg']['recall']  # MACRO-RECALL
+
         mcc = matthews_corrcoef(ys, predictions)
+        cok = cohen_kappa_score(ys, predictions)
+
         val_dict = {
             model_step.value + f"_{si}_" + cst.Metrics.F1.value: float(f1score),
+            model_step.value + f"_{si}_" + cst.Metrics.F1_W.value: float(f1score_w),
+
             model_step.value + f"_{si}_" + cst.Metrics.PRECISION.value: float(precision),
+            model_step.value + f"_{si}_" + cst.Metrics.PRECISION_W.value: float(precision_w),
+
             model_step.value + f"_{si}_" + cst.Metrics.RECALL.value: float(recall),
+            model_step.value + f"_{si}_" + cst.Metrics.RECALL_W.value: float(recall_w),
+
             model_step.value + f"_{si}_" + cst.Metrics.ACCURACY.value: float(accuracy),
             model_step.value + f"_{si}_" + cst.Metrics.MCC.value: float(mcc),
+            model_step.value + f"_{si}_" + cst.Metrics.COK.value: float(cok),
             # single
-            model_step.value + f"__" + cst.Metrics.LOSS.value: float(np.sum(loss_vals)),
+            model_step.value + f"_" + cst.Metrics.LOSS.value: float(np.sum(loss_vals)),
         }
 
         return val_dict

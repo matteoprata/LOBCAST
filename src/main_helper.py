@@ -57,6 +57,7 @@ def prepare_data_FI(config: Configuration):
         dataset_type=cst.DatasetType.TEST,
         horizon=config.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON],
         window=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_SNAPSHOTS],
+        chosen_model=config.CHOSEN_MODEL
     )
 
     train_set = FIDataset(

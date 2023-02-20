@@ -42,7 +42,7 @@ class Configuration:
         self.IS_WANDB = 0
         self.IS_TUNE_H_PARAMS = False
 
-        self.SWEEP_METHOD = 'grid'  # 'bayes'
+        self.SWEEP_METHOD = 'bayes'  # 'grid'
 
         self.WANDB_INSTANCE = None
         self.WANDB_RUN_NAME = None
@@ -52,6 +52,8 @@ class Configuration:
             'goal': 'maximize',
             'name': None
         }
+
+        self.EARLY_STOPPING_METRIC = None
 
         self.METRICS_JSON = Metrics(self)
         self.HYPER_PARAMETERS = {lp: None for lp in LearningHyperParameter}
@@ -81,7 +83,8 @@ class Configuration:
 
     def dynamic_config_setup(self):
         # sets the name of the metric to optimize
-        self.SWEEP_METRIC['name'] = "{}_{}_{}".format(cst.ModelSteps.VALIDATION.value, self.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, cst.Metrics.F1.value)
+        self.SWEEP_METRIC['name'] = "{}_{}_{}".format(cst.ModelSteps.VALIDATION_MODEL.value, self.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, cst.Metrics.F1.value)
+        self.EARLY_STOPPING_METRIC = "{}_{}_{}".format(cst.ModelSteps.VALIDATION_EPOCH.value, self.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, cst.Metrics.F1.value)
 
         self.WANDB_SWEEP_NAME = self.cf_name_format().format(
             self.CHOSEN_MODEL.name,

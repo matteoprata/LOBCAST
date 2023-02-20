@@ -49,7 +49,7 @@ class TABL_layer(nn.Module):
         X = self.W1 @ X
 
         # enforcing constant (1) on the diagonal
-        W = self.W - self.W * torch.eye(self.t1, dtype=torch.float32).to(cst.DEVICE_TYPE) + torch.eye(self.t1, dtype=torch.float32).to(cst.DEVICE_TYPE) / self.t1
+        W = self.W - self.W * torch.eye(self.t1, dtype=torch.float32, device=cst.DEVICE_TYPE) + torch.eye(self.t1, dtype=torch.float32, device=cst.DEVICE_TYPE) / self.t1
 
         # attention, the aim of the second step is to learn how important the temporal instances are to each other (8)
         E = X @ W
