@@ -160,13 +160,13 @@ def prepare_data_META(config: Configuration):
 
     val_set = MetaDataset(
         meta_databuilder.get_samples_val(),
-        dataset_type=cst.DatasetType.TRAIN,
+        dataset_type=cst.DatasetType.VALIDATION,
         num_classes=cst.NUM_CLASSES
     )
 
     test_set = MetaDataset(
         meta_databuilder.get_samples_test(),
-        dataset_type=cst.DatasetType.TRAIN,
+        dataset_type=cst.DatasetType.TEST,
         num_classes=cst.NUM_CLASSES
     )
 
