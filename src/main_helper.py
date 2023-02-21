@@ -2,8 +2,8 @@ import numpy as np
 
 import src.constants as cst
 from src.config import Configuration
-from src.data_preprocessing.METACLASS.meta_databuilder import MetaDataBuilder
-from src.data_preprocessing.METACLASS.meta_preprocessing import create_datasets_meta_classifier, load_predictions_fi
+from src.data_preprocessing.META.METADataset import MetaDataset
+from src.data_preprocessing.META.METADataBuilder import MetaDataBuilder
 from src.models.model_executor import NNEngine
 from src.models.nbof.nbof_centers import get_nbof_centers
 
@@ -29,8 +29,7 @@ from src.models.dla.dla import DLA
 from src.models.atnbof.atnbof import ATNBoF
 from src.models.tlonbof.tlonbof import TLONBoF
 from src.models.axial.axiallob import AxialLOB
-from src.models.metaclass.meta_classifier import MetaLOB
-from src.utils.lob_util import plot_corr_matrix, plot_agreement_matrix
+from src.models.metalob.metalob import MetaLOB
 
 
 def prepare_data_FI(config: Configuration):
@@ -125,35 +124,50 @@ def prepare_data_LOBSTER(config: Configuration):
     print(len(train_set), len(val_set), len(test_set))
     print()
 
-    lob_dm = DataModule(train_set, val_set, test_set, config.HYPER_PARAMETERS[cst.LearningHyperParameter.BATCH_SIZE],
-                        config.HYPER_PARAMETERS[cst.LearningHyperParameter.IS_SHUFFLE_TRAIN_SET])
+    lob_dm = DataModule(
+        train_set, val_set, test_set,
+        config.HYPER_PARAMETERS[cst.LearningHyperParameter.BATCH_SIZE],
+        config.HYPER_PARAMETERS[cst.LearningHyperParameter.IS_SHUFFLE_TRAIN_SET]
+    )
+
     return lob_dm
 
 
 def prepare_data_META(config: Configuration):
 
-    dataset = MetaDataBuilder(
-        # cst.DATA_SOURCE + cst.DATASET_FI,
-        cst.DATASET_FI,
-        dataset_type=cst.DatasetType.TEST,
-        horizon=config.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON],
-        train_val_split=config.TRAIN_SPLIT_VAL,
-        chosen_model=config.CHOSEN_MODEL,
-        pred_data_path=cst.DIR_FI_FINAL_JSONS
+    if config.CHOSEN_PERIOD == cst.Periods.FI:
+        databuilder_test = FIDataBuilder(
+            cst.DATA_SOURCE + cst.DATASET_FI,
+            dataset_type=cst.DatasetType.TEST,
+            horizon=config.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON],
+            window=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_SNAPSHOTS],
+            chosen_model=config.CHOSEN_MODEL
+        )
+    else:
+        # TODO: instantiate LOBSTER test dataset
+        raise NotImplementedError
+
+    meta_test = MetaDataBuilder(
+        truth_y=databuilder_test.samples_y,
+        config=config
     )
 
-    y_test = dataset.get_samples_y()
-    all_prob = dataset.get_samples_x()
-    all_pred = dataset.get_all_pred()
+    train_set = MetaDataset(
+        meta_test.get_samples_train(),
+        dataset_type=cst.DatasetType.TRAIN,
+        num_classes=cst.NUM_CLASSES
+    )
 
-    plot_corr_matrix(all_pred, cst.N_MODELS)
-    plot_agreement_matrix(all_pred, cst.N_MODELS)
+    val_set = MetaDataset(
+        meta_test.get_samples_val(),
+        dataset_type=cst.DatasetType.TRAIN,
+        num_classes=cst.NUM_CLASSES
+    )
 
-    train_set, val_set, test_set = create_datasets_meta_classifier(
-        all_prob,
-        y_test,
-        num_classes=cst.NUM_CLASSES,
-        n_models=cst.N_MODELS
+    test_set = MetaDataset(
+        meta_test.get_samples_test(),
+        dataset_type=cst.DatasetType.TRAIN,
+        num_classes=cst.NUM_CLASSES
     )
 
     print("Samples in the splits:")
@@ -165,7 +179,6 @@ def prepare_data_META(config: Configuration):
         config.HYPER_PARAMETERS[cst.LearningHyperParameter.BATCH_SIZE],
         config.HYPER_PARAMETERS[cst.LearningHyperParameter.IS_SHUFFLE_TRAIN_SET]
     )
-
     return meta_dm
 
 
@@ -295,9 +308,7 @@ def pick_model(config: Configuration, data_module):
 
     elif config.CHOSEN_MODEL == cst.Models.METALOB:
         net_architecture = MetaLOB(
-            n_classifiers=cst.N_MODELS,
-            num_classes=cst.NUM_CLASSES,
-            dim_midlayer=config.HYPER_PARAMETERS[cst.LearningHyperParameter.META_HIDDEN],
+            mlp_hidden=config.HYPER_PARAMETERS[cst.LearningHyperParameter.MLP_HIDDEN],
         )
 
     engine = NNEngine(
