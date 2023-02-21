@@ -60,7 +60,6 @@ class MetaDataBuilder:
                     assert logits_.shape[0] == self.n_samples, f"For model {model}, n_samples != number of predictions in the json"
                     logits.append(logits_)
 
-
         logits = np.dstack(logits)
         # logits.shape = [n_samples, n_classes, n_models]
 

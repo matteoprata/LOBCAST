@@ -147,25 +147,25 @@ def prepare_data_META(config: Configuration):
         # TODO: instantiate LOBSTER test dataset
         raise NotImplementedError
 
-    meta_test = MetaDataBuilder(
+    meta_databuilder = MetaDataBuilder(
         truth_y=databuilder_test.samples_y,
         config=config
     )
 
     train_set = MetaDataset(
-        meta_test.get_samples_train(),
+        meta_databuilder.get_samples_train(),
         dataset_type=cst.DatasetType.TRAIN,
         num_classes=cst.NUM_CLASSES
     )
 
     val_set = MetaDataset(
-        meta_test.get_samples_val(),
+        meta_databuilder.get_samples_val(),
         dataset_type=cst.DatasetType.TRAIN,
         num_classes=cst.NUM_CLASSES
     )
 
     test_set = MetaDataset(
-        meta_test.get_samples_test(),
+        meta_databuilder.get_samples_test(),
         dataset_type=cst.DatasetType.TRAIN,
         num_classes=cst.NUM_CLASSES
     )
