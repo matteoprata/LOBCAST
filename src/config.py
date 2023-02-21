@@ -29,6 +29,7 @@ class Configuration:
         self.INSTANCES_LOWER_BOUND = 1000  # under-sampling must have at least INSTANCES_LOWER_BOUND instances
 
         self.TRAIN_SPLIT_VAL = .8  # FI only
+        self.META_TRAIN_VAL_TEST_SPLIT = (.7, .15, .15)  # META Only
 
         self.CHOSEN_DATASET = cst.DatasetFamily.META
         self.CHOSEN_PERIOD = cst.Periods.FI
@@ -76,7 +77,6 @@ class Configuration:
 
         self.HYPER_PARAMETERS[LearningHyperParameter.MLP_HIDDEN] = 128
         self.HYPER_PARAMETERS[LearningHyperParameter.RNN_HIDDEN] = 32
-        self.HYPER_PARAMETERS[LearningHyperParameter.META_HIDDEN] = 16
 
         self.HYPER_PARAMETERS[LearningHyperParameter.RNN_N_HIDDEN] = 1
         self.HYPER_PARAMETERS[LearningHyperParameter.DAIN_LAYER_MODE] = 'full'

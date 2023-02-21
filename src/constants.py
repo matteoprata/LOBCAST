@@ -24,7 +24,6 @@ class LearningHyperParameter(str, Enum):
     LABELING_SIGMA_SCALER = "labeling_sigma_scaler"
     FI_HORIZON = 'fi_horizon_k'
     NUM_SNAPSHOTS = 'num_snapshots'
-    META_HIDDEN = "meta_dim_layer"
 
 class STK_OPEN(str, Enum):
     """ The modalities associated to a list of stocks. """
@@ -123,6 +122,7 @@ class Models(str, Enum):
     TRANSLOB = "TransLob"
 
     METALOB = "MetaLOB"
+
     # NBoF = "NBoF"  # do not use
 
 
@@ -220,9 +220,7 @@ class ExpIndependentVariables(Enum):
     FORWARD_WIN = 'fw'
     BACKWARD_WIN = 'bw'
 
-
 N_LOB_LEVELS = 10
-N_MODELS = 15
 NUM_CLASSES = 3
 
 DEVICE_TYPE = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -235,7 +233,7 @@ DIR_FI_FINAL_JSONS = "data/experiments/fi_final_jsons/"
 
 DATA_SOURCE = "data/"
 DATASET_LOBSTER = "LOBSTER_6/unzipped/"
-DATASET_FI = "C:/Users/leona/Documents/BenchmarkDatasets/Auction"
+DATASET_FI = "FI-2010/BenchmarkDatasets/"
 DATA_PICKLES = "data/pickles/"
 
 

@@ -17,7 +17,8 @@ import traceback
 # TORCH
 from pytorch_lightning import Trainer
 from pytorch_lightning import seed_everything
-from pytorch_lightning.loggers import WandbLogger
+from pytorch_lightning.strategies import DDPStrategy
+
 
 import src.constants as cst
 import src.models.model_callbacks as cbk
@@ -44,12 +45,13 @@ from src.models.axial.axiallob_param_search import HP_AXIALLOB, HP_AXIALLOB_FI_F
 from src.models.nbof.nbof_param_search import HP_NBoF, HP_NBoF_FI_FIXED
 from src.models.atnbof.atnbof_param_search import HP_ATNBoF, HP_ATNBoF_FI_FIXED
 from src.models.tlonbof.tlonbof_param_search import HP_TLONBoF, HP_TLONBoF_FI_FIXED
-from src.models.metaclass.meta_param_search import HP_META_FI, HP_META_FI_FIXED
+from src.models.metalob.metalob_param_search import HP_META, HP_META_FIXED
 from src.utils.utilities import get_sys_mac
 from src.main_helper import pick_model, pick_dataset
 from collections import namedtuple
 
 HPSearchTypes = namedtuple('HPSearchTypes', ("sweep", "fixed_fi", "fixed_lob"))
+HPSearchTypes2 = namedtuple('HPSearchTypes', ("sweep", "fixed"))
 
 HP_DICT_MODEL = {
     cst.Models.MLP:  HPSearchTypes(HP_MLP, HP_MLP_FI_FIXED, None),
@@ -68,7 +70,7 @@ HP_DICT_MODEL = {
     # cst.Models.NBoF: HPSearchTypes(HP_NBoF, HP_NBoF_FI_FIXED, None),
     cst.Models.ATNBoF: HPSearchTypes(HP_ATNBoF, HP_ATNBoF_FI_FIXED, None),
     cst.Models.TLONBoF: HPSearchTypes(HP_TLONBoF, HP_TLONBoF_FI_FIXED, None),
-    cst.Models.METALOB: HPSearchTypes(HP_META_FI, HP_META_FI_FIXED, None)
+    cst.Models.METALOB: HPSearchTypes2(HP_META, HP_META_FIXED)
 }
 
 HP_DICT_DATASET = {
@@ -124,7 +126,7 @@ def launch_single(config: Configuration, model_params=None):
             elif config.CHOSEN_DATASET == cst.DatasetFamily.LOBSTER:
                 model_params = HP_DICT_MODEL[config.CHOSEN_MODEL].fixed_lob
             elif config.CHOSEN_DATASET == cst.DatasetFamily.META:
-                model_params = HP_DICT_MODEL[config.CHOSEN_MODEL].fixed_fi
+                model_params = HP_DICT_MODEL[config.CHOSEN_MODEL].fixed
 
         print("Setting model parameters", model_params)
 
@@ -144,7 +146,8 @@ def launch_single(config: Configuration, model_params=None):
             callbacks=[
                 cbk.callback_save_model(config, config.WANDB_RUN_NAME),
                 cbk.early_stopping(config)
-            ]
+            ],
+            # strategy=DDPStrategy(find_unused_parameters=False)
         )
         trainer.fit(nn_engine, data_module)
 
@@ -276,7 +279,6 @@ if __name__ == "__main__":
 
     cf = set_configuration()
     set_seeds(cf)
-
     if cf.IS_WANDB:
         launch_wandb(cf)
     else:
