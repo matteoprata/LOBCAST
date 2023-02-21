@@ -115,9 +115,10 @@ class NNEngine(pl.LightningModule):
         self.__log_wandb_cm(truths, preds, model_step, self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name)  # cm to log
 
         val_dict = self.__compute_metrics(truths, preds, model_step, loss_vals, self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name)  # dict to log
-        val_dict['LOGITS'] = str(logits.tolist())
+        val_dict_logits = {k: v for k, v in val_dict.items()}
+        val_dict_logits['LOGITS'] = str(logits.tolist())
 
-        self.config.METRICS_JSON.add_testing_metrics(self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, val_dict)
+        self.config.METRICS_JSON.add_testing_metrics(self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, val_dict_logits)
 
         cm = self.__compute_sk_cm(truths, preds)
         self.config.METRICS_JSON.add_testing_cfm(self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, cm)
@@ -136,7 +137,7 @@ class NNEngine(pl.LightningModule):
                 preds_si = df_si['predictions'].to_numpy()
 
                 dic_si = self.__compute_metrics(truths_si, preds_si, model_step, loss_vals, si)
-                self.config.METRICS_JSON.add_testing_metrics(si, dic_si)
+                self.config.METRICS_JSON.add_testing_metrics(si, dic_si)  # TODO CHECK
                 val_dict.update(dic_si)
 
                 self.__log_wandb_cm(truths_si, preds_si, model_step, si)
