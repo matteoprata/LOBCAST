@@ -101,8 +101,8 @@ class LOBDataset(data.Dataset):
             ignore_indices += list(range(p, p+self.sample_size))  # [range(0, 100), range(1223, 1323), ]
             ind_sf = p
 
-        self.x = np.concatenate(Xs, axis=0)
-        self.y = np.concatenate(Ys, axis=0)
+        self.x = torch.from_numpy(np.concatenate(Xs, axis=0)).type(torch.FloatTensor)
+        self.y = np.concatenate(Ys, axis=0).astype(int)
         self.stock_sym_name = Ss
 
         self.indexes_chosen = self.__under_sampling(self.y, ignore_indices)
@@ -116,9 +116,7 @@ class LOBDataset(data.Dataset):
         """ Generates samples of data. """
 
         id_sample = self.indexes_chosen[index]
-        x, y, s = self.x[id_sample-self.sample_size:id_sample, :], int(self.y[id_sample]), self.stock_sym_name[id_sample]
-
-        x = torch.from_numpy(x).type(torch.FloatTensor)
+        x, y, s = self.x[id_sample-self.sample_size:id_sample, :], self.y[id_sample], self.stock_sym_name[id_sample]
         return x, y, s
 
     def __under_sampling(self, y, ignore_indices):
