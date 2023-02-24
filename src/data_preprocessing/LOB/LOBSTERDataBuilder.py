@@ -66,7 +66,7 @@ class LOBSTERDataBuilder:
             self.dataset_type.value
         )
 
-        self.__data, self.__samples_x, self.__samples_y = None, None, None
+        self.__data, self.__samples_x, self.__samples_y = None, None, None   # NX40, MX100X40, MX1
         self.__prepare_dataset()  # KEY CALL
 
     def __read_dataset(self):
@@ -139,44 +139,6 @@ class LOBSTERDataBuilder:
                 self.label_dynamic_scaler
             )
 
-    def __snapshotting(self):
-        """ This creates 4 X n_levels X NUM_SNAPSHOTS -> prediction. """
-        print("Snapshotting... (__data has", self.__data.shape[0], "rows)")
-
-        relevant_columns = [c for c in self.__data.columns if "sell" in c or "buy" in c]
-        # relevant_columns = [self.__data.columns.get_loc(rc) for rc in relevant_columns]
-        y_id = self.__data.columns.get_loc(ppu.DataCols.PREDICTION.value)
-
-        n_tot = self.__data.shape[0] - self.num_snapshots
-        data_x_np = self.__data[relevant_columns].to_numpy()
-        data_y_np = self.__data[ppu.DataCols.PREDICTION.value].to_numpy()
-
-        X = np.array([data_x_np[st:st + self.num_snapshots] for st in tqdm.tqdm(range(0, n_tot))])
-        Y = np.array([data_y_np[st + self.num_snapshots - 1] for st in tqdm.tqdm(range(0, n_tot))])
-
-        self.__samples_x, self.__samples_y = X, Y
-
-
-
-    def __under_sampling(self):
-        """ Discard instances of the majority class. """
-        print("Doing under-sampling...")
-
-        occurrences, ys = self.__compute_occurrences()
-        i_min_occ = min(occurrences, key=occurrences.get)  # index of the class with the least instances
-        n_min_occ = occurrences[i_min_occ]                 # number of occurrences of the minority class
-
-        indexes_chosen = []
-        for i in [cst.Predictions.UPWARD.value, cst.Predictions.STATIONARY.value, cst.Predictions.DOWNWARD.value]:
-            indexes = np.where(ys == i)[0]
-            assert len(indexes) >= self.config.INSTANCES_LOWER_BOUND, "The instance is not well formed, there are less than " \
-                   "{} instances for the class {} ({}).".format(self.config.INSTANCES_LOWER_BOUND, i, len(indexes))
-            indexes_chosen += list(self.config.RANDOM_GEN_DATASET.choice(indexes, n_min_occ, replace=False))
-        indexes_chosen = np.sort(indexes_chosen)
-
-        self.__samples_x = self.__samples_x[indexes_chosen]
-        self.__samples_y = self.__samples_y[indexes_chosen]
-
     def plot_dataset(self):
         ppu.plot_dataframe_stats(
             self.__data,
@@ -184,9 +146,6 @@ class LOBSTERDataBuilder:
             self.label_threshold_neg,
             self.dataset_type
         )
-
-    def __abort_generation(self):
-        self.__data, self.__samples_x, self.__samples_y = None, None, None
 
     def __serialize_dataset(self):
         if not os.path.exists(cst.DATA_PICKLES + self.F_NAME_PICKLE):
@@ -205,30 +164,23 @@ class LOBSTERDataBuilder:
         self.__read_dataset()
         self.__label_dataset()
         self.__normalize_dataset()
-        self.__snapshotting()
 
-        occurrences, _ = self.__compute_occurrences()
-        print("Before undersampling:", self.dataset_type, occurrences)
-
-        if not self.dataset_type == cst.DatasetType.TEST:
-            self.__under_sampling()
-
-        occurrences, _ = self.__compute_occurrences()
-        print("After undersampling:", self.dataset_type, occurrences)
+        # TOO MUCH MEMORY! AVOID
+        # self.__snapshotting()
+        #
+        # occurrences, _ = self.__compute_occurrences()
+        # print("Before undersampling:", self.dataset_type, occurrences)
+        #
+        # if not self.dataset_type == cst.DatasetType.TEST:
+        #     self.__under_sampling()
+        #
+        # occurrences, _ = self.__compute_occurrences()
+        # print("After undersampling:", self.dataset_type, occurrences)
 
         # self.plot_dataset()
 
-    def __compute_occurrences(self):
-        ys = None
-        if self.config.CHOSEN_MODEL == cst.Models.DEEPLOBATT:
-            ys = self.__samples_y[:, cst.HORIZONS_MAPPINGS_LOBSTER[self.window_size_forward]]
-        else:
-            ys = self.__samples_y
-        occurrences = collections.Counter(ys)
-        return occurrences, ys
+    def get_X_nx40(self):
+        return self.__data.iloc[:, :-5]
 
-    def get_samples_x(self, split=None):
-        return self.__samples_x if split is None else np.split(self.__samples_x, split)
-
-    def get_samples_y(self, split=None):
-        return self.__samples_y if split is None else np.split(self.__samples_y, split)
+    def get_Y_n(self):
+        return self.__data[ppu.DataCols.PREDICTION.value]

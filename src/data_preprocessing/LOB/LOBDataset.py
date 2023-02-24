@@ -4,6 +4,7 @@ from torch.utils import data
 import torch.nn.functional as F
 import numpy as np
 import torch
+import pandas as pd
 import src.constants as cst
 import collections
 
@@ -35,6 +36,7 @@ class LOBDataset(data.Dataset):
         self.num_classes = num_classes
 
         self.stockName2mu, self.stockName2sigma = stockName2mu, stockName2sigma
+        self.sample_size = self.config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_SNAPSHOTS] # 100
 
         stockName2databuilder = dict()
 
@@ -75,42 +77,80 @@ class LOBDataset(data.Dataset):
             )
 
             self.stockName2mu[stock], self.stockName2sigma[stock] = databuilder.normalization_means, databuilder.normalization_stds
-            stockName2databuilder[stock] = databuilder
+            stockName2databuilder[stock] = databuilder  # STOCK: databuilder
 
         print('stockName2mu:', self.stockName2mu)
         print('stockName2sigma:', self.stockName2sigma)
 
-        self.stock2orderNlen = dict()
-        self.x, self.y, self.stock_sym_name = list(), list(), list()
+        Xs, Ys, Ss, ignore_indices_len = list(), list(), list(), [0]
         for stock in self.stocks:
             print("Handling", stock, "for dataset", dataset_type)
             databuilder = stockName2databuilder[stock]
-            samplesX, samplesY = databuilder.get_samples_x(), databuilder.get_samples_y()
-            self.x.append(samplesX)
-            self.y.append(samplesY)
-            self.stock_sym_name.extend([stock]*len(samplesY))
 
-        self.x = np.concatenate(self.x, axis=0)
-        self.y = np.concatenate(self.y, axis=0)
+            data_x, data_y = databuilder.get_X_nx40(), databuilder.get_Y_n()
+            Xs.append(data_x)
+            Ys.append(data_y)
+            Ss.extend([stock]*len(data_y))
+            ignore_indices_len.append(len(data_y))
 
-        self.x = torch.from_numpy(self.x).type(torch.FloatTensor)
-        self.y = torch.from_numpy(np.array(self.y)).type(torch.LongTensor)
+        # removes the indices that are the first 100
+        ignore_indices = []
+        ind_sf = 0
+        for iv in range(len(ignore_indices_len)-1):
+            p = ind_sf + ignore_indices_len[iv]
+            ignore_indices += list(range(p, p+self.sample_size))  # [range(0, 100), range(1223, 1323), ]
+            ind_sf = p
 
-        if not self.config.CHOSEN_MODEL == cst.Models.DEEPLOBATT:
-            self.ys_occurrences = collections.Counter(self.y)
-            occs = np.array([self.ys_occurrences[k] for k in sorted(self.ys_occurrences)])
-            self.loss_weights = torch.Tensor(occs / np.sum(occs))
-        else:
-            self.y = F.one_hot(self.y.to(torch.int64), num_classes=self.num_classes).float()
-            self.y = torch.permute(self.y, (0, 2, 1))
-            # y.shape = (n_samples, num_classes, num_horizons)
+        self.x = np.concatenate(Xs, axis=0)
+        self.y = np.concatenate(Ys, axis=0)
+        self.stock_sym_name = Ss
 
-        self.x_shape = tuple(self.x[0].shape)
+        self.indexes_chosen = self.__under_sampling(self.y, ignore_indices)
+        self.x_shape = (self.sample_size, self.x.shape[1])
 
     def __len__(self):
         """ Denotes the total number of samples. """
-        return self.x.shape[0]
+        return len(self.indexes_chosen)
 
     def __getitem__(self, index):
         """ Generates samples of data. """
-        return self.x[index], self.y[index], self.stock_sym_name[index]
+
+        id_sample = self.indexes_chosen[index]
+        x, y, s = self.x[id_sample-self.sample_size:id_sample, :], np.array([self.y[id_sample]]), self.stock_sym_name[id_sample]
+
+        x = torch.from_numpy(x).type(torch.FloatTensor)
+        y = torch.from_numpy(y).type(torch.LongTensor)
+
+        self.ys_occurrences = collections.Counter(self.y)
+        occs = np.array([self.ys_occurrences[k] for k in sorted(self.ys_occurrences)])
+        self.loss_weights = torch.Tensor(occs / np.sum(occs))
+
+        # y = F.one_hot(y, num_classes=self.num_classes).float()  # [0, 1, 0]
+        # y = torch.permute(y, (1, 0))
+        return x, y, s
+
+    def __under_sampling(self, y, ignore_indices):
+        """ Discard instances of the majority class. """
+        print("Doing under-sampling...")
+
+        y_without_snap = [y[i] for i in range(len(y)) if i not in ignore_indices]  # removes the indices of the first sample for each stock
+
+        occurrences = self.__compute_occurrences(y_without_snap)
+        i_min_occ = min(occurrences, key=occurrences.get)  # index of the class with the least instances
+        n_min_occ = occurrences[i_min_occ]                 # number of occurrences of the minority class
+
+        indexes_ignore = set(ignore_indices)
+        indexes_chosen = []
+        for i in [cst.Predictions.UPWARD.value, cst.Predictions.STATIONARY.value, cst.Predictions.DOWNWARD.value]:
+            indexes = np.where(y == i)[0]
+            indexes = np.array(list(set(indexes) - indexes_ignore))  # the indices of the first sample for each stock
+
+            assert len(indexes) >= self.config.INSTANCES_LOWER_BOUND, "The instance is not well formed, there are less than {} instances for the class {} ({}).".format(self.config.INSTANCES_LOWER_BOUND, i, len(indexes))
+            indexes_chosen += list(self.config.RANDOM_GEN_DATASET.choice(indexes, n_min_occ, replace=False))
+
+        indexes_chosen = np.sort(indexes_chosen)
+        return indexes_chosen
+
+    def __compute_occurrences(self, y):
+        occurrences = collections.Counter(y)
+        return occurrences
