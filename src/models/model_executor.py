@@ -117,10 +117,9 @@ class NNEngine(pl.LightningModule):
         val_dict = self.__compute_metrics(truths, preds, model_step, loss_vals, self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name)  # dict to log
         val_dict_logits = {k: v for k, v in val_dict.items()}
         val_dict_logits['LOGITS'] = str(logits.tolist())
+        cm = self.__compute_sk_cm(truths, preds)
 
         self.config.METRICS_JSON.add_testing_metrics(self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, val_dict_logits)
-
-        cm = self.__compute_sk_cm(truths, preds)
         self.config.METRICS_JSON.add_testing_cfm(self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, cm)
 
         # PER STOCK PREDICTIONS

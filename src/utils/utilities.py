@@ -78,3 +78,7 @@ def sample_color(index, cmap='tab10'):
     # 3. Color the i-th line with the i-th color, i.e. slicedCM[i]
     color = colors[index]
     return color
+
+
+if __name__ == '__main__':
+    print(get_sys_mac())

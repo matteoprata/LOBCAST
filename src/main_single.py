@@ -103,7 +103,13 @@ def _wandb_exe(config: Configuration):
         wandb_instance.log_code("src/")
         wandb_instance.log({"model": config.CHOSEN_MODEL.name})
         wandb_instance.log({"seed": config.SEED})
-        wandb_instance.log({"fi-k":  config.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON]})
+
+        if config.CHOSEN_DATASET == cst.DatasetFamily.FI:
+            wandb_instance.log({"fi-k":  config.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON]})
+
+        elif config.CHOSEN_DATASET == cst.DatasetFamily.LOBSTER:
+            wandb_instance.log({"back-win":  config.HYPER_PARAMETERS[cst.LearningHyperParameter.BACKWARD_WINDOW]})
+            wandb_instance.log({"fwrd-win":  config.HYPER_PARAMETERS[cst.LearningHyperParameter.FORWARD_WINDOW]})
 
         config.WANDB_RUN_NAME = wandb_instance.name
         config.WANDB_INSTANCE = wandb_instance
@@ -184,7 +190,7 @@ def launch_wandb(config: Configuration):
                 'metric': config.SWEEP_METRIC,
                 'parameters': {
                     **HP_DICT_DATASET[config.CHOSEN_DATASET],
-                    **HP_DICT_MODEL[config.CHOSEN_MODEL].sweep
+                    **HP_DICT_MODEL  [config.CHOSEN_MODEL].sweep
                 }
             },
             project=cst.PROJECT_NAME
