@@ -44,7 +44,7 @@ servers = [cst.Servers.ALIEN1, cst.Servers.ALIEN2, cst.Servers.FISSO1]
 
 models_todo = {
     cst.Servers.FISSO1: [cst.Models.TRANSLOB],
-    cst.Servers.ALIEN2: [cst.Models.ATNBoF],
+    cst.Servers.ALIEN1: [cst.Models.MLP],
 }
 
 kset = [cst.FI_Horizons.K5, cst.FI_Horizons.K10]

@@ -50,6 +50,7 @@ servers = [cst.Servers.ALIEN1, cst.Servers.ALIEN2, cst.Servers.FISSO1]
 models_todo = {
     cst.Servers.ALIEN1: [cst.Models.MLP],
     cst.Servers.ALIEN2: [cst.Models.BINCTABL],
+    cst.Servers.FISSO1: [cst.Models.DEEPLOB],
 }
 
 bwin = {

@@ -1,3 +1,5 @@
+import time
+
 import pandas as pd
 import pytorch_lightning as pl
 
@@ -149,12 +151,12 @@ class NNEngine(pl.LightningModule):
 
     # COMMON
     def __validation_and_testing(self, batch):
-        x, y, stock_names = batch
-        out, logits = self(x)
+        x, y, stock_names = batch   # B x 100 x 40;   B
+        out, logits = self(x)       # B x 3;   B X 3
         loss_val = self.loss_fn(out, y)
 
         # deriving prediction from softmax probs
-        prediction_ind = torch.argmax(logits, dim=1)
+        prediction_ind = torch.argmax(logits, dim=1)  # B
 
         return prediction_ind, y, loss_val, stock_names, logits
 

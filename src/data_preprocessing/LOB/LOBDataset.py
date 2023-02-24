@@ -116,17 +116,9 @@ class LOBDataset(data.Dataset):
         """ Generates samples of data. """
 
         id_sample = self.indexes_chosen[index]
-        x, y, s = self.x[id_sample-self.sample_size:id_sample, :], np.array([self.y[id_sample]]), self.stock_sym_name[id_sample]
+        x, y, s = self.x[id_sample-self.sample_size:id_sample, :], int(self.y[id_sample]), self.stock_sym_name[id_sample]
 
         x = torch.from_numpy(x).type(torch.FloatTensor)
-        y = torch.from_numpy(y).type(torch.LongTensor)
-
-        self.ys_occurrences = collections.Counter(self.y)
-        occs = np.array([self.ys_occurrences[k] for k in sorted(self.ys_occurrences)])
-        self.loss_weights = torch.Tensor(occs / np.sum(occs))
-
-        # y = F.one_hot(y, num_classes=self.num_classes).float()  # [0, 1, 0]
-        # y = torch.permute(y, (1, 0))
         return x, y, s
 
     def __under_sampling(self, y, ignore_indices):
@@ -138,6 +130,9 @@ class LOBDataset(data.Dataset):
         occurrences = self.__compute_occurrences(y_without_snap)
         i_min_occ = min(occurrences, key=occurrences.get)  # index of the class with the least instances
         n_min_occ = occurrences[i_min_occ]                 # number of occurrences of the minority class
+
+        occs = np.array([occurrences[k] for k in sorted(occurrences)])
+        self.loss_weights = torch.Tensor(occs / np.sum(occs))
 
         indexes_ignore = set(ignore_indices)
         indexes_chosen = []
