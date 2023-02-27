@@ -153,7 +153,7 @@ def launch_single(config: Configuration, model_params=None):
                 cbk.callback_save_model(config, config.WANDB_RUN_NAME),
                 cbk.early_stopping(config)
             ],
-            # strategy=DDPStrategy(find_unused_parameters=False)
+            strategy=DDPStrategy(find_unused_parameters=False)
         )
         trainer.fit(nn_engine, data_module)
 

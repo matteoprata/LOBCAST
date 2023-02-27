@@ -63,19 +63,22 @@ def prepare_data_FI(config: Configuration):
     train_set = FIDataset(
         x=fi_train.get_samples_x(),
         y=fi_train.get_samples_y(),
-        chosen_model=config.CHOSEN_MODEL
+        chosen_model=config.CHOSEN_MODEL,
+        num_snapshots=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_SNAPSHOTS],
     )
 
     val_set = FIDataset(
         x=fi_val.get_samples_x(),
         y=fi_val.get_samples_y(),
-        chosen_model=config.CHOSEN_MODEL
+        chosen_model=config.CHOSEN_MODEL,
+        num_snapshots=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_SNAPSHOTS],
     )
 
     test_set = FIDataset(
         x=fi_test.get_samples_x(),
         y=fi_test.get_samples_y(),
-        chosen_model=config.CHOSEN_MODEL
+        chosen_model=config.CHOSEN_MODEL,
+        num_snapshots=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_SNAPSHOTS],
     )
 
     print()

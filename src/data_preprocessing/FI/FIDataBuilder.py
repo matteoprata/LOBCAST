@@ -102,6 +102,7 @@ class FIDataBuilder:
         self.samples_y -= 1
 
     def __snapshotting(self):
+        # This is not used
         """ This creates 4 X n_levels X window_size_backward -> prediction. """
         print("Snapshotting... (__data has", self.data.shape[0], "rows)")
 
@@ -119,7 +120,7 @@ class FIDataBuilder:
 
         self.__prepareX()
         self.__prepareY()
-        self.__snapshotting()
+        #  self.__snapshotting()
 
         #occurrences = collections.Counter(self.samples_y)
         #print("dataset type:", self.dataset_type, "- occurrences:", occurrences)

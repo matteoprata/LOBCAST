@@ -113,7 +113,6 @@ class LOBDataset(data.Dataset):
 
     def __getitem__(self, index):
         """ Generates samples of data. """
-
         id_sample = self.indexes_chosen[index]
         x, y, s = self.x[id_sample-self.sample_size:id_sample, :], self.y[id_sample], self.stock_sym_name[id_sample]
         return x, y, s
@@ -128,8 +127,9 @@ class LOBDataset(data.Dataset):
         i_min_occ = min(occurrences, key=occurrences.get)  # index of the class with the least instances
         n_min_occ = occurrences[i_min_occ]                 # number of occurrences of the minority class
 
-        occs = np.array([occurrences[k] for k in sorted(occurrences)])
-        self.loss_weights = torch.Tensor(occs / np.sum(occs))
+        # if we balance the classes, loss_weights is not useuful anymore
+        # occs = np.array([occurrences[k] for k in sorted(occurrences)])
+        # self.loss_weights = torch.Tensor(occs / np.sum(occs))
 
         indexes_ignore = set(ignore_indices)
         indexes_chosen = []

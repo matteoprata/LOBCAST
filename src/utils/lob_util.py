@@ -7,7 +7,6 @@ import os
 
 from enum import Enum
 
-import seaborn
 import tqdm
 from matplotlib import pyplot as plt
 from matplotlib import colors
