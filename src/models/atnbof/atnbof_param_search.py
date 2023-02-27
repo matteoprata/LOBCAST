@@ -9,7 +9,7 @@ HP_ATNBoF = {
     cst.LearningHyperParameter.P_DROPOUT.value: {'values': [0.2]},
 
     cst.LearningHyperParameter.BATCH_SIZE.value:    {'values': [128]},
-    cst.LearningHyperParameter.LEARNING_RATE.value: {'max': 0.001, 'min': 0.00005}
+    cst.LearningHyperParameter.LEARNING_RATE.value: {'max': 1e-2, 'min': 1e-5}
 }
 
 HP_ATNBoF_FI_FIXED = {
