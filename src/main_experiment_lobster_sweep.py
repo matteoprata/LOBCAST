@@ -44,19 +44,19 @@ def experiment_lobster(models_todo, bwin, now=None, servers=None):
                     sys.exit()
 
 
-cst.WANDB_SWEEP_MAX_RUNS = 3
+cst.WANDB_SWEEP_MAX_RUNS = 5
 servers = [cst.Servers.ALIEN1, cst.Servers.ALIEN2, cst.Servers.FISSO1]
 
 models_todo = {
-    cst.Servers.ALIEN1: [cst.Models.MLP],
+    cst.Servers.ALIEN1: [cst.Models.CNN2],
     cst.Servers.ALIEN2: [cst.Models.BINCTABL],
-    cst.Servers.FISSO1: [cst.Models.DEEPLOB],
+    cst.Servers.FISSO1: [cst.Models.CNNLSTM],
 }
 
 bwin = {
-    cst.WinSize.SEC10.value:  [cst.WinSize.SEC10.value],
-    cst.WinSize.SEC50.value:  [cst.WinSize.SEC50.value],
-    cst.WinSize.SEC100.value: [cst.WinSize.SEC100.value]
+    cst.WinSize.SEC10.value:  [cst.WinSize.SEC100.value, cst.WinSize.SEC50.value, cst.WinSize.SEC10.value],
+    cst.WinSize.SEC50.value:  [cst.WinSize.SEC100.value, cst.WinSize.SEC50.value, cst.WinSize.SEC10.value],
+    cst.WinSize.SEC100.value: [cst.WinSize.SEC100.value, cst.WinSize.SEC50.value, cst.WinSize.SEC10.value]
 }
 
 now = "LOBSTER-SWEEP-ALL-FINAL"

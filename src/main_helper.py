@@ -97,26 +97,26 @@ def prepare_data_LOBSTER(config: Configuration):
     train_set = LOBDataset(
         config=config,
         dataset_type=cst.DatasetType.TRAIN,
-        stocks=config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].value,
+        stocks_list=config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].value,
         start_end_trading_day=config.CHOSEN_PERIOD.value['train']
     )
 
-    stockName2mu, stockName2sigma = train_set.stockName2mu, train_set.stockName2sigma
+    stockName2mu, stockName2sigma = train_set.map_stock_mu, train_set.map_stock_sigma
 
     val_set = LOBDataset(
         config=config,
         dataset_type=cst.DatasetType.VALIDATION,
-        stocks=config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].value,
+        stocks_list=config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].value,
         start_end_trading_day=config.CHOSEN_PERIOD.value['val'],
-        stockName2mu=stockName2mu, stockName2sigma=stockName2sigma
+        map_stock_mu=stockName2mu, map_stock_sigma=stockName2sigma
     )
 
     test_set = LOBDataset(
         config=config,
         dataset_type=cst.DatasetType.TEST,
-        stocks=config.CHOSEN_STOCKS[cst.STK_OPEN.TEST].value,
+        stocks_list=config.CHOSEN_STOCKS[cst.STK_OPEN.TEST].value,
         start_end_trading_day=config.CHOSEN_PERIOD.value['test'],
-        stockName2mu=stockName2mu, stockName2sigma=stockName2sigma
+        map_stock_mu=stockName2mu, map_stock_sigma=stockName2sigma
     )
 
     print()

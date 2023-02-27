@@ -19,45 +19,44 @@ class LOBDataset(data.Dataset):
             self,
             config: Configuration,
             dataset_type,
-            stocks,
+            stocks_list,
             start_end_trading_day,
-            stockName2mu=dict(),
-            stockName2sigma=dict(),
-            num_classes=3,
-            num_snapshots=100,
-            one_hot_encoding=False
+            map_stock_mu=dict(),
+            map_stock_sigma=dict(),
+            num_classes=cst.NUM_CLASSES
     ):
         self.config = config
-        self.ys_occurrences = None
-        self.dataset_type = dataset_type
-        self.stocks = stocks
         self.start_end_trading_day = start_end_trading_day
-        self.num_snapshots = num_snapshots
         self.num_classes = num_classes
 
-        self.stockName2mu, self.stockName2sigma = stockName2mu, stockName2sigma
-        self.sample_size = self.config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_SNAPSHOTS] # 100
+        self.map_stock_mu, self.map_stock_sigma = map_stock_mu, map_stock_sigma
+        self.sample_size = self.config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_SNAPSHOTS]  # 100
 
-        stockName2databuilder = dict()
+        map_stock_databuilder = dict()
 
         # Choose the stock names to open to build the specific dataset.
         # No need to open all for test set, because mu/sig are pre-computed when prev opened train and dev
-        stocksToOpen = None
+        stocks_open = None
         if dataset_type == cst.DatasetType.TRAIN:
             # we open also the TEST stock(s) to determine mu and sigma for normalization, needed for all
-            stocksToOpen = list(set(config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].value + config.CHOSEN_STOCKS[cst.STK_OPEN.TEST].value))  # = [LYFT, NVDA]
-        elif dataset_type == cst.DatasetType.VALIDATION:
-            stocksToOpen = config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].value  # = [LYFT]
-        elif dataset_type == cst.DatasetType.TEST:
-            stocksToOpen = config.CHOSEN_STOCKS[cst.STK_OPEN.TEST].value   # = [NVDA]
+            stocks_open = list(set(config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].value + config.CHOSEN_STOCKS[cst.STK_OPEN.TEST].value))  # = [LYFT, NVDA]
 
-        for stock in stocksToOpen:
+        elif dataset_type == cst.DatasetType.VALIDATION:
+            stocks_open = config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].value  # = [LYFT]
+
+        elif dataset_type == cst.DatasetType.TEST:
+            stocks_open = config.CHOSEN_STOCKS[cst.STK_OPEN.TEST].value   # = [NVDA]
+
+        #
+        for stock in stocks_open:
             path = cst.DATASET_LOBSTER + f'_data_dwn_48_332__{stock}_{config.CHOSEN_PERIOD.value["train"][0]}_{config.CHOSEN_PERIOD.value["test"][1]}_10'
 
-            normalization_mean = stockName2mu[stock] if stock in stockName2mu else None
-            normalization_std = stockName2sigma[stock] if stock in stockName2sigma else None
+            normalization_mean = map_stock_mu[stock] if stock in map_stock_mu else None
+            normalization_std = map_stock_sigma[stock] if stock in map_stock_sigma else None
 
-            print(dataset_type, '\t', stocks, '\t', stock, '\t', start_end_trading_day, '\t', normalization_mean, '\t', normalization_std, '\t', path)
+            print()
+            print(dataset_type, stocks_list, stock, start_end_trading_day, normalization_mean, normalization_std, path, sep="\n")
+            print()
 
             databuilder = LOBSTERDataBuilder(
                 stock,
@@ -71,21 +70,21 @@ class LOBDataset(data.Dataset):
                 window_size_backward=config.HYPER_PARAMETERS[cst.LearningHyperParameter.BACKWARD_WINDOW],
                 normalization_mean=normalization_mean,
                 normalization_std=normalization_std,
-                num_snapshots=num_snapshots,
+                num_snapshots=self.sample_size,
                 label_dynamic_scaler=config.HYPER_PARAMETERS[cst.LearningHyperParameter.LABELING_SIGMA_SCALER],
                 is_data_preload=config.IS_DATA_PRELOAD
             )
 
-            self.stockName2mu[stock], self.stockName2sigma[stock] = databuilder.normalization_means, databuilder.normalization_stds
-            stockName2databuilder[stock] = databuilder  # STOCK: databuilder
+            self.map_stock_mu[stock], self.map_stock_sigma[stock] = databuilder.normalization_means, databuilder.normalization_stds
+            map_stock_databuilder[stock] = databuilder  # STOCK: databuilder
 
-        print('stockName2mu:', self.stockName2mu)
-        print('stockName2sigma:', self.stockName2sigma)
+        print('map_stock_mu:', self.map_stock_mu)
+        print('map_stock_sigma:', self.map_stock_sigma)
 
         Xs, Ys, Ss, ignore_indices_len = list(), list(), list(), [0]
-        for stock in self.stocks:
+        for stock in stocks_list:
             print("Handling", stock, "for dataset", dataset_type)
-            databuilder = stockName2databuilder[stock]
+            databuilder = map_stock_databuilder[stock]
 
             data_x, data_y = databuilder.get_X_nx40(), databuilder.get_Y_n()
             Xs.append(data_x)
