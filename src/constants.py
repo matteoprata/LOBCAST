@@ -248,7 +248,7 @@ class Servers(Enum):
 
 MACIDsServer = {
     '73:b5:cc:b3:5a:9a': Servers.ALIEN1,
-    '5d:35:d4:b7:82:df': Servers.ALIEN2,
+    'd9:df:03:86:29:65': Servers.ALIEN2,
     'ea:82:88:8a:79:89': Servers.FISSO1
 }
 
