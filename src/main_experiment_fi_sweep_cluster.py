@@ -36,6 +36,6 @@ def experiment_FI(model, k, now=None):
         print("There was a problem running on cluster FI experiment on {}, with K={}".format(model.name, k))
         sys.exit()
 
-now = "FI-2010-Sweep-ALL-Cluster"
+now = "FI-2010-Sweep-ALL-20220227"
 wandb.login(key="54775690baa838985ad1ce959fd2d5dcc8b23b8b")
 experiment_FI(model=cst.Models[sys.argv[1]], k=cst.FI_Horizons[sys.argv[2]], now=now)
