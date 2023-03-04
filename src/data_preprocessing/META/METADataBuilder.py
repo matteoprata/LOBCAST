@@ -1,6 +1,8 @@
 import json
 import os
-
+import pandas as pd
+import seaborn
+import matplotlib.pyplot as plt
 import src.constants as cst
 from src.config import Configuration
 import numpy as np
@@ -29,6 +31,13 @@ class MetaDataBuilder:
         self.logits, self.preds = self.__load_predictions_from_jsons()
         # logits.shape = [n_samples, n_classes*n_models]
         # preds.shape = [n_samples, n_models]
+
+        self.n_models = self.preds.shape[1]
+
+        self.__plot_agreement_matrix()
+        self.__plot_corr_matrix()
+
+
 
     def __load_predictions_from_jsons(self):
         logits = list()
@@ -92,88 +101,68 @@ class MetaDataBuilder:
         return self.logits[s], self.truth_y[s]
 
     def __plot_corr_matrix(self):
-        pass
-        # if (all_predictions.shape[1] != n_models):
-        #     raise Exception("dimensions of all_predictions are wrong. They have to be [n_models, n_instances]")
+         # collect data
+         models = sorted([model.name for model in cst.Models if (model.name != "METALOB")])
 
-        # # collect data
-        # data = {
-        #     "ATNBoF": all_predictions[:, 0],
-        #     "AXIAL-LOB": all_predictions[:, 1],
-        #     'BiN-CTABL': all_predictions[:, 2],
-        #     'CNN1': all_predictions[:, 3],
-        #     'CNN2': all_predictions[:, 4],
-        #     'CNN-LSTM': all_predictions[:, 5],
-        #     'CTABL': all_predictions[:, 6],
-        #     'DAIN-MLP': all_predictions[:, 7],
-        #     'DeepLOBATT': all_predictions[:, 8],
-        #     'DeepLOB': all_predictions[:, 9],
-        #     'DLA': all_predictions[:, 10],
-        #     'LSTM': all_predictions[:, 11],
-        #     'MLP': all_predictions[:, 12],
-        #     'TLONBoF': all_predictions[:, 13],
-        #     'TransLOB': all_predictions[:, 14]
-        # }
+         #we swap the order of DeepLOBATT and DeepLOB, because in the json there is DEEPLOBATT first
+         models[8], models[9] = models[9], models[8]
+         data = {}
+         for i, model in enumerate(models):
+             data[model] = self.preds[:, i]
 
-        # # form dataframe
-        # dataframe = pd.DataFrame(data, columns=list(data.keys()))
+         # form dataframe
+         dataframe = pd.DataFrame(data, columns=list(data.keys()))
 
-        # # form correlation matrix
-        # corr_matrix = dataframe.corr()
+         # form correlation matrix
+         corr_matrix = dataframe.corr()
 
-        # heatmap = seaborn.heatmap(corr_matrix, annot=True)
-        # heatmap.set(title="Correlation matrix")
-        # plt.show()
+         heatmap = seaborn.heatmap(corr_matrix, annot=True, fmt=".2f")
+         heatmap.set(title="Correlation matrix")
+
+         heatmap.figure.set_size_inches(10, 7)
+         plt.show()
 
 
     def __plot_agreement_matrix(self):
-        pass
-        # all_predictions.permute(1, 0)
-        # n_predictions = all_predictions.shape[1]
 
-        # data = {
-        #     "ATNBoF": all_predictions[:, 0],
-        #     "AXIAL-LOB": all_predictions[:, 1],
-        #     'BiN-CTABL': all_predictions[:, 2],
-        #     'CNN1': all_predictions[:, 3],
-        #     'CNN2': all_predictions[:, 4],
-        #     'CNN-LSTM': all_predictions[:, 5],
-        #     'CTABL': all_predictions[:, 6],
-        #     'DAIN-MLP': all_predictions[:, 7],
-        #     'DeepLOBATT': all_predictions[:, 8],
-        #     'DeepLOB': all_predictions[:, 9],
-        #     'DLA': all_predictions[:, 10],
-        #     'LSTM': all_predictions[:, 11],
-        #     'MLP': all_predictions[:, 12],
-        #     'TLONBoF': all_predictions[:, 13],
-        #     'TransLOB': all_predictions[:, 14]
-        # }
+        # collect data
+        models = sorted([model.name for model in cst.Models if (model.name != "METALOB")])
 
-        # agreement_matrix = np.zeros((n_models, n_models))
-        # list_names = list(data.keys())
-        # for i in range(n_models):
-        #     for j in range(n_models):
-        #         agr = 0
-        #         for pred in range(n_predictions):
-        #             if all_predictions[i, pred] == all_predictions[j, pred]:
-        #                 agr += 1
-        #         agreement_matrix[i, j] = agr / n_predictions
+        # we swap the order of DeepLOBATT and DeepLOB, because in the json there is DEEPLOBATT first
+        models[8], models[9] = models[9], models[8]
+        data = {}
+        for i, model in enumerate(models):
+            data[model] = self.preds[:, i]
 
-        # fig, ax = plt.subplots()
-        # print("Agreement_Matrix is : ")
-        # ax.matshow(agreement_matrix, cmap=plt.cm.Reds)
+        agreement_matrix = np.zeros((self.n_models, self.n_models))
+        list_names = list(data.keys())
+        for i in range(self.n_models):
+            for j in range(self.n_models):
+                agr = 0
+                for pred in range(100):
+                    if self.preds[pred, i] == self.preds[pred, j]:
+                       agr += 1
+                agreement_matrix[i, j] = agr / self.n_samples
 
-        # Set number of ticks for x-axis
-        # ax.set_xticks(np.arange(0, n_models, 1))
-        # Set ticks labels for x-axis
-        # ax.set_xticklabels(list_names, fontsize=18)
+        fig, ax = plt.subplots()
+        ax.matshow(agreement_matrix, cmap=plt.cm.Reds)
+        ax.set_title('Agreement matrix', fontsize=12)
 
-        # Set number of ticks for x-axis
-        # ax.set_yticks(np.arange(0, n_models, 1))
-        # Set ticks labels for x-axis
-        # ax.set_yticklabels(list_names, fontsize=18)
+        #Set number of ticks for x-axis
+        ax.set_xticks(np.arange(0, self.n_models, 1))
+        #Set ticks labels for x-axis
+        ax.set_xticklabels(list_names, fontsize=8, rotation=90, ha='center')
+        ax.xaxis.set_label_position('bottom')
+        ax.xaxis.tick_bottom()
 
-        # for i in range(n_models):
-        #     for j in range(n_models):
-        #         c = agreement_matrix[j, i]
-        #         ax.text(i, j, str(round(c, 5)), va='center', ha='center')
+        #Set number of ticks for x-axis
+        ax.set_yticks(np.arange(0, self.n_models, 1))
+        #Set ticks labels for x-axis
+        ax.set_yticklabels(list_names, fontsize=8)
+
+        for i in range(self.n_models):
+            for j in range(self.n_models):
+                c = agreement_matrix[j, i]
+                ax.text(i, j, str(round(c, 2)), va='center', ha='center', fontsize=8)
+
+        plt.show()
