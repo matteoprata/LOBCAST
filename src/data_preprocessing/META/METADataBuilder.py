@@ -10,7 +10,6 @@ class MetaDataBuilder:
     def __init__(self, truth_y, config: Configuration):
 
         self.split_percentages = config.META_TRAIN_VAL_TEST_SPLIT
-
         self.truth_y = truth_y
         # truth_y.shape = [n_samples]
         self.n_samples = self.truth_y.shape[0]
@@ -36,10 +35,6 @@ class MetaDataBuilder:
 
         for model in cst.Models:
 
-            # TODO: check for DEEPLOBATT
-            if model == cst.Models.DEEPLOBATT:
-                continue
-
             file_name = self.generic_file_name.format(
                 model.name,
                 self.seed,
@@ -52,12 +47,16 @@ class MetaDataBuilder:
                 self.fiw,
             )
 
-            if os.path.exists(cst.DIR_FI_FINAL_JSONS + file_name):
-                with open(cst.DIR_FI_FINAL_JSONS + file_name, "r") as f:
+            if os.path.exists(self.project_dir + cst.DIR_FI_FINAL_JSONS + file_name):
+                with open(self.project_dir + cst.DIR_FI_FINAL_JSONS + file_name, "r") as f:
                     d = json.loads(f.read())
                     logits_str = d['LOGITS']
                     logits_ = np.array(json.loads(logits_str))
                     assert logits_.shape[0] == self.n_samples, f"For model {model}, n_samples != number of predictions in the json"
+                    if (model == cst.Models.DEEPLOBATT):
+                        horizons = [horizon.value for horizon in cst.FI_Horizons]
+                        h = horizons.index(self.fiw)
+                        logits_ = logits_[:, :, h]
                     logits.append(logits_)
 
         logits = np.dstack(logits)
