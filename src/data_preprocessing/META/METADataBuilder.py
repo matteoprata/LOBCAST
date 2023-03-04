@@ -139,7 +139,7 @@ class MetaDataBuilder:
         for i in range(self.n_models):
             for j in range(self.n_models):
                 agr = 0
-                for pred in range(100):
+                for pred in range(self.n_samples):
                     if self.preds[pred, i] == self.preds[pred, j]:
                        agr += 1
                 agreement_matrix[i, j] = agr / self.n_samples
