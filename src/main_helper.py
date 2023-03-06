@@ -104,14 +104,14 @@ def prepare_data_LOBSTER(config: Configuration):
         start_end_trading_day=config.CHOSEN_PERIOD.value['train']
     )
 
-    stockName2mu, stockName2sigma = train_set.map_stock_mu, train_set.map_stock_sigma
+    vol_price_mu, vol_price_sig = train_set.vol_price_mu, train_set.vol_price_sig
 
     val_set = LOBDataset(
         config=config,
         dataset_type=cst.DatasetType.VALIDATION,
         stocks_list=config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].value,
         start_end_trading_day=config.CHOSEN_PERIOD.value['val'],
-        map_stock_mu=stockName2mu, map_stock_sigma=stockName2sigma
+        vol_price_mu=vol_price_mu, vol_price_sig=vol_price_sig
     )
 
     test_set = LOBDataset(
@@ -119,7 +119,7 @@ def prepare_data_LOBSTER(config: Configuration):
         dataset_type=cst.DatasetType.TEST,
         stocks_list=config.CHOSEN_STOCKS[cst.STK_OPEN.TEST].value,
         start_end_trading_day=config.CHOSEN_PERIOD.value['test'],
-        map_stock_mu=stockName2mu, map_stock_sigma=stockName2sigma
+        vol_price_mu=vol_price_mu, vol_price_sig=vol_price_sig
     )
 
     print()

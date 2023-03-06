@@ -13,8 +13,10 @@ def is_outlier(X, Q1, Q3, outlier_factor=3):
 
 
 def stationary_normalize_data(data, normalization_mean=None, normalization_std=None):
-    """ TODO: remember to use the mean/std of the training set, to z-normalize the test set. """
-    col_choice = {"volumes": get_volume_column_name(data.columns), "prices": get_price_column_name(data.columns)}
+    """ DONE: remember to use the mean/std of the training set, to z-normalize the test set. """
+
+    col_choice = {"volumes": get_volume_column_name(data.columns),
+                  "prices":  get_price_column_name(data.columns)}
 
     print("Normalization... (using means", normalization_mean, "and stds", normalization_std, ")")
 
@@ -60,7 +62,7 @@ def add_lob_labels(data, window_size_forward, window_size_backward, label_thresh
     data = add_midprices_columns(data, window_size_forward, window_size_backward)
 
     # we remove the first and the last rolling_tu because the rolling mean has holes
-    data = data[(window_size_backward - 1):-(window_size_forward - 1)]
+    data = data[(window_size_backward - 1):-(window_size_forward - 1)]  # ok checked 6-03-23
 
     data[DataCols.PERCENTAGE_CHANGE.value] = get_percentage_change(data, DataCols.MID_PRICE_PAST.value, DataCols.MID_PRICE_FUTURE.value)
     ratio_mu, ratio_si = data[DataCols.PERCENTAGE_CHANGE.value].mean(), data[DataCols.PERCENTAGE_CHANGE.value].std()
@@ -81,7 +83,7 @@ def add_lob_labels(data, window_size_forward, window_size_backward, label_thresh
 
 def add_midprices_columns(data, window_size_forward, window_size_backward):
     data[DataCols.MID_PRICE.value] = get_mid_price(data)
-    data[DataCols.MID_PRICE_FUTURE.value] = data[DataCols.MID_PRICE.value].rolling(window_size_forward).mean().shift(- window_size_forward + 1)
+    data[DataCols.MID_PRICE_FUTURE.value] = data[DataCols.MID_PRICE.value].rolling(window_size_forward).mean().shift(- window_size_forward + 1)  # +1 is correct checked
     data[DataCols.MID_PRICE_PAST.value] = data[DataCols.MID_PRICE.value].rolling(window_size_backward).mean()
     return data
 

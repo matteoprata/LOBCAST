@@ -5,6 +5,7 @@ import src.data_preprocessing.preprocessing_utils as ppu
 import src.utils.utilities as util
 import src.utils.lob_util as lbu
 
+
 import tqdm
 import collections
 import numpy as np
@@ -163,7 +164,7 @@ class LOBSTERDataBuilder:
 
         self.__read_dataset()
         self.__label_dataset()
-        self.__normalize_dataset()
+        # self.__normalize_dataset()
 
         # TOO MUCH MEMORY! AVOID
         # self.__snapshotting()
