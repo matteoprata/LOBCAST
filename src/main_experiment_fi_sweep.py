@@ -43,12 +43,12 @@ def experiment_FI(models_todo, kset=None, now=None, servers=None):
 servers = [cst.Servers.ALIEN1, cst.Servers.ALIEN2, cst.Servers.FISSO1]
 
 models_todo = {
-    cst.Servers.FISSO1: [cst.Models.CTABL, cst.Models.MLP, cst.Models.LSTM, cst.Models.CNN2],
-    cst.Servers.ALIEN1: [cst.Models.TLONBoF, cst.Models.CNN1, cst.Models.DAIN],
-    cst.Servers.ALIEN2: [cst.Models.DLA, cst.Models.BINCTABL, cst.Models.CNNLSTM, cst.Models.DEEPLOB],
+    cst.Servers.FISSO1: [cst.Models.DEEPLOB],
+    # cst.Servers.ALIEN1: [cst.Models.TLONBoF, cst.Models.CNN1, cst.Models.DAIN],
+    # cst.Servers.ALIEN2: [cst.Models.DLA, cst.Models.BINCTABL, cst.Models.CNNLSTM, cst.Models.DEEPLOB],
 }
 
-kset = [cst.FI_Horizons.K1, cst.FI_Horizons.K5, cst.FI_Horizons.K10]
+kset = [cst.FI_Horizons.K1]
 
-now = "FI-2010-Sweep-ALL-20220227"
+now = "TEST-DEBUG-DEEPLOB"
 experiment_FI(models_todo, kset=kset, now=now, servers=servers)

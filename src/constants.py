@@ -249,7 +249,7 @@ class Servers(Enum):
 MACIDsServer = {
     '73:b5:cc:b3:5a:9a': Servers.ALIEN1,
     'ff:6f:33:5d:20:a0': Servers.ALIEN2,
-    'ea:82:88:8a:79:89': Servers.FISSO1
+    '3e:18:01:db:23:0e': Servers.FISSO1
 }
 
 ServerMACIDs = {v: k for k, v in MACIDsServer.items()}
