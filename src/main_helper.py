@@ -151,7 +151,7 @@ def prepare_data_META(config: Configuration):
         raise NotImplementedError
 
     meta_databuilder = MetaDataBuilder(
-        truth_y=databuilder_test.samples_y,
+        truth_y=databuilder_test.samples_y[99:-1],
         config=config
     )
 
@@ -311,7 +311,7 @@ def pick_model(config: Configuration, data_module):
 
     elif config.CHOSEN_MODEL == cst.Models.METALOB:
         net_architecture = MetaLOB(
-            mlp_hidden=config.HYPER_PARAMETERS[cst.LearningHyperParameter.MLP_HIDDEN],
+            meta_hidden=config.HYPER_PARAMETERS[cst.LearningHyperParameter.META_HIDDEN],
         )
 
     engine = NNEngine(

@@ -15,10 +15,11 @@ import wandb
 import traceback
 
 # TORCH
+import torch
 from pytorch_lightning import Trainer
 from pytorch_lightning import seed_everything
 from pytorch_lightning.strategies import DDPStrategy
-
+import torch.nn as nn
 
 import src.constants as cst
 import src.models.model_callbacks as cbk
@@ -41,14 +42,16 @@ from src.models.binctabl.binctabl_param_search import HP_BINTABL, HP_BINTABL_FI_
 from src.models.deeplobatt.dlbatt_param_search import HP_DEEPATT, HP_DEEPATT_FI_FIXED, HP_DEEPATT_LOBSTER_FIXED
 from src.models.dla.dla_param_search import HP_DLA, HP_DLA_FI_FIXED
 from src.models.axial.axiallob_param_search import HP_AXIALLOB, HP_AXIALLOB_FI_FIXED
-
+from src.models.metalob import metalob
 from src.models.nbof.nbof_param_search import HP_NBoF, HP_NBoF_FI_FIXED
 from src.models.atnbof.atnbof_param_search import HP_ATNBoF, HP_ATNBoF_FI_FIXED
 from src.models.tlonbof.tlonbof_param_search import HP_TLONBoF, HP_TLONBoF_FI_FIXED
 from src.models.metalob.metalob_param_search import HP_META, HP_META_FIXED
+from src.models.metalob.metalob import train_metaLOB, test_metaLOB, plot_correlation_vector
 from src.utils.utilities import get_sys_mac
 from src.main_helper import pick_model, pick_dataset
 from collections import namedtuple
+
 
 HPSearchTypes = namedtuple('HPSearchTypes', ("sweep", "fixed_fi", "fixed_lob"))
 HPSearchTypes2 = namedtuple('HPSearchTypes', ("sweep", "fixed"))
@@ -142,29 +145,38 @@ def launch_single(config: Configuration, model_params=None):
 
         config.dynamic_config_setup()
         data_module = pick_dataset(config)
-        nn_engine = pick_model(config, data_module)
 
-        trainer = Trainer(
-            accelerator=cst.DEVICE_TYPE,
-            devices=cst.NUM_GPUS,
-            check_val_every_n_epoch=config.VALIDATE_EVERY,
-            max_epochs=config.HYPER_PARAMETERS[cst.LearningHyperParameter.EPOCHS_UB],
-            callbacks=[
-                cbk.callback_save_model(config, config.WANDB_RUN_NAME),
-                cbk.early_stopping(config)
-            ],
-            # strategy=DDPStrategy(find_unused_parameters=False)
+        if (config.CHOSEN_DATASET == cst.DatasetFamily.FI):
+            nn_engine = pick_model(config, data_module)
+
+            trainer = Trainer(
+                accelerator=cst.DEVICE_TYPE,
+                devices=cst.NUM_GPUS,
+                check_val_every_n_epoch=config.VALIDATE_EVERY,
+                max_epochs=config.HYPER_PARAMETERS[cst.LearningHyperParameter.EPOCHS_UB],
+                callbacks=[
+                    cbk.callback_save_model(config, config.WANDB_RUN_NAME),
+                    cbk.early_stopping(config)
+                ],
+                # strategy=DDPStrategy(find_unused_parameters=False)
+            )
+            trainer.fit(nn_engine, data_module)
+
+            nn_engine.testing_mode = cst.ModelSteps.VALIDATION_MODEL
+            trainer.test(nn_engine, dataloaders=data_module.val_dataloader(), ckpt_path="best")
+
+            nn_engine.testing_mode = cst.ModelSteps.TESTING
+            trainer.test(nn_engine, dataloaders=data_module.test_dataloader(), ckpt_path="best")
+
+            if not config.IS_TUNE_H_PARAMS:
+                config.METRICS_JSON.close()
+
+        #for MetaLOB we need another training and testing method
+        else:
+            metaLOB = metalob.MetaLOB(
+            meta_hidden=config.HYPER_PARAMETERS[cst.LearningHyperParameter.META_HIDDEN],
         )
-        trainer.fit(nn_engine, data_module)
-
-        nn_engine.testing_mode = cst.ModelSteps.VALIDATION_MODEL
-        trainer.test(nn_engine, dataloaders=data_module.val_dataloader(), ckpt_path="best")
-
-        nn_engine.testing_mode = cst.ModelSteps.TESTING
-        trainer.test(nn_engine, dataloaders=data_module.test_dataloader(), ckpt_path="best")
-
-        if not config.IS_TUNE_H_PARAMS:
-            config.METRICS_JSON.close()
+            launch_meta(metaLOB, data_module, config)
 
     try:
         core(model_params)
@@ -172,6 +184,31 @@ def launch_single(config: Configuration, model_params=None):
         print("The following error was raised")
         print(traceback.print_exc(), file=sys.stderr)
         exit(1)
+
+
+def launch_meta(metaLOB, data_module, config):
+    lr = config.HYPER_PARAMETERS[cst.LearningHyperParameter.LEARNING_RATE]
+    momentum = config.HYPER_PARAMETERS[cst.LearningHyperParameter.MOMENTUM]
+    n_samples_train = data_module.x_shape[0]
+    horizon = config.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON]
+    batch_size = config.HYPER_PARAMETERS[cst.LearningHyperParameter.BATCH_SIZE]
+    n_epochs = config.HYPER_PARAMETERS[cst.LearningHyperParameter.EPOCHS_UB]
+    opt = torch.optim.SGD(metaLOB.parameters(), lr=lr, momentum=momentum)
+    sch = torch.optim.lr_scheduler.CosineAnnealingLR(opt,
+                                                     T_max=int((n_samples_train / batch_size) * n_epochs),
+                                                     eta_min=0.000001)
+    loss = nn.CrossEntropyLoss()
+    train_metaLOB(metaLOB, config, lr, momentum, n_samples_train, batch_size, n_epochs, opt, sch, loss, data_module)
+
+    #loading the best model
+    metaLOB = torch.load(f'data/saved_models/metaLOB_k={horizon}.pt')
+
+    meta_predictions = test_metaLOB(metaLOB, config, lr, momentum, n_samples_train, batch_size, n_epochs, opt, sch, loss, data_module)
+    base_logits_test = data_module.test_set.x
+
+    #extracting the predictions from the logits
+    base_predictions_test = np.argmax(torch.reshape(base_logits_test, (base_logits_test.shape[0], -1, cst.NUM_CLASSES)), axis=-1)
+    plot_correlation_vector(base_predictions_test, meta_predictions, horizon)
 
 
 def launch_wandb(config: Configuration):

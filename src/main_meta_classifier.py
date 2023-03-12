@@ -17,7 +17,7 @@ def experiment_FI(kset):
         try:
             cf: Configuration = Configuration(now)
             set_seeds(cf)
-
+            parser_cl_arguments(cf)
             cf.CHOSEN_DATASET = cst.DatasetFamily.META
             cf.CHOSEN_MODEL = cst.Models.METALOB
 
@@ -25,8 +25,8 @@ def experiment_FI(kset):
             cf.IS_TUNE_H_PARAMS = True
             cf.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON] = k.value
 
-            launch_wandb(cf)
-
+            #launch_wandb(cf)
+            launch_single(cf, model_params=None)
         except KeyboardInterrupt:
             print("There was a problem running experiment with K={}".format(k))
             sys.exit()

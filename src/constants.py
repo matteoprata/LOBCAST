@@ -24,6 +24,7 @@ class LearningHyperParameter(str, Enum):
     LABELING_SIGMA_SCALER = "labeling_sigma_scaler"
     FI_HORIZON = 'fi_horizon_k'
     NUM_SNAPSHOTS = 'num_snapshots'
+    META_HIDDEN = 'meta_hidden'
 
 class STK_OPEN(str, Enum):
     """ The modalities associated to a list of stocks. """
@@ -229,11 +230,11 @@ NUM_GPUS = None if DEVICE_TYPE == 'cpu' else torch.cuda.device_count()
 PROJECT_NAME = "LOB-CLASSIFIERS-({})"
 DIR_EXPERIMENTS = "data/experiments/" + PROJECT_NAME
 DIR_SAVED_MODEL = "data/saved_models/" + PROJECT_NAME
-DIR_FI_FINAL_JSONS = "data/experiments/fi_final_jsons/"
+DIR_FI_FINAL_JSONS = "\\data\\fi_final_jsons\\"
 
-DATA_SOURCE = "data/"
+DATA_SOURCE = "C:/Users/leona/Documents/"
 DATASET_LOBSTER = "LOBSTER_6/unzipped/"
-DATASET_FI = "FI-2010/BenchmarkDatasets/"
+DATASET_FI = "BenchmarkDatasets/Auction"
 DATA_PICKLES = "data/pickles/"
 
 
