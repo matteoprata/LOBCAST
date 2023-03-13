@@ -121,8 +121,7 @@ class Models(str, Enum):
     AXIALLOB = "AXIALLOB"
     TRANSLOB = "TransLob"
 
-
-METALOB = "MetaLOB"
+    METALOB = "MetaLOB"
 
 
 class DatasetFamily(str, Enum):

@@ -129,8 +129,10 @@ def launch_single(config: Configuration, model_params=None):
 
             if config.CHOSEN_DATASET == cst.DatasetFamily.FI:
                 model_params = HP_DICT_MODEL[config.CHOSEN_MODEL].fixed_fi
+
             elif config.CHOSEN_DATASET == cst.DatasetFamily.LOBSTER:
                 model_params = HP_DICT_MODEL[config.CHOSEN_MODEL].fixed_lob
+
             elif config.CHOSEN_DATASET == cst.DatasetFamily.META:
                 model_params = HP_DICT_MODEL[config.CHOSEN_MODEL].fixed
 
@@ -165,7 +167,6 @@ def launch_single(config: Configuration, model_params=None):
 
         if not config.IS_TUNE_H_PARAMS:
             config.METRICS_JSON.close()
-
     try:
         core(model_params)
     except:
@@ -277,7 +278,6 @@ def experiment_preamble(now, servers):
         print("Running on server", server_name.name)
     else:
         raise "This SERVER is not handled for the experiment."
-
     return now, server_name, server_id, n_servers
 
 
