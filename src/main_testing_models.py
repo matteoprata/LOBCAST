@@ -16,11 +16,11 @@ from src.models.model_executor import NNEngine
 kset, mset = cst.FI_Horizons, cst.Models
 seed = 0
 stock_dataset = "FI"
-src_data = "data/saved_models/IODIVENTOPAZZO/"
+src_data = "data/saved_models/models_fin/"
 dirs = [d + '/' for d in os.listdir(src_data) if not d.startswith('.')]
 
-model_todo = [cst.Models.AXIALLOB, cst.Models.ATNBoF]  # cst.Models  # [cst.Models.MLP, cst.Models.CNN1, cst.Models.DAIN]
-models_to_avoid = []
+model_todo = [cst.Models.ATNBoF]  #cst.Models
+models_to_avoid = [cst.Models.METALOB]
 
 
 def launch_test():
@@ -84,5 +84,3 @@ def launch_test():
 
 if __name__ == "__main__":
     launch_test()
-
-
