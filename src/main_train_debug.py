@@ -48,6 +48,8 @@ from src.models.deeplobatt.dlbatt_param_search import HP_DEEPATT, HP_DEEPATT_FI_
 from src.models.dla.dla_param_search import HP_DLA, HP_DLA_FI_FIXED
 from src.models.axial.axiallob_param_search import HP_AXIALLOB, HP_AXIALLOB_FI_FIXED
 from src.models.metalob import metalob
+from src.models.tabl.ctabl import CTABL
+from src.models.binctabl.bin_tabl import BiN_CTABL
 from src.models.nbof.nbof_param_search import HP_NBoF, HP_NBoF_FI_FIXED
 from src.models.atnbof.atnbof_param_search import HP_ATNBoF, HP_ATNBoF_FI_FIXED
 from src.models.tlonbof.tlonbof_param_search import HP_TLONBoF, HP_TLONBoF_FI_FIXED
@@ -197,6 +199,11 @@ def train(model, config, n_epochs, opt, loss_function, data_module):
     val_loader = data_module.val_dataloader()
     device = cst.DEVICE_TYPE
 
+    #scheduler for C-TABL e BiN-CTABL
+    SC = [0.005, 0.001, 0.0005, 0.0001, 0.00008, 0.00001]
+    index_sc = 0
+    counter = 0
+
     for it in tqdm(range(n_epochs)):
 
         model.train()
@@ -210,6 +217,19 @@ def train(model, config, n_epochs, opt, loss_function, data_module):
         # Get mean train loss
         mean_train_loss = np.mean(train_loss)
 
+        #apply scheduling for C-TABL e BiN-CTABL
+        #Update learning rate every 3 epochs in which the train loss doesn't decrease
+        if ((isinstance(model, CTABL) or isinstance(model, BiN_CTABL)) and mean_train_loss > best_train_loss and i < 6 and it != 0 and counter < 4):
+            counter += 1
+        else:
+            counter = 0
+            
+        if ((isinstance(model, CTABL) or isinstance(model, BiN_CTABL)) and mean_train_loss > best_train_loss and i < 6 and it != 0 and counter == 4):
+            counter = 0
+            for g in optimizer.param_groups:
+               g['lr'] = SC[i]
+            index_sc += 1
+
         model.eval()
         val_loss = []
         for inputs, targets in val_loader:
@@ -222,6 +242,7 @@ def train(model, config, n_epochs, opt, loss_function, data_module):
         if mean_val_loss < best_val_loss:
             torch.save(model, f'data/saved_models/{str(type(model))[8:-2]}k={horizon}.pt')
             best_val_loss = mean_val_loss
+            best_train_loss = mean_train_loss
             best_test_epoch = it
             print('model saved')
 
