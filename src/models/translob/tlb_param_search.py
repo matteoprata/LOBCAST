@@ -7,7 +7,7 @@ HP_TRANS = {
     cst.LearningHyperParameter.WEIGHT_DECAY.value: {'values': [1e-5]},
 
     cst.LearningHyperParameter.BATCH_SIZE.value:    {'values': [32]},
-    cst.LearningHyperParameter.LEARNING_RATE.value: {'max': 1e-2, 'min': 1e-5}
+    cst.LearningHyperParameter.LEARNING_RATE.value: {'values': [1e-4]}
 }
 
 HP_TRANS_FI_FIXED = {

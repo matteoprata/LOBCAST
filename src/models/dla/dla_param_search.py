@@ -7,7 +7,7 @@ HP_DLA = {
     cst.LearningHyperParameter.NUM_SNAPSHOTS.value: {'values': [5]},
 
     cst.LearningHyperParameter.BATCH_SIZE.value:    {'values': [256]},
-    cst.LearningHyperParameter.LEARNING_RATE.value: {'max': 1e-2, 'min': 1e-5}
+    cst.LearningHyperParameter.LEARNING_RATE.value: {'values': [1e-2]}
 
 }
 

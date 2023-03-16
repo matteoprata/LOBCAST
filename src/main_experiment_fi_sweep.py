@@ -43,12 +43,12 @@ def experiment_FI(models_todo, kset=None, now=None, servers=None):
 servers = [cst.Servers.ALIEN1, cst.Servers.ALIEN2, cst.Servers.FISSO1]
 
 models_todo = {
-    cst.Servers.FISSO1: [cst.Models.DEEPLOB],
-    # cst.Servers.ALIEN1: [cst.Models.TLONBoF, cst.Models.CNN1, cst.Models.DAIN],
-    # cst.Servers.ALIEN2: [cst.Models.DLA, cst.Models.BINCTABL, cst.Models.CNNLSTM, cst.Models.DEEPLOB],
+    cst.Servers.ALIEN2: [cst.Models.BINCTABL, cst.Models.CNN1, cst.Models.CNNLSTM, cst.Models.DAIN, cst.Models.DEEPLOB, cst.Models.AXIALLOB, cst.Models.TRANSLOB],
+    cst.Servers.ALIEN1: [cst.Models.CTABL, cst.Models.MLP, cst.Models.LSTM, cst.Models.CNN2, cst.Models.DLA, cst.Models.DEEPLOBATT, cst.Models.TLONBoF, cst.Models.ATNBoF],
+    cst.Servers.FISSO1: [cst.Models.DEEPLOB, cst.Models.TRANSLOB, cst.Models.DEEPLOBATT],
 }
 
-kset = [cst.FI_Horizons.K1]
+kset = [cst.FI_Horizons.K1, cst.FI_Horizons.K2, cst.FI_Horizons.K3, cst.FI_Horizons.K5, cst.FI_Horizons.K10]
 
-now = "TEST-DEBUG-DEEPLOB"
+now = "FI-CI-SIAMO-FRA"
 experiment_FI(models_todo, kset=kset, now=now, servers=servers)

@@ -3,11 +3,11 @@ import src.constants as cst
 HP_DEEPATT = {
     cst.LearningHyperParameter.EPOCHS_UB.value: {'values': [100]},
     cst.LearningHyperParameter.OPTIMIZER.value: {'values': [cst.Optimizers.ADAM.value]},
-    cst.LearningHyperParameter.EPS.value: {'values': [1e-07]},  # 'max': 0.001, 'min': 0.0001
+    cst.LearningHyperParameter.EPS.value: {'values': [1e-7]},  # 'max': 0.001, 'min': 0.0001
     cst.LearningHyperParameter.NUM_SNAPSHOTS.value: {'values': [50]},  # [50, 100]
 
-    cst.LearningHyperParameter.BATCH_SIZE.value:    {'values': [32, 64, 128]},
-    cst.LearningHyperParameter.LEARNING_RATE.value: {'max': 1e-2, 'min': 1e-5}
+    cst.LearningHyperParameter.BATCH_SIZE.value:    {'values': [32]},
+    cst.LearningHyperParameter.LEARNING_RATE.value: {'values': [1e-3]}
 }
 
 HP_DEEPATT_FI_FIXED = {

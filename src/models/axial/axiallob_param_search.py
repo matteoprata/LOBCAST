@@ -6,9 +6,8 @@ HP_AXIALLOB = {
     cst.LearningHyperParameter.OPTIMIZER.value: {'values': [cst.Optimizers.SGD.value]},
     cst.LearningHyperParameter.NUM_SNAPSHOTS.value: {'values': [40]},  # [32, 64, 128]
     cst.LearningHyperParameter.MOMENTUM.value: {'values': [0.9]},  # [32, 64, 128]
-
     cst.LearningHyperParameter.BATCH_SIZE.value:    {'values': [64]},
-    cst.LearningHyperParameter.LEARNING_RATE.value: {'max': 1e-2, 'min': 1e-5}
+    cst.LearningHyperParameter.LEARNING_RATE.value: {'values': [1e-2, 1e-3, 1e-4]}
 }
 
 HP_AXIALLOB_FI_FIXED = {

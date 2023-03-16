@@ -61,6 +61,13 @@ class NNEngine(pl.LightningModule):
 
         self.testing_mode = cst.ModelSteps.TESTING
 
+        # LR decay here below
+        self.optimizer_obj = None
+        self.no_improvement_count = 0
+        self.best_epoch_train_loss = 0
+        self.cur_decay_index = 0
+        self.LR_DECAY_CTABL = [0.005, 0.001, 0.0005, 0.0001, 0.00008, 0.00001]
+
     def forward(self, x):
         out = self.neural_architecture(x)
         logits = self.softmax(out)
@@ -83,11 +90,15 @@ class NNEngine(pl.LightningModule):
     def training_epoch_end(self, validation_step_outputs):
         losses = [el["loss"].item() for el in validation_step_outputs]
         sum_losses = float(np.sum(losses))
+
+        self.update_lr(sum_losses)
+
         var_name = cst.ModelSteps.TRAINING.value + cst.Metrics.LOSS.value
         self.log(var_name, sum_losses, prog_bar=True)
 
         if self.remote_log is not None:
             self.remote_log.log({var_name: sum_losses})
+
 
         # self.config.METRICS_JSON.add_testing_metrics(self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, {'MAX-EPOCHS': self.current_epoch})
         # self.remote_log({"current_epoch": self.current_epoch})
@@ -238,40 +249,76 @@ class NNEngine(pl.LightningModule):
 
     def configure_optimizers(self):
 
-        if self.model_type == cst.Models.DAIN:
-            return torch.optim.RMSprop([
-                {'params': self.neural_architecture.base.parameters()},
-                {'params': self.neural_architecture.dean.mean_layer.parameters(), 'lr': self.lr*self.neural_architecture.dean.mean_lr},
-                {'params': self.neural_architecture.dean.scaling_layer.parameters(), 'lr': self.lr*self.neural_architecture.dean.scale_lr},
-                {'params': self.neural_architecture.dean.gating_layer.parameters(), 'lr': self.lr*self.neural_architecture.dean.gate_lr},
-            ], lr=self.lr)
-
         if self.optimizer == cst.Optimizers.ADAM.value:
 
             if self.config.CHOSEN_MODEL == cst.Models.ATNBoF:
                 opt = torch.optim.Adam(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
                 sch = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=int((self.n_samples / self.n_batch_size) * self.n_epochs))
-                return [opt], [{"scheduler": sch,
-                                "interval": "step",
-                                "frequency": 1}]
+                self.optimizer_obj = [opt], [{"scheduler": sch,
+                                                "interval": "step",
+                                                "frequency": 1}]
             else:
-                return torch.optim.Adam(self.parameters(), lr=self.lr, weight_decay=self.weight_decay, eps=self.eps)
+                self.optimizer_obj = torch.optim.Adam(self.parameters(), lr=self.lr, weight_decay=self.weight_decay, eps=self.eps)
 
         elif self.optimizer == cst.Optimizers.RMSPROP.value:
-            return torch.optim.RMSprop(self.parameters(), lr=self.lr)
+            if self.model_type == cst.Models.DAIN:
+                self.optimizer_obj = torch.optim.RMSprop([
+                    {'params': self.neural_architecture.base.parameters()},
+                    {'params': self.neural_architecture.dean.mean_layer.parameters(),
+                     'lr': self.lr * self.neural_architecture.dean.mean_lr},
+                    {'params': self.neural_architecture.dean.scaling_layer.parameters(),
+                     'lr': self.lr * self.neural_architecture.dean.scale_lr},
+                    {'params': self.neural_architecture.dean.gating_layer.parameters(),
+                     'lr': self.lr * self.neural_architecture.dean.gate_lr},
+                ], lr=self.lr)
+            else:
+                self.optimizer_obj = torch.optim.RMSprop(self.parameters(), lr=self.lr)
 
         elif self.optimizer == cst.Optimizers.SGD.value:
             if self.config.CHOSEN_MODEL == cst.Models.AXIALLOB or self.config.CHOSEN_MODEL == cst.Models.METALOB:
                 opt = torch.optim.SGD(self.parameters(), lr=self.lr, momentum=self.momentum)
                 sch = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=int((self.n_samples / self.n_batch_size) * self.n_epochs))
-                return [opt], [{"scheduler": sch,
-                                "interval": "step",
-                                "frequency": 1}]
+                self.optimizer_obj = [opt], [{"scheduler": sch,
+                                                "interval": "step",
+                                                "frequency": 1}]
 
-    @staticmethod
-    def get_cosine_lr_scheduler(init_lr, final_lr):
-        """ From ATNBOF """
-        def lr_scheduler(n_epoch, epoch_idx):
-            lr = final_lr + 0.5 * (init_lr - final_lr) * (1 + np.cos(np.pi * epoch_idx / n_epoch))
-            return lr
-        return lr_scheduler
+        return self.optimizer_obj
+
+    def update_lr(self, sum_loss):
+        """ To run on train epoch end, to update the lr of needing models. """
+
+        if self.config.CHOSEN_MODEL == cst.Models.ATNBoF:
+            DROP_EPOCHS = [11, 51]
+            if self.current_epoch in DROP_EPOCHS:
+                self.lr /= 0.1
+                self.__update_all_lr()
+
+        elif self.config.CHOSEN_MODEL == cst.Models.CTABL:
+
+            if sum_loss > self.best_epoch_train_loss and self.current_epoch > 0:
+                self.no_improvement_count += 1
+            else:
+                self.best_epoch_train_loss = sum_loss
+                self.no_improvement_count = 0
+
+            if self.no_improvement_count > 3 and self.cur_decay_index < len(self.LR_DECAY_CTABL):
+                self.no_improvement_count = 0
+                self.lr = self.LR_DECAY_CTABL[self.cur_decay_index]
+                self.cur_decay_index += 1
+
+                self.__update_all_lr()
+
+        elif self.config.CHOSEN_MODEL == cst.Models.BINCTABL:
+            DROP_EPOCHS = [11, 71]
+            if self.current_epoch == DROP_EPOCHS[0]:
+                self.lr = 1e-4
+                self.__update_all_lr()
+
+            elif self.current_epoch == DROP_EPOCHS[1]:
+                self.lr = 1e-5
+                self.__update_all_lr()
+
+    def __update_all_lr(self):
+        # SETTING the new LR
+        for g in self.optimizer_obj.param_groups:
+            g['lr'] = self.lr

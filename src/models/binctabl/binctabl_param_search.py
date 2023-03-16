@@ -5,10 +5,8 @@ HP_BINTABL = {
     cst.LearningHyperParameter.EPOCHS_UB.value: {'values': [200]},
     cst.LearningHyperParameter.OPTIMIZER.value: {'values': [cst.Optimizers.ADAM.value]},
     cst.LearningHyperParameter.NUM_SNAPSHOTS.value: {'values': [10]},
-
     cst.LearningHyperParameter.BATCH_SIZE.value:    {'values': [32, 64, 128]},
-    cst.LearningHyperParameter.LEARNING_RATE.value: {'max': 1e-2, 'min': 1e-5}
-
+    cst.LearningHyperParameter.LEARNING_RATE.value: {'values': [1e-3]}
 }
 
 # SC = {0.01, 0.005, 0.001, 0.0005, 0.0001}

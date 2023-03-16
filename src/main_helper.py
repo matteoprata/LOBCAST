@@ -81,17 +81,11 @@ def prepare_data_FI(config: Configuration):
         num_snapshots=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_SNAPSHOTS],
     )
 
-    print()
-    print("Samples in the splits:")
-    print(len(train_set), len(val_set), len(test_set))
-    print()
-
     fi_dm = DataModule(
         train_set, val_set, test_set,
         config.HYPER_PARAMETERS[cst.LearningHyperParameter.BATCH_SIZE],
         config.HYPER_PARAMETERS[cst.LearningHyperParameter.IS_SHUFFLE_TRAIN_SET]
     )
-
     return fi_dm
 
 

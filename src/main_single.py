@@ -144,6 +144,9 @@ def launch_single(config: Configuration, model_params=None):
 
         config.dynamic_config_setup()
         data_module = pick_dataset(config)
+
+        # EDIT HERE
+
         nn_engine = pick_model(config, data_module)
 
         trainer = Trainer(
