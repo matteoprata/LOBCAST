@@ -15,6 +15,8 @@ class MetaDataBuilder:
         self.truth_y = truth_y
         # truth_y.shape = [n_samples]
         self.n_samples = self.truth_y.shape[0]
+        print(self.n_samples)
+        exit()
 
         self.seed = config.SEED
         self.trst = config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name
@@ -34,10 +36,8 @@ class MetaDataBuilder:
 
         self.n_models = self.preds.shape[1]
 
-        self.__plot_agreement_matrix()
-        self.__plot_corr_matrix()
-
-
+        # self.__plot_agreement_matrix()
+        # self.__plot_corr_matrix()
 
     def __load_predictions_from_jsons(self):
         logits = list()
@@ -55,17 +55,23 @@ class MetaDataBuilder:
                 self.fw,
                 self.fiw,
             )
-
-            if os.path.exists(self.project_dir + cst.DIR_FI_FINAL_JSONS + file_name):
-                with open(self.project_dir + cst.DIR_FI_FINAL_JSONS + file_name, "r") as f:
+            if os.path.exists(cst.DIR_FI_FINAL_JSONS + file_name):
+                with open(cst.DIR_FI_FINAL_JSONS + file_name, "r") as f:
                     d = json.loads(f.read())
+
                     logits_str = d['LOGITS']
                     logits_ = np.array(json.loads(logits_str))
-                    assert logits_.shape[0] == self.n_samples, f"For model {model}, n_samples != number of predictions in the json"
+
+                    # there are models for which the predictions are more because of the smaller len window, so we have to cut them
+                    if (logits_.shape[0] != self.n_samples):
+                        cut = logits_.shape[0] - self.n_samples
+                        logits_ = logits_[cut:]
+
                     if (model == cst.Models.DEEPLOBATT):
                         horizons = [horizon.value for horizon in cst.FI_Horizons]
                         h = horizons.index(self.fiw)
                         logits_ = logits_[:, :, h]
+
                     logits.append(logits_)
 
         logits = np.dstack(logits)
@@ -75,94 +81,27 @@ class MetaDataBuilder:
         # preds.shape = [n_samples, n_models]
 
         n_samples, n_classes, n_models = logits.shape
-        logits = logits.reshape(n_samples, n_classes*n_models)
+        logits = logits.reshape(n_samples, n_classes * n_models)
         # logits.shape = [n_samples, n_classes*n_models]
 
         return logits, preds
 
     def get_samples_train(self):
         s = slice(int(
-                self.n_samples*self.split_percentages[0]
+            self.n_samples * self.split_percentages[0]
         ))
         return self.logits[s], self.truth_y[s]
 
     def get_samples_val(self):
         s = slice(
-            int(self.n_samples*self.split_percentages[0]),
-            int(self.n_samples*(self.split_percentages[0]+self.split_percentages[1])),
+            int(self.n_samples * self.split_percentages[0]),
+            int(self.n_samples * (self.split_percentages[0] + self.split_percentages[1])),
         )
         return self.logits[s], self.truth_y[s]
 
     def get_samples_test(self):
         s = slice(
-            int(self.n_samples*(self.split_percentages[0]+self.split_percentages[1])),
+            int(self.n_samples * (self.split_percentages[0] + self.split_percentages[1])),
             -1
         )
         return self.logits[s], self.truth_y[s]
-
-    def __plot_corr_matrix(self):
-         # collect data
-         models = sorted([model.name for model in cst.Models if (model.name != "METALOB")])
-
-         #we swap the order of DeepLOBATT and DeepLOB, because in the json there is DEEPLOBATT first
-         models[8], models[9] = models[9], models[8]
-         data = {}
-         for i, model in enumerate(models):
-             data[model] = self.preds[:, i]
-
-         # form dataframe
-         dataframe = pd.DataFrame(data, columns=list(data.keys()))
-
-         # form correlation matrix
-         corr_matrix = dataframe.corr()
-
-         heatmap = seaborn.heatmap(corr_matrix, annot=True, fmt=".2f")
-         heatmap.set(title="Correlation matrix")
-
-         heatmap.figure.set_size_inches(10, 7)
-         plt.show()
-
-
-    def __plot_agreement_matrix(self):
-
-        # collect data
-        models = sorted([model.name for model in cst.Models if (model.name != "METALOB")])
-
-        # we swap the order of DeepLOBATT and DeepLOB, because in the json there is DEEPLOBATT first
-        models[8], models[9] = models[9], models[8]
-        data = {}
-        for i, model in enumerate(models):
-            data[model] = self.preds[:, i]
-
-        agreement_matrix = np.zeros((self.n_models, self.n_models))
-        list_names = list(data.keys())
-        for i in range(self.n_models):
-            for j in range(self.n_models):
-                agr = 0
-                for pred in range(self.n_samples):
-                    if self.preds[pred, i] == self.preds[pred, j]:
-                       agr += 1
-                agreement_matrix[i, j] = agr / self.n_samples
-
-        fig, ax = plt.subplots()
-        ax.matshow(agreement_matrix, cmap=plt.cm.Reds)
-        ax.set_title('Agreement matrix', fontsize=12)
-
-        #Set number of ticks for x-axis
-        ax.set_xticks(np.arange(0, self.n_models, 1))
-        #Set ticks labels for x-axis
-        ax.set_xticklabels(list_names, fontsize=8, rotation=90, ha='center')
-        ax.xaxis.set_label_position('bottom')
-        ax.xaxis.tick_bottom()
-
-        #Set number of ticks for x-axis
-        ax.set_yticks(np.arange(0, self.n_models, 1))
-        #Set ticks labels for x-axis
-        ax.set_yticklabels(list_names, fontsize=8)
-
-        for i in range(self.n_models):
-            for j in range(self.n_models):
-                c = agreement_matrix[j, i]
-                ax.text(i, j, str(round(c, 2)), va='center', ha='center', fontsize=8)
-
-        plt.show()

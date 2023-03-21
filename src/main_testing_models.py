@@ -16,11 +16,11 @@ from src.models.model_executor import NNEngine
 kset, mset = cst.FI_Horizons, cst.Models
 seed = 0
 stock_dataset = "FI"
-src_data = "data/saved_models/models_fin/"
+src_data = "all_models_20_03_23/"
 dirs = [d + '/' for d in os.listdir(src_data) if not d.startswith('.')]
 
-model_todo = [cst.Models.ATNBoF]  #cst.Models
-models_to_avoid = [cst.Models.METALOB]
+model_todo = [cst.Models.METALOB]  # cst.Models
+models_to_avoid = [cst.Models.ATNBoF]
 
 
 def launch_test():
@@ -36,7 +36,11 @@ def launch_test():
                 set_seeds(cf)
 
                 cf.IS_TEST_ONLY = True
-                cf.CHOSEN_DATASET = cst.DatasetFamily.FI
+                if model == cst.Models.METALOB:
+                    cf.CHOSEN_DATASET = cst.DatasetFamily.META
+                else:
+                    cf.CHOSEN_DATASET = cst.DatasetFamily.FI
+
                 cf.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN] = cst.Stocks.FI
                 cf.CHOSEN_STOCKS[cst.STK_OPEN.TEST] = cst.Stocks.FI
                 cf.CHOSEN_PERIOD = cst.Periods.FI
@@ -65,7 +69,11 @@ def launch_test():
                 file_name = files[0]
 
                 # Setting configuration parameters
-                model_params = HP_DICT_MODEL[cf.CHOSEN_MODEL].fixed_fi
+                if model == cst.Models.METALOB:
+                    model_params = HP_DICT_MODEL[cf.CHOSEN_MODEL].fixed
+                else:
+                    model_params = HP_DICT_MODEL[cf.CHOSEN_MODEL].fixed_fi
+
                 for param in cst.LearningHyperParameter:
                     if param.value in model_params:
                         cf.HYPER_PARAMETERS[param] = model_params[param.value]

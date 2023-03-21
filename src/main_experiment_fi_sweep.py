@@ -23,7 +23,11 @@ def experiment_FI(models_todo, kset=None, now=None, servers=None):
                 cf: Configuration = Configuration(now)
                 set_seeds(cf)
 
-                cf.CHOSEN_DATASET = cst.DatasetFamily.FI
+                if mod == cst.Models.METALOB:
+                    cf.CHOSEN_DATASET = cst.DatasetFamily.META
+                else:
+                    cf.CHOSEN_DATASET = cst.DatasetFamily.FI
+
                 cf.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN] = cst.Stocks.FI
                 cf.CHOSEN_STOCKS[cst.STK_OPEN.TEST] = cst.Stocks.FI
                 cf.CHOSEN_PERIOD = cst.Periods.FI
@@ -43,12 +47,13 @@ def experiment_FI(models_todo, kset=None, now=None, servers=None):
 servers = [cst.Servers.ALIEN1, cst.Servers.ALIEN2, cst.Servers.FISSO1]
 
 models_todo = {
-    cst.Servers.ALIEN2: [cst.Models.BINCTABL, cst.Models.CNN1, cst.Models.CNNLSTM, cst.Models.DAIN, cst.Models.DEEPLOB, cst.Models.AXIALLOB, cst.Models.TRANSLOB],
-    cst.Servers.ALIEN1: [cst.Models.CTABL, cst.Models.MLP, cst.Models.LSTM, cst.Models.CNN2, cst.Models.DLA, cst.Models.DEEPLOBATT, cst.Models.TLONBoF, cst.Models.ATNBoF],
-    cst.Servers.FISSO1: [cst.Models.DEEPLOB, cst.Models.TRANSLOB, cst.Models.DEEPLOBATT],
+    cst.Servers.ALIEN1: [cst.Models.METALOB],
+    cst.Servers.ALIEN2: [],
+    cst.Servers.FISSO1: [],
 }
 
 kset = [cst.FI_Horizons.K1, cst.FI_Horizons.K2, cst.FI_Horizons.K3, cst.FI_Horizons.K5, cst.FI_Horizons.K10]
 
-now = "FI-CI-SIAMO-FRA"
+now = "FI-META-ALL"
 experiment_FI(models_todo, kset=kset, now=now, servers=servers)
+

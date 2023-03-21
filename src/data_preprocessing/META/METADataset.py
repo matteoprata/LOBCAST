@@ -15,8 +15,8 @@ class MetaDataset(data.Dataset):
         self.n_samples = x.shape[0]
         self.x_shape = x.shape
 
-        self.x = torch.from_numpy(x)
-        self.y = torch.from_numpy(y)
+        self.x = torch.from_numpy(x).type(torch.FloatTensor)
+        self.y = torch.from_numpy(y).type(torch.LongTensor)
 
     def __len__(self):
         """Denotes the total number of samples"""

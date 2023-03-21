@@ -4,7 +4,7 @@ import torch
 
 
 class LearningHyperParameter(str, Enum):
-    OPTIMIZER = "optimizer"
+    OPTIMIZER = "optimizer_name"
     LEARNING_RATE = "lr"
     WEIGHT_DECAY = "weight_decay"
     EPS = "eps"
@@ -411,7 +411,8 @@ MODELS_YEAR_DICT = {
     Models.DEEPLOBATT: 2021,
     Models.DLA: 2022,
     Models.ATNBoF: 2022,
-    Models.AXIALLOB: 2022
+    Models.AXIALLOB: 2022,
+    Models.METALOB: 2023
 }
 MODELS_YEAR_DICT = {k: v for k, v in sorted(MODELS_YEAR_DICT.items(), key=lambda a: a[1])}
 

@@ -4,9 +4,9 @@ import src.constants as cst
 
 
 class MetaLOB(pl.LightningModule):
-    def __init__(self, mlp_hidden):
+    def __init__(self, mlp_hidden, chosen_models):
         super().__init__()
-        input_dim = len(cst.Models) * cst.NUM_CLASSES
+        input_dim = len(chosen_models) * cst.NUM_CLASSES
 
         self.fc1 = nn.Linear(input_dim, mlp_hidden)
         self.fc2 = nn.Linear(mlp_hidden, cst.NUM_CLASSES)

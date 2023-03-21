@@ -53,7 +53,7 @@ class NNEngine(pl.LightningModule):
 
         self.loss_fn = nn.CrossEntropyLoss(weight=loss_weights)
 
-        self.optimizer = optimizer
+        self.optimizer_name = optimizer
         self.lr = lr
         self.weight_decay = weight_decay
         self.eps = eps
@@ -74,7 +74,11 @@ class NNEngine(pl.LightningModule):
         return out, logits
 
     def training_step(self, batch, batch_idx):
-        x, y, _ = batch
+        if len(batch) == 3:
+            x, y, _ = batch
+        else:
+            x, y = batch
+
         out, logits = self(x)
         loss = self.loss_fn(out, y)
         return loss
@@ -98,7 +102,6 @@ class NNEngine(pl.LightningModule):
 
         if self.remote_log is not None:
             self.remote_log.log({var_name: sum_losses})
-
 
         # self.config.METRICS_JSON.add_testing_metrics(self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, {'MAX-EPOCHS': self.current_epoch})
         # self.remote_log({"current_epoch": self.current_epoch})
@@ -162,7 +165,13 @@ class NNEngine(pl.LightningModule):
 
     # COMMON
     def __validation_and_testing(self, batch):
-        x, y, stock_names = batch   # B x 100 x 40;   B
+
+        stock_names = [None]*self.n_batch_size
+        if len(batch) == 3:
+            x, y, stock_names = batch
+        else:
+            x, y = batch
+
         out, logits = self(x)       # B x 3;   B X 3
         loss_val = self.loss_fn(out, y)
 
@@ -249,18 +258,18 @@ class NNEngine(pl.LightningModule):
 
     def configure_optimizers(self):
 
-        if self.optimizer == cst.Optimizers.ADAM.value:
+        if self.optimizer_name == cst.Optimizers.ADAM.value:
 
             if self.config.CHOSEN_MODEL == cst.Models.ATNBoF:
                 opt = torch.optim.Adam(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
                 sch = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=int((self.n_samples / self.n_batch_size) * self.n_epochs))
-                self.optimizer_obj = [opt], [{"scheduler": sch,
-                                                "interval": "step",
-                                                "frequency": 1}]
+                self.optimizer_obj = opt
+                return [opt], [{"scheduler": sch, "interval": "step", "frequency": 1}]
             else:
                 self.optimizer_obj = torch.optim.Adam(self.parameters(), lr=self.lr, weight_decay=self.weight_decay, eps=self.eps)
+                return self.optimizer_obj
 
-        elif self.optimizer == cst.Optimizers.RMSPROP.value:
+        elif self.optimizer_name == cst.Optimizers.RMSPROP.value:
             if self.model_type == cst.Models.DAIN:
                 self.optimizer_obj = torch.optim.RMSprop([
                     {'params': self.neural_architecture.base.parameters()},
@@ -271,18 +280,24 @@ class NNEngine(pl.LightningModule):
                     {'params': self.neural_architecture.dean.gating_layer.parameters(),
                      'lr': self.lr * self.neural_architecture.dean.gate_lr},
                 ], lr=self.lr)
+                return self.optimizer_obj
             else:
                 self.optimizer_obj = torch.optim.RMSprop(self.parameters(), lr=self.lr)
+                return self.optimizer_obj
 
-        elif self.optimizer == cst.Optimizers.SGD.value:
+        elif self.optimizer_name == cst.Optimizers.SGD.value:
             if self.config.CHOSEN_MODEL == cst.Models.AXIALLOB or self.config.CHOSEN_MODEL == cst.Models.METALOB:
                 opt = torch.optim.SGD(self.parameters(), lr=self.lr, momentum=self.momentum)
                 sch = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=int((self.n_samples / self.n_batch_size) * self.n_epochs))
-                self.optimizer_obj = [opt], [{"scheduler": sch,
-                                                "interval": "step",
-                                                "frequency": 1}]
+                self.optimizer_obj = opt
+                return [opt], [{"scheduler": sch, "interval": "step", "frequency": 1}]
 
-        return self.optimizer_obj
+        # # CHECK FOR ALL
+        # if self.current_epoch == 0:
+        #     print("check")
+        #     for g in self.optimizer_obj.param_groups:
+        #         print(g['lr'])
+        #     print("OK")
 
     def update_lr(self, sum_loss):
         """ To run on train epoch end, to update the lr of needing models. """
