@@ -7,7 +7,7 @@ import numpy as np
 import collections
 
 LOSS_WEIGHTS_DICT = {m: 1e6 for m in cst.Models}
-LOSS_WEIGHTS_DICT[cst.Models.ATNBoF] = 1e3
+# LOSS_WEIGHTS_DICT[cst.Models.ATNBoF] = 1e3
 
 
 class FIDataset(data.Dataset):

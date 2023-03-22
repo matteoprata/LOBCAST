@@ -7,7 +7,7 @@ HP_ATNBoF = {
     cst.LearningHyperParameter.MLP_HIDDEN.value: {'values': [512]},
     cst.LearningHyperParameter.NUM_RBF_NEURONS.value: {'values': [16]},
     cst.LearningHyperParameter.P_DROPOUT.value: {'values': [0.2]},
-    cst.LearningHyperParameter.BATCH_SIZE.value:    {'values': [64, 128]},
+    cst.LearningHyperParameter.BATCH_SIZE.value:    {'values': [128]},
     cst.LearningHyperParameter.LEARNING_RATE.value: {'values': [1e-3]}
 }
 

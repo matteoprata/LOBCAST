@@ -30,6 +30,8 @@ from src.models.atnbof.atnbof import ATNBoF
 from src.models.tlonbof.tlonbof import TLONBoF
 from src.models.axial.axiallob import AxialLOB
 from src.models.metalob.metalob import MetaLOB
+from collections import Counter
+import torch
 
 
 def prepare_data_FI(config: Configuration):
@@ -66,6 +68,10 @@ def prepare_data_FI(config: Configuration):
         chosen_model=config.CHOSEN_MODEL,
         num_snapshots=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_SNAPSHOTS],
     )
+    perc_cl = lambda a: np.array(list(a.values())) / sum(a.values())
+
+    print()
+    print("TRAIN balance", Counter(fi_train.get_samples_y()), perc_cl(Counter(fi_train.get_samples_y())))
 
     val_set = FIDataset(
         x=fi_val.get_samples_x(),
@@ -73,6 +79,7 @@ def prepare_data_FI(config: Configuration):
         chosen_model=config.CHOSEN_MODEL,
         num_snapshots=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_SNAPSHOTS],
     )
+    print("VAL balance", Counter(fi_val.get_samples_y()), perc_cl(Counter(fi_val.get_samples_y())))
 
     test_set = FIDataset(
         x=fi_test.get_samples_x(),
@@ -81,6 +88,8 @@ def prepare_data_FI(config: Configuration):
         num_snapshots=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_SNAPSHOTS],
     )
 
+    print("TEST balance", Counter(fi_test.get_samples_y()), perc_cl(Counter(fi_test.get_samples_y())))
+    print()
     fi_dm = DataModule(
         train_set, val_set, test_set,
         config.HYPER_PARAMETERS[cst.LearningHyperParameter.BATCH_SIZE],
@@ -254,6 +263,7 @@ def pick_model(config: Configuration, data_module):
 
     elif config.CHOSEN_MODEL == cst.Models.TRANSLOB:
         net_architecture = TransLob(seq_len=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_SNAPSHOTS])
+        loss_weights = data_module.train_set.loss_weights
 
     elif config.CHOSEN_MODEL == cst.Models.CTABL:
         net_architecture = CTABL(60, 40, 10, 10, 120, 5, 3, 1)
@@ -277,6 +287,7 @@ def pick_model(config: Configuration, data_module):
     elif config.CHOSEN_MODEL == cst.Models.TLONBoF:
         num_snapshots, num_features = data_module.x_shape
         net_architecture = TLONBoF(window=num_snapshots, split_horizon=5, use_scaling=True)
+        loss_weights = data_module.train_set.loss_weights
 
     elif config.CHOSEN_MODEL == cst.Models.ATNBoF:
         num_snapshots, num_features = data_module.x_shape
@@ -308,6 +319,9 @@ def pick_model(config: Configuration, data_module):
             mlp_hidden=config.HYPER_PARAMETERS[cst.LearningHyperParameter.MLP_HIDDEN],
             chosen_models=list(set(list(cst.Models))-{cst.Models.METALOB, cst.Models.ATNBoF}),
         )
+
+    # torch v2.0
+    # net_architecture = torch.compile(net_architecture, backend="inductor", mode="reduce-overhead")
 
     engine = NNEngine(
         config=config,
