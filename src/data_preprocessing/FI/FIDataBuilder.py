@@ -44,7 +44,7 @@ class FIDataBuilder:
         NORMALIZATION = 'Zscore' if self.normalization_type == cst.NormalizationType.Z_SCORE else 'MinMax' if self.normalization_type == cst.NormalizationType.MINMAX else 'DecPre'
         DATASET_TYPE = 'Training' if self.dataset_type == cst.DatasetType.TRAIN or self.dataset_type == cst.DatasetType.VALIDATION else 'Testing'
         DIR = self.fi_data_dir + \
-                 "/{}".format(AUCTION) + \
+                 "{}".format(AUCTION) + \
                  "/{}{}_{}".format(N, AUCTION, NORMALIZATION) + \
                  "/{}_{}_{}".format(AUCTION, NORMALIZATION, DATASET_TYPE)
 

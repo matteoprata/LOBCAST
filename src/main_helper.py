@@ -158,6 +158,8 @@ def prepare_data_META(config: Configuration):
         config=config
     )
 
+    f1_scores = meta_databuilder.get_f1_scores()
+
     train_set = MetaDataset(
         meta_databuilder.get_samples_train(),
         dataset_type=cst.DatasetType.TRAIN,
@@ -182,8 +184,9 @@ def prepare_data_META(config: Configuration):
 
     meta_dm = DataModule(
         train_set, val_set, test_set,
+        f1_scores,
         config.HYPER_PARAMETERS[cst.LearningHyperParameter.BATCH_SIZE],
-        config.HYPER_PARAMETERS[cst.LearningHyperParameter.IS_SHUFFLE_TRAIN_SET]
+        config.HYPER_PARAMETERS[cst.LearningHyperParameter.IS_SHUFFLE_TRAIN_SET],
     )
     return meta_dm
 

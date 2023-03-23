@@ -46,6 +46,7 @@ from src.models.nbof.nbof_param_search import HP_NBoF, HP_NBoF_FI_FIXED
 from src.models.atnbof.atnbof_param_search import HP_ATNBoF, HP_ATNBoF_FI_FIXED
 from src.models.tlonbof.tlonbof_param_search import HP_TLONBoF, HP_TLONBoF_FI_FIXED
 from src.models.metalob.metalob_param_search import HP_META, HP_META_FIXED
+from src.models.metalob.baseline import BaselineEnsemble
 from src.utils.utilities import get_sys_mac
 from src.main_helper import pick_model, pick_dataset
 from collections import namedtuple
@@ -170,6 +171,10 @@ def launch_single(config: Configuration, model_params=None):
 
         if not config.IS_TUNE_H_PARAMS:
             config.METRICS_JSON.close()
+
+        if (config.CHOSEN_DATASET == cst.DatasetFamily.META):
+            launch_baseline_ensemble(data_module.test_set, data_module.f1_scores)
+
     try:
         core(model_params)
     except:
@@ -177,6 +182,9 @@ def launch_single(config: Configuration, model_params=None):
         print(traceback.print_exc(), file=sys.stderr)
         exit(1)
 
+def launch_baseline_ensemble(test_set, f1_scores):
+    baseline_ensemble = BaselineEnsemble(test_set, f1_scores)
+    baseline_ensemble.run_w_majority()
 
 def launch_wandb(config: Configuration):
     # 🐝 STEP: initialize sweep by passing in config

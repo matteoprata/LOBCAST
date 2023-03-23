@@ -15,8 +15,6 @@ class MetaDataBuilder:
         self.truth_y = truth_y
         # truth_y.shape = [n_samples]
         self.n_samples = self.truth_y.shape[0]
-        print(self.n_samples)
-        exit()
 
         self.seed = config.SEED
         self.trst = config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name
@@ -41,7 +39,7 @@ class MetaDataBuilder:
 
     def __load_predictions_from_jsons(self):
         logits = list()
-
+        self.f1_scores = list()
         for model in cst.Models:
 
             file_name = self.generic_file_name.format(
@@ -55,9 +53,12 @@ class MetaDataBuilder:
                 self.fw,
                 self.fiw,
             )
+
             if os.path.exists(cst.DIR_FI_FINAL_JSONS + file_name):
                 with open(cst.DIR_FI_FINAL_JSONS + file_name, "r") as f:
                     d = json.loads(f.read())
+
+                    self.f1_scores.append(d['testing_FI_f1'])
 
                     logits_str = d['LOGITS']
                     logits_ = np.array(json.loads(logits_str))
@@ -81,10 +82,14 @@ class MetaDataBuilder:
         # preds.shape = [n_samples, n_models]
 
         n_samples, n_classes, n_models = logits.shape
+        logits = logits.transpose(0, 2, 1)
         logits = logits.reshape(n_samples, n_classes * n_models)
         # logits.shape = [n_samples, n_classes*n_models]
 
         return logits, preds
+
+    def get_f1_scores(self):
+        return self.f1_scores
 
     def get_samples_train(self):
         s = slice(int(
