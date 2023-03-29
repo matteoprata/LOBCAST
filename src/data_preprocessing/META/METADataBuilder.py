@@ -15,8 +15,6 @@ class MetaDataBuilder:
         self.truth_y = truth_y
         # truth_y.shape = [n_samples]
         self.n_samples = self.truth_y.shape[0]
-        print(self.n_samples)
-        exit()
 
         self.seed = config.SEED
         self.trst = config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name
@@ -30,31 +28,20 @@ class MetaDataBuilder:
         self.generic_file_name = config.cf_name_format(ext='.json')
 
         # KEY call, generates the dataset
-        self.logits, self.preds = self.__load_predictions_from_jsons()
+        self.logits, self.preds = self.load_predictions_from_jsons(cst.MODELS_15, self.seed, self.fiw)
         # logits.shape = [n_samples, n_classes*n_models]
         # preds.shape = [n_samples, n_models]
 
         self.n_models = self.preds.shape[1]
 
-        # self.__plot_agreement_matrix()
-        # self.__plot_corr_matrix()
-
-    def __load_predictions_from_jsons(self):
+    @staticmethod
+    def load_predictions_from_jsons(models, seed, horizon, is_raw=False, n_instances=139487):
         logits = list()
 
-        for model in cst.Models:
+        for model in models:
 
-            file_name = self.generic_file_name.format(
-                model.name,
-                self.seed,
-                self.trst,
-                self.test,
-                self.chosen_dataset,
-                self.peri,
-                self.bw,
-                self.fw,
-                self.fiw,
-            )
+            file_name = "model={}-seed={}-trst=FI-test=FI-data={}-peri=FI-bw=None-fw=None-fiw={}.json".format(model.name, seed, cst.model_dataset(model), horizon)
+
             if os.path.exists(cst.DIR_FI_FINAL_JSONS + file_name):
                 with open(cst.DIR_FI_FINAL_JSONS + file_name, "r") as f:
                     d = json.loads(f.read())
@@ -63,22 +50,28 @@ class MetaDataBuilder:
                     logits_ = np.array(json.loads(logits_str))
 
                     # there are models for which the predictions are more because of the smaller len window, so we have to cut them
-                    if (logits_.shape[0] != self.n_samples):
-                        cut = logits_.shape[0] - self.n_samples
-                        logits_ = logits_[cut:]
+                    assert logits_.shape[0] >= n_instances
+                    # cut = logits_.shape[0] - n_instances
+                    logits_ = logits_[-n_instances:]
 
                     if (model == cst.Models.DEEPLOBATT):
                         horizons = [horizon.value for horizon in cst.FI_Horizons]
-                        h = horizons.index(self.fiw)
+                        h = horizons.index(horizon)
                         logits_ = logits_[:, :, h]
 
                     logits.append(logits_)
+            else:
+                print("problem with file", cst.DIR_FI_FINAL_JSONS + file_name)
+                exit()
 
         logits = np.dstack(logits)
         # logits.shape = [n_samples, n_classes, n_models]
 
         preds = np.argmax(logits, axis=1)
         # preds.shape = [n_samples, n_models]
+
+        if is_raw:
+            return logits, preds
 
         n_samples, n_classes, n_models = logits.shape
         logits = logits.reshape(n_samples, n_classes * n_models)

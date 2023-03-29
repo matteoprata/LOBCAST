@@ -6,16 +6,12 @@ import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 
-from sklearn.metrics import classification_report
-from sklearn.metrics import matthews_corrcoef
-from sklearn.metrics import cohen_kappa_score
-from sklearn.metrics import confusion_matrix
-
 import numpy as np
 import src.constants as cst
 import wandb
 from src.config import Configuration
 from src.utils.utilities import get_index_from_window
+from src.metrics.metrics_learning import compute_sk_cm, compute_metrics
 
 
 class NNEngine(pl.LightningModule):
@@ -127,7 +123,7 @@ class NNEngine(pl.LightningModule):
 
         # COMPUTE CM (1) (SRC) - (SRC)
         self.__log_wandb_cm(truths, preds, model_step, self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name)  # cm to log
-        val_dict = self.__compute_metrics(truths, preds, model_step, loss_vals, self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name)  # dict to log
+        val_dict = compute_metrics(truths, preds, model_step, loss_vals, self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name)  # dict to log
 
         # for saving best model
         validation_string = "{}_{}_{}".format(model_step.value, self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, cst.Metrics.F1.value)
@@ -144,13 +140,13 @@ class NNEngine(pl.LightningModule):
         # COMPUTE CM (1) (SRC) - (SRC)
         self.__log_wandb_cm(truths, preds, model_step, self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name)  # cm to log
 
-        val_dict = self.__compute_metrics(truths, preds, model_step, loss_vals, self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name)  # dict to log
+        val_dict = compute_metrics(truths, preds, model_step, loss_vals, self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name)  # dict to log
         self.config.METRICS_JSON.update_metrics(self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, val_dict)
 
         logits_dict = {'LOGITS': str(logits.tolist())}
         self.config.METRICS_JSON.update_metrics(self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, logits_dict)
 
-        cm = self.__compute_sk_cm(truths, preds)
+        cm = compute_sk_cm(truths, preds)
 
         self.config.METRICS_JSON.update_cfm(self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, cm)
 
@@ -167,12 +163,12 @@ class NNEngine(pl.LightningModule):
                 truths_si = df_si['ys'].to_numpy()
                 preds_si = df_si['predictions'].to_numpy()
 
-                dic_si = self.__compute_metrics(truths_si, preds_si, model_step, loss_vals, si)
+                dic_si = compute_metrics(truths_si, preds_si, model_step, loss_vals, si)
                 self.config.METRICS_JSON.update_metrics(si, dic_si)  # TODO CHECK
                 val_dict.update(dic_si)
 
                 self.__log_wandb_cm(truths_si, preds_si, model_step, si)
-                cm = self.__compute_sk_cm(truths_si, preds_si)
+                cm = compute_sk_cm(truths_si, preds_si)
                 self.config.METRICS_JSON.update_cfm(si, cm)
 
         if self.remote_log is not None:  # log to wandb
@@ -228,49 +224,6 @@ class NNEngine(pl.LightningModule):
                 class_names=[cl.name for cl in cst.Predictions],
                 title=name)},
             )
-
-    def __compute_sk_cm(self, truths, predictions):
-        y_actu = pd.Series(truths, name='actual')
-        y_pred = pd.Series(predictions, name='predicted')
-        mat_confusion = confusion_matrix(y_actu, y_pred)
-        return mat_confusion
-
-    def __compute_metrics(self, ys, predictions, model_step, loss_vals, si):
-        ys = torch.Tensor(ys)
-        predictions = torch.Tensor(predictions)
-
-        cr = classification_report(ys, predictions, output_dict=True, zero_division=0)
-        accuracy = cr['accuracy']  # MICRO-F1
-
-        f1score = cr['macro avg']['f1-score']  # MACRO-F1
-        precision = cr['macro avg']['precision']  # MACRO-PRECISION
-        recall = cr['macro avg']['recall']  # MACRO-RECALL
-
-        f1score_w = cr['weighted avg']['f1-score']  # MACRO-F1
-        precision_w = cr['weighted avg']['precision']  # MACRO-PRECISION
-        recall_w = cr['weighted avg']['recall']  # MACRO-RECALL
-
-        mcc = matthews_corrcoef(ys, predictions)
-        cok = cohen_kappa_score(ys, predictions)
-
-        val_dict = {
-            model_step.value + f"_{si}_" + cst.Metrics.F1.value: float(f1score),
-            model_step.value + f"_{si}_" + cst.Metrics.F1_W.value: float(f1score_w),
-
-            model_step.value + f"_{si}_" + cst.Metrics.PRECISION.value: float(precision),
-            model_step.value + f"_{si}_" + cst.Metrics.PRECISION_W.value: float(precision_w),
-
-            model_step.value + f"_{si}_" + cst.Metrics.RECALL.value: float(recall),
-            model_step.value + f"_{si}_" + cst.Metrics.RECALL_W.value: float(recall_w),
-
-            model_step.value + f"_{si}_" + cst.Metrics.ACCURACY.value: float(accuracy),
-            model_step.value + f"_{si}_" + cst.Metrics.MCC.value: float(mcc),
-            model_step.value + f"_{si}_" + cst.Metrics.COK.value: float(cok),
-            # single
-            model_step.value + f"_" + cst.Metrics.LOSS.value: float(np.sum(loss_vals)),
-        }
-
-        return val_dict
 
     def configure_optimizers(self):
 

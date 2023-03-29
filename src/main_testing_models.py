@@ -20,8 +20,8 @@ stock_dataset = "FI"
 src_data = "all_models_28_03_23/"
 out_data = "data/experiments/all_models_28_03_23/"
 
-model_todo = [cst.Models.AXIALLOB]  #.Models  # cst.Models
-models_to_avoid = [cst.Models.METALOB]  # [cst.Models.ATNBoF]
+model_todo = [cst.Models.METALOB]  #.Models  # cst.Models
+models_to_avoid = [] #[cst.Models.METALOB]  # [cst.Models.ATNBoF]
 seeds = [500, 501, 502, 503, 504]  # ,
 
 horizons_todo = cst.FI_Horizons

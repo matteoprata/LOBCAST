@@ -60,8 +60,8 @@ servers = [cst.Servers.ALIEN1, cst.Servers.ALIEN2, cst.Servers.FISSO1]
 
 models_todo = {
 
-    cst.Servers.FISSO1: [(cst.Models.AXIALLOB, {'k': 'all', 'seed': [504]})],
-    cst.Servers.ALIEN2: [(cst.Models.AXIALLOB, {'k': [cst.FI_Horizons.K1], 'seed': [503]})],
+    cst.Servers.ALIEN1: [(cst.Models.METALOB, {'k': 'all', 'seed': [500, 501, 502, 503, 504]})],
+    # cst.Servers.ALIEN2: [(cst.Models.AXIALLOB, {'k': [cst.FI_Horizons.K1], 'seed': [503]})],
 
     # cst.Servers.ALIEN2: {'mod': [cst.Models.DLA,
     #                              cst.Models.LSTM,

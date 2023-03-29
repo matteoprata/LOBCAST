@@ -25,6 +25,9 @@ from pytorch_lightning.strategies import DDPStrategy
 import src.constants as cst
 import src.models.model_callbacks as cbk
 from src.config import Configuration
+from src.data_preprocessing.META.METADataBuilder import MetaDataBuilder
+from src.metrics.metrics_learning import compute_metrics, compute_sk_cm
+from src.data_preprocessing.FI.FIDataBuilder import FIDataBuilder
 
 # DATASETS
 from src.data_preprocessing.LOB.lobster_param_search import HP_LOBSTER
@@ -72,7 +75,8 @@ HP_DICT_MODEL = {
     # cst.Models.NBoF: HPSearchTypes(HP_NBoF, HP_NBoF_FI_FIXED, None),
     cst.Models.ATNBoF: HPSearchTypes(HP_ATNBoF, HP_ATNBoF_FI_FIXED, None),
     cst.Models.TLONBoF: HPSearchTypes(HP_TLONBoF, HP_TLONBoF_FI_FIXED, None),
-    cst.Models.METALOB: HPSearchTypes2(HP_META, HP_META_FIXED)
+    cst.Models.METALOB: HPSearchTypes2(HP_META, HP_META_FIXED),
+    cst.Models.MAJORITY: HPSearchTypes2(HP_META, HP_META_FIXED)
 }
 
 HP_DICT_DATASET = {
@@ -122,7 +126,7 @@ def _wandb_exe(config: Configuration):
         launch_single(config, params_dict)
 
 
-def launch_single(config: Configuration, model_params=None):
+def launch_single(config: Configuration, model_params=None, is_baseline=False):
     def core(model_params):
 
         # selects the parameters for the run
@@ -147,8 +151,6 @@ def launch_single(config: Configuration, model_params=None):
         config.dynamic_config_setup()
         data_module = pick_dataset(config)
 
-        # EDIT HERE
-
         nn_engine = pick_model(config, data_module)
 
         trainer = Trainer(
@@ -160,7 +162,6 @@ def launch_single(config: Configuration, model_params=None):
                 cbk.callback_save_model(config, config.WANDB_RUN_NAME),
                 cbk.early_stopping(config)
             ],
-            # strategy=DDPStrategy(find_unused_parameters=False)
         )
         trainer.fit(nn_engine, data_module)
 
@@ -178,6 +179,7 @@ def launch_single(config: Configuration, model_params=None):
         print("The following error was raised")
         print(traceback.print_exc(), file=sys.stderr)
         exit(1)
+
 
 
 

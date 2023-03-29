@@ -42,7 +42,6 @@ class Metrics:
             )
             print("Writing", dir + fname)
             write_json(compound_dict, dir + fname)
-            # print("DUMPING", dir + fname)
 
     def close(self, dir=cst.DIR_EXPERIMENTS):
         self._config_dict = self._config.__dict__

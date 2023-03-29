@@ -1,6 +1,7 @@
 
 from enum import Enum
 import torch
+import numpy as np
 
 
 class LearningHyperParameter(str, Enum):
@@ -122,6 +123,9 @@ class Models(str, Enum):
     TRANSLOB = "TransLob"
 
     METALOB = "MetaLOB"
+    MAJORITY = "Majority"
+
+
 
 
 class DatasetFamily(str, Enum):
@@ -227,7 +231,7 @@ NUM_GPUS = None if DEVICE_TYPE == 'cpu' else torch.cuda.device_count()
 PROJECT_NAME = "LOB-CLASSIFIERS-({})"
 DIR_EXPERIMENTS = "data/experiments/" + PROJECT_NAME
 DIR_SAVED_MODEL = "data/saved_models/" + PROJECT_NAME
-DIR_FI_FINAL_JSONS = "data/experiments/fi_final_jsons/"
+DIR_FI_FINAL_JSONS = "data/experiments/all_models_28_03_23/"
 
 DATA_SOURCE = "data/"
 DATASET_LOBSTER = "LOBSTER_6/unzipped/"
@@ -394,6 +398,24 @@ DECLARED_PERF = {
     ]
 }
 
+# 15 models sorted as MODELS_YEAR_DICT 5 horizons (1,2,3,5,10)
+FI_2010_PERF = [[48.20959434, 44.0243892 , 47.16951297, 48.98859317, 51.59479558],
+                [66.52923452, 58.84149884, 65.32833911, 66.94654334, 59.39128832],
+                [49.2981125 , 46.13136848, 62.25851268, 65.81445807, 67.22525588],
+                [69.50077035, 62.37239457, 70.41167476, 71.57144704, 73.92415787],
+                [71.05508381, 62.35127564, 70.79542871, 75.44489737, 77.58435408],
+                [53.93056855, 46.7289375 , 53.53170748, 61.20605517, 62.799441  ],
+                [63.54372207, 49.11480102, 63.2928966 , 69.20978287, 70.97891493],
+                [27.63152453, 35.39434307, 53.23187754, 67.89210732, 68.54819641],
+                [61.38668962, 54.6851    , 59.78363276, 60.61423192, 60.45715238],
+                [36.47748716, 51.72324997, 41.60755085, 52.39199265, 66.1857505 ],
+                [81.06300774, 71.50503826, 80.77082955, 87.70825349, 92.10769365],
+                [70.56721888, 54.76342387, 66.01384491, 73.56041705, 71.60695086],
+                [79.38524762, 69.28080704, 78.93945331, 87.08451691, 52.21075607],
+                [32.91944651, 34.17991529, 38.19156618, 48.07789058, 50.97924787],
+                [73.15020001, 63.35440217, 72.84614792, 78.31442845, 79.1791612 ]]
+FI_2010_PERF = np.array(FI_2010_PERF)
+
 # metrics_name = ['F1 Score (%)', 'Precision (%)', 'Recall (%)', 'Accuracy (%)', 'MCC']
 
 MODELS_YEAR_DICT = {
@@ -412,8 +434,24 @@ MODELS_YEAR_DICT = {
     Models.DLA: 2022,
     Models.ATNBoF: 2022,
     Models.AXIALLOB: 2022,
-    Models.METALOB: 2023
+    Models.METALOB: 2023,
+    Models.MAJORITY: 2023
 }
+
 MODELS_YEAR_DICT = {k: v for k, v in sorted(MODELS_YEAR_DICT.items(), key=lambda a: a[1])}
 
-print(FI_Horizons['K1'].value)
+MODELS_15 = list(set(list(Models))-{Models.METALOB, Models.MAJORITY})
+MODELS_15 = [m for m in MODELS_YEAR_DICT if m in MODELS_15]
+
+TRAINABLE_16 = list(set(list(Models))-{Models.MAJORITY})
+TRAINABLE_16 = [m for m in MODELS_YEAR_DICT if m in TRAINABLE_16]
+
+MODELS_17 = list(set(list(Models)))
+MODELS_17 = [m for m in MODELS_YEAR_DICT if m in MODELS_17]
+
+
+def model_dataset(model):
+    if model in [Models.MAJORITY, Models.METALOB]:
+        return "Meta"
+    else:
+        return "FI"

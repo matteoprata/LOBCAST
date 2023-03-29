@@ -1,4 +1,6 @@
 
+from src.data_preprocessing.META.METADataBuilder import MetaDataBuilder
+
 import matplotlib.pyplot as plt
 import src.utils.utilities as util
 import src.constants as cst
@@ -22,23 +24,36 @@ def setup_plotting_env():
     plt.rcParams["font.family"] = "serif"
 
 
-def reproduced_metrics(path, metrics, list_models, list_horizons, list_seeds):
+def reproduced_metrics(path, metrics, list_models, list_horizons, list_seeds, jolly_seed=None):
     METRICS = np.zeros(shape=(len(list_seeds), len(list_models), len(list_horizons), len(metrics)))
 
     for imod, mod in enumerate(list_models):
         for ik, k in enumerate(list_horizons):
             for iss, s in enumerate(list_seeds):
-                fname = "model={}-seed={}-trst=FI-test=FI-data=FI-peri=FI-bw=None-fw=None-fiw={}.json".format(mod.name, s, k.value)
-                jsn = util.read_json(path + fname)
-                for imet, met in enumerate(metrics):
-                    METRICS[iss, imod, ik, imet] = jsn[met]
+                fname = "model={}-seed={}-trst=FI-test=FI-data={}-peri=FI-bw=None-fw=None-fiw={}.json".format(mod.name, s, cst.model_dataset(mod), k.value)
+
+                if mod == cst.Models.MAJORITY:  # only seed for the baseline
+                    if s == jolly_seed:
+                        jsn = util.read_json(path + fname)
+                        vec = np.zeros(shape=(len(metrics)))
+                        for imet, met in enumerate(metrics):
+                            vec[imet] = jsn[met]
+                        repeat = np.repeat(np.expand_dims(vec, axis=0), len(list_seeds), axis=0)
+                        METRICS[:, imod, ik, :] = repeat
+                else:
+                    jsn = util.read_json(path + fname)
+                    for imet, met in enumerate(metrics):
+                        METRICS[iss, imod, ik, imet] = jsn[met]
     return METRICS
 
 
 def inference_data(path, list_models, seed=502, horizon=10):
     INFERENCE = np.zeros(shape=(2, len(list_models)))
     for imod, mod in enumerate(list_models):
-        fname = "model={}-seed={}-trst=FI-test=FI-data=FI-peri=FI-bw=None-fw=None-fiw={}.json".format(mod.name, seed, horizon)
+        if mod == cst.Models.MAJORITY:
+            continue
+
+        fname = "model={}-seed={}-trst=FI-test=FI-data={}-peri=FI-bw=None-fw=None-fiw={}.json".format(mod.name, seed, cst.model_dataset(mod), horizon)
         jsn = util.read_json(path + fname)
         INFERENCE[0, imod] = jsn['inference_mean']
         INFERENCE[1, imod] = jsn['inference_std']
@@ -59,15 +74,22 @@ def original_metrics(metrics, list_models, list_horizons):
     return METRICS_ORI
 
 
-def confusion_metrix(path, list_models, list_seeds):
+def confusion_metrix(path, list_models, list_seeds, jolly_seed=None):
     CMS = np.zeros(shape=(len(list_seeds), len(list_models), len(cst.FI_Horizons), 3, 3))
 
     for imod, mod in enumerate(list_models):
         for ik, k in enumerate(cst.FI_Horizons):
             for iss, s in enumerate(list_seeds):
-                fname = "model={}-seed={}-trst=FI-test=FI-data=FI-peri=FI-bw=None-fw=None-fiw={}.json".format(mod.name, s, k.value)
-                jsn = util.read_json(path + fname)
-                CMS[iss, imod, ik] = np.array(jsn["cm"])
+                fname = "model={}-seed={}-trst=FI-test=FI-data={}-peri=FI-bw=None-fw=None-fiw={}.json".format(mod.name, s, cst.model_dataset(mod), k.value)
+
+                if mod == cst.Models.MAJORITY:  # only seed for the baseline
+                    if s == jolly_seed:
+                        jsn = util.read_json(path + fname)
+                        repeat = np.repeat(np.expand_dims(np.array(jsn["cm"]), axis=0), len(list_seeds), axis=0)
+                        CMS[:, imod, ik, :, :] = repeat
+                else:
+                    jsn = util.read_json(path + fname)
+                    CMS[iss, imod, ik] = np.array(jsn["cm"])
     return CMS
 
 
@@ -101,7 +123,7 @@ def metrics_vs_models_k(met_name, met_vec, out_dir, list_models, met_vec_origina
     std_met = np.std(met_vec, axis=0)
 
     x = np.arange(len(labels)) * 9  # the label locations
-    width = 0.5  # the width of the bars
+    width = 0.44  # the width of the bars
 
     fig, ax = plt.subplots(figsize=(19, 9))
 
@@ -260,48 +282,7 @@ def scatter_plot_year(met_name, met_data, list_models, list_models_years, out_di
     plt.show()
     plt.close()
 
-
-
 # ADJUST
-
-def load_predictions_from_jsons(path, list_models, fw_win):
-    logits = list()
-    N = 139487
-
-    for imod, mod in enumerate(list_models):
-        fname = "model={}-seed=0-trst=FI-test=FI-data=FI-peri=FI-bw=None-fw=None-fiw={}.json".format(mod.name, fw_win)
-
-        d = util.read_json(path + fname)
-
-        logits_str = d['LOGITS']
-        logits_ = np.array(json.loads(logits_str))
-
-        print(mod, logits_.shape)
-        # there are models for which the predictions are more because of the smaller len window, so we have to cut them
-        if logits_.shape[0] != N:
-            cut = logits_.shape[0] - N
-            logits_ = logits_[cut:]
-
-        if mod == cst.Models.DEEPLOBATT:
-            horizons = [horizon.value for horizon in cst.FI_Horizons]
-            h = horizons.index(fw_win)
-            logits_ = logits_[:, :, h]
-
-        logits_ = logits_[-20923:]   # TODO REMOVE
-        logits.append(logits_)
-
-    logits = np.dstack(logits)
-    # logits.shape = [n_samples, n_classes, n_models]
-
-    preds = np.argmax(logits, axis=1)
-    # preds.shape = [n_samples, n_models]
-
-    n_samples, n_classes, n_models = logits.shape
-    logits = logits.reshape(n_samples, n_classes * n_models)
-    # logits.shape = [n_samples, n_classes*n_models]
-
-    return logits, preds
-
 
 def plot_corr_matrix(list_models, fw_win, preds, out_dir):
 
@@ -330,6 +311,7 @@ def plot_corr_matrix(list_models, fw_win, preds, out_dir):
     # save heatmap as PNG file
     heatmap.figure.savefig(out_dir + f"correlation_matrix_k={fw_win}.pdf", bbox_inches='tight')
     plt.show()
+    plt.close()
 
 
 def plot_agreement_matrix(list_models, fw_win, preds, out_dir):
@@ -352,6 +334,8 @@ def plot_agreement_matrix(list_models, fw_win, preds, out_dir):
     heatmap.set(title=f'Agreement matrix for K={fw_win}')
     heatmap.figure.set_size_inches(20, 20)
     heatmap.figure.savefig(out_dir + f"agreement_matrix_K={fw_win}.pdf", bbox_inches='tight')
+    plt.show()
+    plt.close()
 
 
 if __name__ == '__main__':
@@ -362,8 +346,7 @@ if __name__ == '__main__':
     LIST_SEEDS = [500, 501, 502, 503, 504]
     LIST_HORIZONS = cst.FI_Horizons
 
-    LIST_MODELS = list(set(list(cst.Models))-{cst.Models.METALOB})
-    LIST_MODELS = [m for m in cst.MODELS_YEAR_DICT if m in LIST_MODELS]
+    LIST_MODELS = cst.MODELS_17  # cst.TRAINABLE_16
     LIST_YEARS =  [cst.MODELS_YEAR_DICT[m] for m in cst.MODELS_YEAR_DICT if m in LIST_MODELS]
 
     os.makedirs(OUT, exist_ok=True)
@@ -377,9 +360,12 @@ if __name__ == '__main__':
 
     setup_plotting_env()
 
-    MAT_REP = reproduced_metrics(PATH, metrics, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS)
+    MAT_REP = reproduced_metrics(PATH, metrics, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS, jolly_seed=502)
+    print("Models performance:")
+    print(np.average(MAT_REP[:, :, :, 0], axis=0)*100)
+
     MAT_ORI = original_metrics(metrics, LIST_MODELS, LIST_HORIZONS)
-    CMS = confusion_metrix(PATH, LIST_MODELS, LIST_SEEDS)
+    CMS = confusion_metrix(PATH, LIST_MODELS, LIST_SEEDS, jolly_seed=502)
     INFER = inference_data(PATH, LIST_MODELS)
     # r_imp = relative_improvement_table(MAT_REP, MAT_ORI, LIST_MODELS)
 
@@ -398,10 +384,10 @@ if __name__ == '__main__':
         scatter_plot_year(met, met_data, LIST_MODELS, LIST_YEARS, OUT)
         print("plot done year", met)
 
-    plot_inference_time(INFER[0], INFER[1], LIST_MODELS, OUT)
+    plot_inference_time(INFER[0], INFER[1], cst.TRAINABLE_16, OUT)
 
-    # for the meta learner
-    # logits, pred = load_predictions_from_jsons(PATH, LIST_MODELS, 10)
-    #
-    # plot_corr_matrix(LIST_MODELS, 10, pred, OUT)
-    # plot_agreement_matrix(LIST_MODELS, 10, pred, OUT)
+    # 20923 is the number of instances because test set is a portion of the original
+    logits, pred = MetaDataBuilder.load_predictions_from_jsons(cst.TRAINABLE_16, 502, cst.FI_Horizons.K10.value, n_instances=20923)
+
+    plot_corr_matrix(cst.TRAINABLE_16, 10, pred, OUT)
+    plot_agreement_matrix(cst.TRAINABLE_16, 10, pred, OUT)

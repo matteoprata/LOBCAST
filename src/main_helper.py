@@ -318,7 +318,7 @@ def pick_model(config: Configuration, data_module):
     elif config.CHOSEN_MODEL == cst.Models.METALOB:
         net_architecture = MetaLOB(
             mlp_hidden=config.HYPER_PARAMETERS[cst.LearningHyperParameter.MLP_HIDDEN],
-            chosen_models=list(set(list(cst.Models))-{cst.Models.METALOB, cst.Models.ATNBoF}),
+            chosen_models=cst.MODELS_15,
         )
 
     # torch v2.0
