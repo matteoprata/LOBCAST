@@ -2,28 +2,30 @@
 from src.utils.utilities import write_json, is_jsonable
 from src.constants import Predictions
 import src.constants as cst
+from collections import defaultdict
 
 
 class Metrics:
     def __init__(self, config):
         self._config = config
         self._config_dict = None
-        self._testing_metrics = []  # list of tuples (test symbol, metric)
-        self._testing_cf = []       # list of tuples (test symbol, cfm)
+        self._testing_metrics = defaultdict(dict)
+        self._testing_cf = dict()
 
-    def add_testing_metrics(self, symbol, testing_metrics):
-        self._testing_metrics += [(symbol, testing_metrics)]
+    def update_metrics(self, symbol: str, testing_metrics: dict):
+        self._testing_metrics[symbol].update(testing_metrics)
 
-    def add_testing_cfm(self, symbol, testing_cf):
-        self._testing_cf += [(symbol, testing_cf)]
+    def update_cfm(self, symbol: str, testing_cf):
+        self._testing_cf[symbol] = testing_cf
 
     def dump(self, dir):
-        for isym in range(len(self._testing_metrics)):
-            sym, cm = self._testing_cf[isym]
-            _, met = self._testing_metrics[isym]
+        for sym in self._testing_metrics:
+            cm = self._testing_cf[sym]
+            met = self._testing_metrics[sym]
 
             # removes keys that are not serializable
-            compound_dict = {**met, **{"cm": cm.tolist()}, **self._config_dict}
+            compound_dict = {**met, **self._config_dict, **{"cm": cm.tolist()}}
+
             keys_to_serialize = [k for k, v in compound_dict.items() if is_jsonable(v)]
             compound_dict = {k: compound_dict[k] for k in keys_to_serialize}
 
@@ -38,6 +40,7 @@ class Metrics:
                 self._config.HYPER_PARAMETERS[cst.LearningHyperParameter.FORWARD_WINDOW],
                 self._config.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON],
             )
+            print("Writing", dir + fname)
             write_json(compound_dict, dir + fname)
             # print("DUMPING", dir + fname)
 

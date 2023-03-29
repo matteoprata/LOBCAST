@@ -9,8 +9,8 @@ HP_LSTM = {
     cst.LearningHyperParameter.MLP_HIDDEN.value: {'values': [64]},
     cst.LearningHyperParameter.P_DROPOUT.value: {'values': [0]},
 
-    cst.LearningHyperParameter.BATCH_SIZE.value:    {'values': [32, 64, 128]},
-    cst.LearningHyperParameter.LEARNING_RATE.value: {'values': [1e-2, 1e-3, 1e-4]}
+    cst.LearningHyperParameter.BATCH_SIZE.value:    {'values': [32]},
+    cst.LearningHyperParameter.LEARNING_RATE.value: {'values': [1e-3]}
 
 }
 

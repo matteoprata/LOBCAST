@@ -91,6 +91,20 @@ class NNEngine(pl.LightningModule):
         prediction_ind, y, loss_val, stock_names, logits = self.__validation_and_testing(batch)
         return prediction_ind, y, loss_val, stock_names, logits
 
+    def predict_step(self, batch, batch_idx, dataloader_idx=0):
+        if len(batch) == 3:
+            x, _, _ = batch
+        else:
+            x, _ = batch
+
+        t0 = time.time()
+        p = self(x)
+        torch.cuda.current_stream().synchronize()
+        t1 = time.time()
+        elapsed = t1 - t0
+        # print("Inference for the model:", elapsed, "ms")
+        return elapsed
+
     def training_epoch_end(self, validation_step_outputs):
         losses = [el["loss"].item() for el in validation_step_outputs]
         sum_losses = float(np.sum(losses))
@@ -131,12 +145,14 @@ class NNEngine(pl.LightningModule):
         self.__log_wandb_cm(truths, preds, model_step, self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name)  # cm to log
 
         val_dict = self.__compute_metrics(truths, preds, model_step, loss_vals, self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name)  # dict to log
-        val_dict_logits = {k: v for k, v in val_dict.items()}
-        val_dict_logits['LOGITS'] = str(logits.tolist())
+        self.config.METRICS_JSON.update_metrics(self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, val_dict)
+
+        logits_dict = {'LOGITS': str(logits.tolist())}
+        self.config.METRICS_JSON.update_metrics(self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, logits_dict)
+
         cm = self.__compute_sk_cm(truths, preds)
 
-        self.config.METRICS_JSON.add_testing_metrics(self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, val_dict_logits)
-        self.config.METRICS_JSON.add_testing_cfm(self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, cm)
+        self.config.METRICS_JSON.update_cfm(self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, cm)
 
         # PER STOCK PREDICTIONS
         if self.config.CHOSEN_STOCKS[cst.STK_OPEN.TEST] == cst.Stocks.ALL:
@@ -152,12 +168,12 @@ class NNEngine(pl.LightningModule):
                 preds_si = df_si['predictions'].to_numpy()
 
                 dic_si = self.__compute_metrics(truths_si, preds_si, model_step, loss_vals, si)
-                self.config.METRICS_JSON.add_testing_metrics(si, dic_si)  # TODO CHECK
+                self.config.METRICS_JSON.update_metrics(si, dic_si)  # TODO CHECK
                 val_dict.update(dic_si)
 
                 self.__log_wandb_cm(truths_si, preds_si, model_step, si)
                 cm = self.__compute_sk_cm(truths_si, preds_si)
-                self.config.METRICS_JSON.add_testing_cfm(si, cm)
+                self.config.METRICS_JSON.update_cfm(si, cm)
 
         if self.remote_log is not None:  # log to wandb
             val_dict["current_epoch"] = self.current_epoch

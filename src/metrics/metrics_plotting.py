@@ -22,23 +22,35 @@ def setup_plotting_env():
     plt.rcParams["font.family"] = "serif"
 
 
-def reproduced_metrics(path, metrics, list_models):
-    METRICS = np.zeros(shape=(len(list_models), len(cst.FI_Horizons), len(metrics)))
+def reproduced_metrics(path, metrics, list_models, list_horizons, list_seeds):
+    METRICS = np.zeros(shape=(len(list_seeds), len(list_models), len(list_horizons), len(metrics)))
 
     for imod, mod in enumerate(list_models):
-        for ik, k in enumerate(cst.FI_Horizons):
-            fname = "model={}-seed=0-trst=FI-test=FI-data=FI-peri=FI-bw=None-fw=None-fiw={}.json".format(mod.name, k.value)
-            jsn = util.read_json(path + fname)
-            for imet, met in enumerate(metrics):
-                METRICS[imod, ik, imet] = jsn[met]
+        for ik, k in enumerate(list_horizons):
+            for iss, s in enumerate(list_seeds):
+                fname = "model={}-seed={}-trst=FI-test=FI-data=FI-peri=FI-bw=None-fw=None-fiw={}.json".format(mod.name, s, k.value)
+                jsn = util.read_json(path + fname)
+                for imet, met in enumerate(metrics):
+                    METRICS[iss, imod, ik, imet] = jsn[met]
     return METRICS
 
 
-def original_metrics(metrics, list_models):
+def inference_data(path, list_models, seed=502, horizon=10):
+    INFERENCE = np.zeros(shape=(2, len(list_models)))
+    for imod, mod in enumerate(list_models):
+        fname = "model={}-seed={}-trst=FI-test=FI-data=FI-peri=FI-bw=None-fw=None-fiw={}.json".format(mod.name, seed, horizon)
+        jsn = util.read_json(path + fname)
+        INFERENCE[0, imod] = jsn['inference_mean']
+        INFERENCE[1, imod] = jsn['inference_std']
+
+    return INFERENCE
+
+
+def original_metrics(metrics, list_models, list_horizons):
     METRICS_ORI = np.zeros(shape=(len(list_models), len(cst.FI_Horizons), len(metrics)))
 
     for imod, mod in enumerate(list_models):
-        for ik, k in enumerate(cst.FI_Horizons):
+        for ik, k in enumerate(list_horizons):
             for imet, met in enumerate(cst.metrics_name):
                 if mod in cst.DECLARED_PERF:
                     METRICS_ORI[imod, ik, imet] = cst.DECLARED_PERF[cst.Models[mod.name]][ik][imet]
@@ -47,29 +59,30 @@ def original_metrics(metrics, list_models):
     return METRICS_ORI
 
 
-def confusion_metrix(path, list_models):
-    CMS = np.zeros(shape=(len(list_models), len(cst.FI_Horizons), 3, 3))
+def confusion_metrix(path, list_models, list_seeds):
+    CMS = np.zeros(shape=(len(list_seeds), len(list_models), len(cst.FI_Horizons), 3, 3))
 
     for imod, mod in enumerate(list_models):
         for ik, k in enumerate(cst.FI_Horizons):
-            fname = "model={}-seed=0-trst=FI-test=FI-data=FI-peri=FI-bw=None-fw=None-fiw={}.json".format(mod.name, k.value)
-            jsn = util.read_json(path + fname)
-            CMS[imod, ik] = np.array(jsn["cm"])
+            for iss, s in enumerate(list_seeds):
+                fname = "model={}-seed={}-trst=FI-test=FI-data=FI-peri=FI-bw=None-fw=None-fiw={}.json".format(mod.name, s, k.value)
+                jsn = util.read_json(path + fname)
+                CMS[iss, imod, ik] = np.array(jsn["cm"])
     return CMS
 
 
-def relative_improvement_table(metrics_repr, metrics_original, list_models):
-    # relative improvement
-    me = np.nanmean(metrics_repr, axis=1)
-    ome = np.nanmean(metrics_original, axis=1) / 100
-
-    tab = (me - ome) / ome
-    tab = tab.T
-    tab = np.round(tab * 100, 2)
-
-    improvement = pd.DataFrame(tab, index=cst.metrics_name, columns=[k.name for k in list_models])
-    # print(improvement.to_latex(index=True))
-    return improvement
+# def relative_improvement_table(metrics_repr, metrics_original, list_models):
+#     # relative improvement
+#     me = np.nanmean(metrics_repr, axis=1)
+#     ome = np.nanmean(metrics_original, axis=1) / 100
+#
+#     tab = (me - ome) / ome
+#     tab = tab.T
+#     tab = np.round(tab * 100, 2)
+#
+#     improvement = pd.DataFrame(tab, index=cst.metrics_name, columns=[k.name for k in list_models])
+#     # print(improvement.to_latex(index=True))
+#     return improvement
 
 
 def metrics_vs_models_k(met_name, met_vec, out_dir, list_models, met_vec_original=None):
@@ -78,10 +91,14 @@ def metrics_vs_models_k(met_name, met_vec, out_dir, list_models, met_vec_origina
 
     fmt = "%.2f"
     miny, maxy = -1, 1.1
+
     if "MCC" not in met_name:
         met_vec = met_vec * 100
         fmt = "%d%%"
         miny, maxy = 0, 110
+
+    avg_met = np.average(met_vec, axis=0)  # avg seeds
+    std_met = np.std(met_vec, axis=0)
 
     x = np.arange(len(labels)) * 9  # the label locations
     width = 0.5  # the width of the bars
@@ -92,24 +109,25 @@ def metrics_vs_models_k(met_name, met_vec, out_dir, list_models, met_vec_origina
     zero = [0] if len(list_models) % 2 == 1 else []
     ranges = list(reversed(indsxs * -1)) + zero + list(indsxs)
 
-    R = []
+    R = []  # the bars
     for iri, ri in enumerate(list_models):
-        r_bar_i = ax.bar(x + width * ranges[iri], met_vec[iri, :], width, label=ri.name,
+        r_bar_i = ax.bar(x + width * ranges[iri], avg_met[iri, :], width, yerr=std_met[iri, :], label=ri.name,
                          color=util.sample_color(iri, "tab20"), align='center')
         R += [r_bar_i]
 
-    diffp = ((met_vec - met_vec_original) / met_vec_original * 100)
+    diffp = ((avg_met - met_vec_original) / met_vec_original * 100)  # text of the diff
     for iri, ri in enumerate(R):
 
         diffp_show = []
         for i, val in enumerate(diffp[iri, :]):
-            our = round(met_vec[iri, i]) if "MCC" not in met_name else round(met_vec[iri, i], 2)
+            our = round(avg_met[iri, i]) if "MCC" not in met_name else round(avg_met[iri, i], 2)
             if not np.isnan(val):
                 diffp_show += ["{}% (".format(our) + "{0:+}%)".format(round(val))]
             else:
                 diffp_show += ["{}% ($\cdot$)".format(our)]
             if "MCC" in met_name:
                 diffp_show = [s.replace('%', '') for s in diffp_show]
+
         ax.bar_label(ri, labels=diffp_show, padding=3, fmt=fmt, rotation=90, fontsize=10)
 
     if met_vec_original is not None:
@@ -129,6 +147,38 @@ def metrics_vs_models_k(met_name, met_vec, out_dir, list_models, met_vec_origina
     fig.tight_layout()
 
     plt.savefig(out_dir + "ka" + met_name + ".pdf")
+    plt.show()
+    plt.close(fig)
+
+
+def plot_inference_time(met_vec, met_vec_err, list_models, out_dir):
+
+    labels = ["K=10"]
+
+    x = np.arange(len(labels)) * 9  # the label locations
+    width = 0.5  # the width of the bars
+
+    fig, ax = plt.subplots(figsize=(10, 9))
+
+    indsxs = np.array(range(1, int(len(list_models) / 2) + 1))
+    zero = [0] if len(list_models) % 2 == 1 else []
+    ranges = list(reversed(indsxs * -1)) + zero + list(indsxs)
+
+    for iri, ri in enumerate(list_models):
+        ax.bar(x + width * ranges[iri], met_vec[iri], width, yerr=met_vec_err[iri], label=ri.name,
+                         color=util.sample_color(iri, "tab20"), align='center')
+
+    # Add some text for labels, title and custom x-axis tick labels, etc.
+    ax.set_ylabel("Time (s)")
+    ax.set_title("Models Inference Time")
+    ax.set_xticks(x, labels)  # , rotation=0, ha="right", rotation_mode="anchor")
+
+    ax.legend(fontsize=10, ncol=2, handleheight=6, labelspacing=0.05)
+
+    # plt.ylim(miny, maxy)
+    fig.tight_layout()
+
+    plt.savefig(out_dir + "inference_time.pdf")
     plt.show()
     plt.close(fig)
 
@@ -182,6 +232,7 @@ def confusion_matrices(cms, list_models, out_dir):
 
 def scatter_plot_year(met_name, met_data, list_models, list_models_years, out_dir):
     X = list_models_years
+    met_data = np.average(met_data, axis=0)  # seeds
 
     fig = plt.figure(figsize=(16, 9))
     df = pd.DataFrame(dict(id=list_models_years, data=met_data))
@@ -305,12 +356,15 @@ def plot_agreement_matrix(list_models, fw_win, preds, out_dir):
 
 if __name__ == '__main__':
 
-    PATH = "data/experiments/fi_final_jsons/"
+    PATH = "data/experiments/all_models_28_03_23/"
     OUT = "data/experiments/pdfs/"
 
-    LIST_MODELS = list(set(list(cst.Models))-{cst.Models.ATNBoF})
+    LIST_SEEDS = [500, 501, 502, 503, 504]
+    LIST_HORIZONS = cst.FI_Horizons
+
+    LIST_MODELS = list(set(list(cst.Models))-{cst.Models.METALOB})
     LIST_MODELS = [m for m in cst.MODELS_YEAR_DICT if m in LIST_MODELS]
-    LIST_YEARS = [cst.MODELS_YEAR_DICT[m] for m in cst.MODELS_YEAR_DICT if m in LIST_MODELS]
+    LIST_YEARS =  [cst.MODELS_YEAR_DICT[m] for m in cst.MODELS_YEAR_DICT if m in LIST_MODELS]
 
     os.makedirs(OUT, exist_ok=True)
 
@@ -318,33 +372,36 @@ if __name__ == '__main__':
                'testing_FI_precision',
                'testing_FI_recall',
                'testing_FI_accuracy',
-               'testing_FI_mcc']
+               'testing_FI_mcc'
+               ]
 
     setup_plotting_env()
 
-    MAT_REP = reproduced_metrics(PATH, metrics, LIST_MODELS)
-    MAT_ORI = original_metrics(metrics, LIST_MODELS)
-    CMS = confusion_metrix(PATH, LIST_MODELS)
-
-    r_imp = relative_improvement_table(MAT_REP, MAT_ORI, LIST_MODELS)
+    MAT_REP = reproduced_metrics(PATH, metrics, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS)
+    MAT_ORI = original_metrics(metrics, LIST_MODELS, LIST_HORIZONS)
+    CMS = confusion_metrix(PATH, LIST_MODELS, LIST_SEEDS)
+    INFER = inference_data(PATH, LIST_MODELS)
+    # r_imp = relative_improvement_table(MAT_REP, MAT_ORI, LIST_MODELS)
 
     # n: PLOT 1
     for imet, met in enumerate(cst.metrics_name):
-        metrics_vs_models_k(met, MAT_REP[:, :, imet], OUT, LIST_MODELS, MAT_ORI[:, :, imet])  # each mat has shape MODELS x K x METRICA
+        metrics_vs_models_k(met, MAT_REP[:, :, :, imet], OUT, LIST_MODELS, MAT_ORI[:, :, imet])  # each mat has shape MODELS x K x METRICA
         print("plot done perf", met)
 
     # 1: PLOT 2
-    confusion_matrices(CMS, LIST_MODELS, OUT)
+    confusion_matrices(CMS[1, :], LIST_MODELS, OUT)
     print("plot done cm")
 
     # n: PLOT 3
     for imet, met in enumerate(cst.metrics_name):
-        met_data = np.mean(MAT_REP[:, :, imet], axis=1)   # MODELS x K x METRICA
+        met_data = np.mean(MAT_REP[:, :, :, imet], axis=2)   # MODELS x K x METRICA
         scatter_plot_year(met, met_data, LIST_MODELS, LIST_YEARS, OUT)
         print("plot done year", met)
 
-    # for the meta learner
-    lo, pred = load_predictions_from_jsons(PATH, LIST_MODELS, 10)
+    plot_inference_time(INFER[0], INFER[1], LIST_MODELS, OUT)
 
-    plot_corr_matrix(LIST_MODELS, 10, pred, OUT)
-    plot_agreement_matrix(LIST_MODELS, 10, pred, OUT)
+    # for the meta learner
+    # logits, pred = load_predictions_from_jsons(PATH, LIST_MODELS, 10)
+    #
+    # plot_corr_matrix(LIST_MODELS, 10, pred, OUT)
+    # plot_agreement_matrix(LIST_MODELS, 10, pred, OUT)

@@ -8,8 +8,8 @@ HP_MLP = {
     cst.LearningHyperParameter.MLP_HIDDEN.value: {'values': [256]},  # [128, 192, 256]
     cst.LearningHyperParameter.P_DROPOUT.value: {'values': [0]},  # [0.1, 0.25, 0.5]
 
-    cst.LearningHyperParameter.BATCH_SIZE.value: {'values': [32, 64, 128]},
-    cst.LearningHyperParameter.LEARNING_RATE.value: {'values': [1e-2, 1e-3, 1e-4]}
+    cst.LearningHyperParameter.BATCH_SIZE.value: {'values': [64]},
+    cst.LearningHyperParameter.LEARNING_RATE.value: {'values': [1e-3]}
 
 }
 

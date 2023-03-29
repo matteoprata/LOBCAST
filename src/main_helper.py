@@ -70,8 +70,8 @@ def prepare_data_FI(config: Configuration):
     )
     perc_cl = lambda a: np.array(list(a.values())) / sum(a.values())
 
-    print()
-    print("TRAIN balance", Counter(fi_train.get_samples_y()), perc_cl(Counter(fi_train.get_samples_y())))
+    # print() HAS PROBLEMS WITH DEEPLOBATT
+    # print("TRAIN balance", Counter(fi_train.get_samples_y()), perc_cl(Counter(fi_train.get_samples_y())))
 
     val_set = FIDataset(
         x=fi_val.get_samples_x(),
@@ -79,7 +79,7 @@ def prepare_data_FI(config: Configuration):
         chosen_model=config.CHOSEN_MODEL,
         num_snapshots=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_SNAPSHOTS],
     )
-    print("VAL balance", Counter(fi_val.get_samples_y()), perc_cl(Counter(fi_val.get_samples_y())))
+    # print("VAL balance", Counter(fi_val.get_samples_y()), perc_cl(Counter(fi_val.get_samples_y())))
 
     test_set = FIDataset(
         x=fi_test.get_samples_x(),
@@ -88,8 +88,9 @@ def prepare_data_FI(config: Configuration):
         num_snapshots=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_SNAPSHOTS],
     )
 
-    print("TEST balance", Counter(fi_test.get_samples_y()), perc_cl(Counter(fi_test.get_samples_y())))
-    print()
+    # print("TEST balance", Counter(fi_test.get_samples_y()), perc_cl(Counter(fi_test.get_samples_y())))
+    # print()
+
     fi_dm = DataModule(
         train_set, val_set, test_set,
         config.HYPER_PARAMETERS[cst.LearningHyperParameter.BATCH_SIZE],

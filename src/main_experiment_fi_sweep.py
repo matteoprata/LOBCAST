@@ -9,15 +9,24 @@ if module_path not in sys.path:
 
 from src.main_single import *
 
+DEFAULT_SEEDS = set(range(500, 505))
+DEFAULT_HORIZONS = set(cst.FI_Horizons)
+
 
 def experiment_FI(models_todo, now=None, servers=None, is_debug=False):
 
     now, server_name, server_id, n_servers = experiment_preamble(now, servers)
     lunches_server = models_todo[server_name]
 
-    for see in lunches_server['seed']:
-        for mod in lunches_server['mod']:
-            for k in lunches_server['k']:
+    for mod, plan in lunches_server:
+        seeds = plan['seed']
+        seeds = DEFAULT_SEEDS if seeds == 'all' else seeds
+
+        for see in seeds:
+            horizons = plan['k']
+            horizons = DEFAULT_HORIZONS if horizons == 'all' else horizons
+
+            for k in horizons:
                 print("Running FI experiment on {}, with K={}".format(mod, k))
 
                 try:
@@ -50,12 +59,27 @@ def experiment_FI(models_todo, now=None, servers=None, is_debug=False):
 servers = [cst.Servers.ALIEN1, cst.Servers.ALIEN2, cst.Servers.FISSO1]
 
 models_todo = {
-    cst.Servers.ALIEN1: {'mod': [cst.Models.TRANSLOB, cst.Models.ATNBoF], 'k': [cst.FI_Horizons.K1, cst.FI_Horizons.K2, cst.FI_Horizons.K3], 'seed': list(range(110, 111))},  # without weights
-    cst.Servers.ALIEN2: {'mod': [cst.Models.TRANSLOB, cst.Models.ATNBoF], 'k': [cst.FI_Horizons.K5, cst.FI_Horizons.K10], 'seed': list(range(110, 111))},  # with weights
-    cst.Servers.FISSO1: {'mod': [cst.Models.TLONBoF], 'k': cst.FI_Horizons, 'seed': list(range(110, 111))},  # with weights
+
+    cst.Servers.FISSO1: [(cst.Models.AXIALLOB, {'k': 'all', 'seed': [504]})],
+    cst.Servers.ALIEN2: [(cst.Models.AXIALLOB, {'k': [cst.FI_Horizons.K1], 'seed': [503]})],
+
+    # cst.Servers.ALIEN2: {'mod': [cst.Models.DLA,
+    #                              cst.Models.LSTM,
+    #                              cst.Models.DAIN,
+    #                              cst.Models.CNNLSTM,
+    #                              cst.Models.DEEPLOBATT
+    
+    # ], 'k': cst.FI_Horizons, 'seed': list(range(500, 510))},
+    #
+    # cst.Servers.ALIEN1: {'mod': [cst.Models.DEEPLOB,
+    #                              cst.Models.CNN1,
+    #                              cst.Models.AXIALLOB,
+    #                              cst.Models.TRANSLOB,
+    #                              cst.Models.ATNBoF
+    # ], 'k': cst.FI_Horizons, 'seed': list(range(500, 510))},
 }
 
 
-now = "FI-HARD-ONES"
+now = "FI-DEFINITIVE-23-03-23"
 experiment_FI(models_todo, now=now, servers=servers, is_debug=False)
 
