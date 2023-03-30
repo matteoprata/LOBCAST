@@ -110,7 +110,7 @@ def _wandb_exe(config: Configuration):
         wandb_instance.log({"model": config.CHOSEN_MODEL.name})
         wandb_instance.log({"seed": config.SEED})
 
-        if config.CHOSEN_DATASET == cst.DatasetFamily.FI:
+        if config.CHOSEN_DATASET in [cst.DatasetFamily.FI, cst.DatasetFamily.META]:
             wandb_instance.log({"fi-k":  config.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON]})
 
         elif config.CHOSEN_DATASET == cst.DatasetFamily.LOBSTER:
@@ -169,7 +169,7 @@ def launch_single(config: Configuration, model_params=None, is_baseline=False):
         trainer.test(nn_engine, dataloaders=data_module.val_dataloader(), ckpt_path="best")
 
         nn_engine.testing_mode = cst.ModelSteps.TESTING
-        trainer.test(nn_engine, dataloaders=data_module.test_dataloader(), ckpt_path="best")
+        trainer.test(nn_engine, dataloaders=data_module.test_dataloader(), ckpt_path="best")  # todo check validate()
 
         if not config.IS_TUNE_H_PARAMS:
             config.METRICS_JSON.close()
@@ -179,9 +179,6 @@ def launch_single(config: Configuration, model_params=None, is_baseline=False):
         print("The following error was raised")
         print(traceback.print_exc(), file=sys.stderr)
         exit(1)
-
-
-
 
 
 def launch_wandb(config: Configuration):

@@ -137,6 +137,7 @@ class NNEngine(pl.LightningModule):
 
         model_step = self.testing_mode
 
+        # LOGGING
         # COMPUTE CM (1) (SRC) - (SRC)
         self.__log_wandb_cm(truths, preds, model_step, self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name)  # cm to log
 
@@ -147,27 +148,27 @@ class NNEngine(pl.LightningModule):
         self.config.METRICS_JSON.update_metrics(self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, logits_dict)
 
         cm = compute_sk_cm(truths, preds)
-
         self.config.METRICS_JSON.update_cfm(self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, cm)
 
         # PER STOCK PREDICTIONS
         if self.config.CHOSEN_STOCKS[cst.STK_OPEN.TEST] == cst.Stocks.ALL:
             # computing metrics per stock
-            df = pd.DataFrame(
-                list(zip(stock_names, preds, truths)),
-                columns=['stock_names', 'predictions', 'ys']
-            )
 
             for si in self.config.CHOSEN_STOCKS[cst.STK_OPEN.TEST].value:
-                df_si = df[df['stock_names'] == si]
-                truths_si = df_si['ys'].to_numpy()
-                preds_si = df_si['predictions'].to_numpy()
+                index_si = np.where(stock_names == si)[0]
+                truths_si = truths[index_si]
+                preds_si = preds[index_si]
+                logits_si = logits[index_si]
 
                 dic_si = compute_metrics(truths_si, preds_si, model_step, loss_vals, si)
-                self.config.METRICS_JSON.update_metrics(si, dic_si)  # TODO CHECK
+                self.config.METRICS_JSON.update_metrics(si, dic_si)
                 val_dict.update(dic_si)
 
+                logits_dict = {'LOGITS': str(logits_si.tolist())}
+                self.config.METRICS_JSON.update_metrics(si, logits_dict)
+
                 self.__log_wandb_cm(truths_si, preds_si, model_step, si)
+
                 cm = compute_sk_cm(truths_si, preds_si)
                 self.config.METRICS_JSON.update_cfm(si, cm)
 
@@ -193,6 +194,8 @@ class NNEngine(pl.LightningModule):
         return prediction_ind, y, loss_val, stock_names, logits
 
     def get_prediction_vectors(self, model_output):
+        """ Accumulates the models output after each validation and testing epoch end. """
+
         preds, truths, losses, stock_names, logits = [], [], [], [], []
         for preds_b, y_b, loss_val, stock_name_b, logits_b in model_output:
             preds += preds_b.tolist()

@@ -101,22 +101,23 @@ class LOBDataset(data.Dataset):
             ind_sf = p
 
         # X and Y ready to go
-        self.x = torch.from_numpy(np.concatenate(Xs, axis=0)).type(torch.FloatTensor)
+        self.x = pd.concat(Xs, axis=0)
         self.x, self.vol_price_mu, self.vol_price_sig = self.__stationary_normalize_data(self.x, self.vol_price_mu, self.vol_price_sig)
+        self.x = torch.from_numpy(self.x.values).type(torch.FloatTensor)
 
         self.y = np.concatenate(Ys, axis=0).astype(int)
         self.stock_sym_name = Ss
 
-        self.indexes_chosen = self.__under_sampling(self.y, ignore_indices)
+        # self.indexes_chosen = self.__under_sampling(self.y, ignore_indices)
         self.x_shape = (self.sample_size, self.x.shape[1])
 
     def __len__(self):
         """ Denotes the total number of samples. """
-        return len(self.indexes_chosen)
+        return len(self.y)  # len(self.indexes_chosen)
 
     def __getitem__(self, index):
         """ Generates samples of data. """
-        id_sample = self.indexes_chosen[index]
+        id_sample = index  # self.indexes_chosen[index]
         x, y, s = self.x[id_sample-self.sample_size:id_sample, :], self.y[id_sample], self.stock_sym_name[id_sample]
         return x, y, s
 
@@ -126,7 +127,7 @@ class LOBDataset(data.Dataset):
 
         y_without_snap = [y[i] for i in range(len(y)) if i not in ignore_indices]  # removes the indices of the first sample for each stock
 
-        occurrences = self.__compute_occurrences(y_without_snap)
+        occurrences = self.compute_occurrences(y_without_snap)
         i_min_occ = min(occurrences, key=occurrences.get)  # index of the class with the least instances
         n_min_occ = occurrences[i_min_occ]                 # number of occurrences of the minority class
 
@@ -178,6 +179,7 @@ class LOBDataset(data.Dataset):
 
         return data, means_dict, stds_dict
 
-    def __compute_occurrences(self, y):
+    @staticmethod
+    def compute_occurrences(y):
         occurrences = collections.Counter(y)
         return occurrences

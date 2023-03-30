@@ -59,7 +59,7 @@ class DataCols(Enum):
 
 def add_lob_labels(data, window_size_forward, window_size_backward, label_threshold_pos, label_threshold_neg, sigma_fraction):
     """ Labels the data in [0, 1, 2], labels 0 (down), 1 (stable), 2 (down). """
-    data = add_midprices_columns(data, window_size_forward, window_size_backward)
+    data = add_midprices_columns(data, window_size_forward, window_size_backward)  # MID_PRICE, MID_PRICE_FUTURE, MID_PRICE_PAST
 
     # we remove the first and the last rolling_tu because the rolling mean has holes
     data = data[(window_size_backward - 1):-(window_size_forward - 1)]  # ok checked 6-03-23
@@ -73,7 +73,7 @@ def add_lob_labels(data, window_size_forward, window_size_backward, label_thresh
     label_threshold_pos = (ratio_mu + ratio_si * sigma_fraction) if sigma_fraction is not None else label_threshold_pos
     label_threshold_neg = (ratio_mu - ratio_si * sigma_fraction) if sigma_fraction is not None else label_threshold_neg
 
-    # labels 0 (down), 1 (stable), 2 (down)
+    # labels 0 (down), 1 (stable), 2 (up)
     data[DataCols.PREDICTION.value] = np.ones(data.shape[0])
     data[DataCols.PREDICTION.value] = np.where(data[DataCols.PERCENTAGE_CHANGE.value] > label_threshold_pos, 2, data[DataCols.PREDICTION.value])
     data[DataCols.PREDICTION.value] = np.where(data[DataCols.PERCENTAGE_CHANGE.value] < label_threshold_neg, 0, data[DataCols.PREDICTION.value])
@@ -81,10 +81,30 @@ def add_lob_labels(data, window_size_forward, window_size_backward, label_thresh
     return data, label_threshold_pos, label_threshold_neg
 
 
+def add_lob_labels_march_2023(data, window_size_forward, window_size_backward, alpha):
+    """ Labels the data in [0, 1, 2], labels 0 (down), 1 (stable), 2 (down). """
+    data = add_midprices_columns(data, window_size_forward, window_size_backward)  # MID_PRICE, MID_PRICE_FUTURE, MID_PRICE_PAST
+
+    # we remove the first and the last rolling_tu because the rolling mean has holes
+    data = data[(window_size_backward - 1):-(window_size_forward - 1)]  # ok checked 6-03-23
+
+    data[DataCols.PERCENTAGE_CHANGE.value] = get_percentage_change(data, DataCols.MID_PRICE_PAST.value, DataCols.MID_PRICE_FUTURE.value)
+
+    label_threshold_pos = alpha
+    label_threshold_neg = - alpha
+
+    # labels 0 (down), 1 (stable), 2 (up)
+    data[DataCols.PREDICTION.value] = np.ones(data.shape[0])
+    data[DataCols.PREDICTION.value] = np.where(data[DataCols.PERCENTAGE_CHANGE.value] > label_threshold_pos, 2, data[DataCols.PREDICTION.value])
+    data[DataCols.PREDICTION.value] = np.where(data[DataCols.PERCENTAGE_CHANGE.value] < label_threshold_neg, 0, data[DataCols.PREDICTION.value])
+
+    return data
+
+
 def add_midprices_columns(data, window_size_forward, window_size_backward):
     data[DataCols.MID_PRICE.value] = get_mid_price(data)
     data[DataCols.MID_PRICE_FUTURE.value] = data[DataCols.MID_PRICE.value].rolling(window_size_forward).mean().shift(- window_size_forward + 1)  # +1 is correct checked
-    data[DataCols.MID_PRICE_PAST.value] = data[DataCols.MID_PRICE.value].rolling(window_size_backward).mean()
+    data[DataCols.MID_PRICE_PAST.value]   = data[DataCols.MID_PRICE.value].rolling(window_size_backward).mean()
     return data
 
 

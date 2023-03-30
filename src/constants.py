@@ -4,6 +4,9 @@ import torch
 import numpy as np
 
 
+ALFA = 0.00024
+
+
 class LearningHyperParameter(str, Enum):
     OPTIMIZER = "optimizer_name"
     LEARNING_RATE = "lr"

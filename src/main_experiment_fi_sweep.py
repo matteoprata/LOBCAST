@@ -40,15 +40,11 @@ def experiment_FI(models_todo, now=None, servers=None, is_debug=False):
                     else:
                         cf.CHOSEN_DATASET = cst.DatasetFamily.FI
 
-                    cf.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN] = cst.Stocks.FI
-                    cf.CHOSEN_STOCKS[cst.STK_OPEN.TEST] = cst.Stocks.FI
-                    cf.CHOSEN_PERIOD = cst.Periods.FI
                     cf.CHOSEN_MODEL = mod
 
                     cf.IS_WANDB = 1 if not is_debug else 0
                     cf.IS_TUNE_H_PARAMS = not is_debug
 
-                    cf.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON] = k.value
                     launch_wandb(cf)
 
                 except KeyboardInterrupt:

@@ -92,26 +92,26 @@ class LOBSTERDataBuilder:
         if self.is_data_preload and not exists:
             self.__serialize_dataset()
 
-    def __normalize_dataset(self):
-        """ Does normalization. """
-        if self.normalization_type == cst.NormalizationType.Z_SCORE:
-            # returns the mean and std, both for the price and for the volume
-            self.__data, means_dicts, stds_dicts = ppu.stationary_normalize_data(
-                self.__data,
-                self.normalization_means,
-                self.normalization_stds
-            )
-
-            # the training dataset shares its normalization with the others
-            if self.dataset_type == cst.DatasetType.TRAIN:
-                self.normalization_means = means_dicts
-                self.normalization_stds = stds_dicts
-
-        elif self.normalization_type == cst.NormalizationType.NONE:
-            pass
-
-        # needed to update the mid-prices columns, after the normalization, mainly for visualization purposes
-        self.__data = ppu.add_midprices_columns(self.__data, self.window_size_forward, self.window_size_backward)
+    # def __normalize_dataset(self):
+    #     """ Does normalization. """
+    #     if self.normalization_type == cst.NormalizationType.Z_SCORE:
+    #         # returns the mean and std, both for the price and for the volume
+    #         self.__data, means_dicts, stds_dicts = ppu.stationary_normalize_data(
+    #             self.__data,
+    #             self.normalization_means,
+    #             self.normalization_stds
+    #         )
+    #
+    #         # the training dataset shares its normalization with the others
+    #         if self.dataset_type == cst.DatasetType.TRAIN:
+    #             self.normalization_means = means_dicts
+    #             self.normalization_stds = stds_dicts
+    #
+    #     elif self.normalization_type == cst.NormalizationType.NONE:
+    #         pass
+    #
+    #     # needed to update the mid-prices columns, after the normalization, mainly for visualization purposes
+    #     self.__data = ppu.add_midprices_columns(self.__data, self.window_size_forward, self.window_size_backward)
 
     def __label_dataset(self):
 
@@ -119,34 +119,20 @@ class LOBSTERDataBuilder:
             for winsize in cst.WinSize:
                 if winsize.value is None:
                     continue
-                self.__data, self.label_threshold_pos, self.label_threshold_neg = ppu.add_lob_labels(
-                    self.__data,
-                    winsize.value,
-                    self.window_size_backward,
-                    self.label_threshold_pos,
-                    self.label_threshold_neg,
-                    self.label_dynamic_scaler
-                )
+                self.__data = ppu.add_lob_labels_march_2023(self.__data, winsize.value, self.window_size_backward, cst.ALFA)
                 self.__data = self.__data.rename(columns={'y': f'y{winsize.value}'})
             self.__data['y'] = self.__data[[f'y{winsize.value}' for winsize in cst.WinSize if winsize.value is not None]].values.tolist()
 
         else:
-            self.__data, self.label_threshold_pos, self.label_threshold_neg = ppu.add_lob_labels(
-                self.__data,
-                self.window_size_forward,
-                self.window_size_backward,
-                self.label_threshold_pos,
-                self.label_threshold_neg,
-                self.label_dynamic_scaler
-            )
+            self.__data = ppu.add_lob_labels_march_2023(self.__data, self.window_size_forward, self.window_size_backward, cst.ALFA)
 
-    def plot_dataset(self):
-        ppu.plot_dataframe_stats(
-            self.__data,
-            self.label_threshold_pos,
-            self.label_threshold_neg,
-            self.dataset_type
-        )
+    # def plot_dataset(self):
+    #     ppu.plot_dataframe_stats(
+    #         self.__data,
+    #         self.label_threshold_pos,
+    #         self.label_threshold_neg,
+    #         self.dataset_type
+    #     )
 
     def __serialize_dataset(self):
         if not os.path.exists(cst.DATA_PICKLES + self.F_NAME_PICKLE):
