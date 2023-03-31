@@ -23,3 +23,13 @@ HP_LSTM_FI_FIXED = {
     cst.LearningHyperParameter.RNN_HIDDEN.value: 40,
     cst.LearningHyperParameter.RNN_N_HIDDEN.value: 1,
 }
+
+HP_LSTM_LOBSTER_FIXED = {
+    cst.LearningHyperParameter.EPOCHS_UB.value: 100,
+    cst.LearningHyperParameter.OPTIMIZER.value: cst.Optimizers.ADAM.value,
+    cst.LearningHyperParameter.LEARNING_RATE.value: 0.001,
+    cst.LearningHyperParameter.BATCH_SIZE.value: 32,
+    cst.LearningHyperParameter.MLP_HIDDEN.value: 64,
+    cst.LearningHyperParameter.RNN_HIDDEN.value: 40,
+    cst.LearningHyperParameter.RNN_N_HIDDEN.value: 1,
+}

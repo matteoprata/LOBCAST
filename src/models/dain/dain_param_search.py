@@ -28,3 +28,13 @@ HP_DAIN_FI_FIXED = {
     cst.LearningHyperParameter.MLP_HIDDEN.value: 512,
     cst.LearningHyperParameter.P_DROPOUT.value: 0.5
 }
+
+HP_DAIN_LOBSTER_FIXED = {
+    cst.LearningHyperParameter.EPOCHS_UB.value: 100,
+    cst.LearningHyperParameter.OPTIMIZER.value: cst.Optimizers.RMSPROP.value,
+    cst.LearningHyperParameter.LEARNING_RATE.value: 0.0001,
+    cst.LearningHyperParameter.BATCH_SIZE.value: 32,
+    cst.LearningHyperParameter.DAIN_LAYER_MODE.value: "full",
+    cst.LearningHyperParameter.MLP_HIDDEN.value: 512,
+    cst.LearningHyperParameter.P_DROPOUT.value: 0.5
+}

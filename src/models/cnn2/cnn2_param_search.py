@@ -16,3 +16,10 @@ HP_CNN2_FI_FIXED = {
     cst.LearningHyperParameter.LEARNING_RATE.value: 0.0002685,
     # cst.LearningHyperParameter.BATCH_SIZE.value: 32,
 }
+
+HP_CNN2_LOBSTER_FIXED = {
+    cst.LearningHyperParameter.EPOCHS_UB.value: 100,
+    cst.LearningHyperParameter.OPTIMIZER.value: cst.Optimizers.RMSPROP.value,
+    cst.LearningHyperParameter.LEARNING_RATE.value: 0.001,
+    cst.LearningHyperParameter.BATCH_SIZE.value: 32,
+}
