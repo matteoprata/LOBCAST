@@ -208,6 +208,7 @@ class NNEngine(pl.LightningModule):
         preds = np.array(preds)
         truths = np.array(truths)
         logits = np.array(logits)
+        stock_names = np.array(stock_names)
         losses = np.array(losses)
 
         if self.config.CHOSEN_MODEL == cst.Models.DEEPLOBATT:

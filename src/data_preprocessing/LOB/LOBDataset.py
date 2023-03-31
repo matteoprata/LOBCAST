@@ -12,6 +12,8 @@ import src.data_preprocessing.preprocessing_utils as ppu
 from src.data_preprocessing.LOB.LOBSTERDataBuilder import LOBSTERDataBuilder
 from src.config import Configuration
 
+LOSS_WEIGHTS_DICT = {m: 1e6 for m in cst.Models}
+# LOSS_WEIGHTS_DICT[cst.Models.ATNBoF] = 1e3
 
 class LOBDataset(data.Dataset):
     """ Characterizes a dataset for PyTorch. """
@@ -103,23 +105,33 @@ class LOBDataset(data.Dataset):
         # X and Y ready to go
         self.x = pd.concat(Xs, axis=0)
         self.x, self.vol_price_mu, self.vol_price_sig = self.__stationary_normalize_data(self.x, self.vol_price_mu, self.vol_price_sig)
-        self.x = torch.from_numpy(self.x.values).type(torch.FloatTensor)
 
-        self.y = np.concatenate(Ys, axis=0).astype(int)
+        self.x = torch.from_numpy(self.x.values).type(torch.FloatTensor)
+        y = np.concatenate(Ys, axis=0).astype(float)
+        self.y = torch.from_numpy(y).type(torch.LongTensor)
         self.stock_sym_name = Ss
+
+        self.ys_occurrences = collections.Counter(y)
+        occs = np.array([self.ys_occurrences[k] for k in sorted(self.ys_occurrences)])
+        self.loss_weights = torch.Tensor(LOSS_WEIGHTS_DICT[config.CHOSEN_MODEL] / occs)
 
         # self.indexes_chosen = self.__under_sampling(self.y, ignore_indices)
         self.x_shape = (self.sample_size, self.x.shape[1])
 
     def __len__(self):
         """ Denotes the total number of samples. """
-        return len(self.y)  # len(self.indexes_chosen)
+        # len(self.indexes_chosen)
+        return len(self.y)-self.sample_size
 
     def __getitem__(self, index):
         """ Generates samples of data. """
-        id_sample = index  # self.indexes_chosen[index]
-        x, y, s = self.x[id_sample-self.sample_size:id_sample, :], self.y[id_sample], self.stock_sym_name[id_sample]
+        x = self.x[index: index + self.sample_size]
+        y = self.y[index + self.sample_size - 1]
+        s = self.stock_sym_name[index]
         return x, y, s
+        # id_sample = self.indexes_chosen[index]
+        # x, y, s = self.x[id_sample-self.sample_size:id_sample], self.y[id_sample], self.stock_sym_name[id_sample]
+
 
     def __under_sampling(self, y, ignore_indices):
         """ Discard instances of the majority class. """

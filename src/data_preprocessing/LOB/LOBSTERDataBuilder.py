@@ -59,7 +59,7 @@ class LOBSTERDataBuilder:
 
         # to store the datasets
         self.STOCK_NAME = stock_name
-        self.F_NAME_PICKLE = "{}_{}_{}_{}.pickle".format(
+        self.F_NAME_PICKLE = "{}_{}_{}_{}_{}.pickle".format(
             self.config.CHOSEN_PERIOD.name,
             self.STOCK_NAME,
             self.start_end_trading_day[0],
@@ -87,6 +87,12 @@ class LOBSTERDataBuilder:
                 boundaries_purge=self.crop_trading_day_by
             )
             out_df = out_df.fillna(method="ffill")
+            out_df = out_df.drop(
+                out_df.index[
+                    (np.where((out_df.index > '2021-08-03') & (out_df.index < '2021-08-05')))[0]
+                ]
+            )
+
             self.__data = out_df
 
         if self.is_data_preload and not exists:
