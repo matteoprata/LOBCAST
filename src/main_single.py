@@ -33,24 +33,24 @@ from src.data_preprocessing.FI.FIDataBuilder import FIDataBuilder
 from src.data_preprocessing.LOB.lobster_param_search import HP_LOBSTER
 
 # MODELS
-from src.models.mlp.mlp_param_search import HP_MLP, HP_MLP_FI_FIXED
-from src.models.tabl.tabl_param_search import HP_TABL, HP_TABL_FI_FIXED
-from src.models.translob.tlb_param_search import HP_TRANS, HP_TRANS_FI_FIXED
-from src.models.cnn1.cnn1_param_search import HP_CNN1, HP_CNN1_FI_FIXED
-from src.models.cnn2.cnn2_param_search import HP_CNN2, HP_CNN2_FI_FIXED
-from src.models.cnnlstm.cnnlstm_param_search import HP_CNNLSTM, HP_CNNLSTM_FI_FIXED
-from src.models.dain.dain_param_search import HP_DAIN, HP_DAIN_FI_FIXED
+from src.models.mlp.mlp_param_search import HP_MLP, HP_MLP_FI_FIXED, HP_MLP_LOBSTER_FIXED
+from src.models.tabl.tabl_param_search import HP_TABL, HP_TABL_FI_FIXED, HP_TABL_LOBSTER_FIXED
+from src.models.translob.tlb_param_search import HP_TRANS, HP_TRANS_FI_FIXED, HP_TRANS_LOBSTER_FIXED
+from src.models.cnn1.cnn1_param_search import HP_CNN1, HP_CNN1_FI_FIXED, HP_CNN1_LOBSTER_FIXED
+from src.models.cnn2.cnn2_param_search import HP_CNN2, HP_CNN2_FI_FIXED, HP_CNN2_LOBSTER_FIXED
+from src.models.cnnlstm.cnnlstm_param_search import HP_CNNLSTM, HP_CNNLSTM_FI_FIXED, HP_CNNLSTM_LOBSTER_FIXED
+from src.models.dain.dain_param_search import HP_DAIN, HP_DAIN_FI_FIXED, HP_DAIN_LOBSTER_FIXED
 from src.models.deeplob.dlb_param_search import HP_DEEP, HP_DEEP_FI_FIXED, HP_DEEP_LOBSTER_FIXED
-from src.models.lstm.lstm_param_search import HP_LSTM, HP_LSTM_FI_FIXED
-from src.models.binctabl.binctabl_param_search import HP_BINTABL, HP_BINTABL_FI_FIXED
+from src.models.lstm.lstm_param_search import HP_LSTM, HP_LSTM_FI_FIXED, HP_LSTM_LOBSTER_FIXED
+from src.models.binctabl.binctabl_param_search import HP_BINTABL, HP_BINTABL_FI_FIXED, HP_BINTABL_LOBSTER_FIXED
 from src.models.deeplobatt.dlbatt_param_search import HP_DEEPATT, HP_DEEPATT_FI_FIXED, HP_DEEPATT_LOBSTER_FIXED
-from src.models.dla.dla_param_search import HP_DLA, HP_DLA_FI_FIXED
-from src.models.axial.axiallob_param_search import HP_AXIALLOB, HP_AXIALLOB_FI_FIXED
-
-from src.models.nbof.nbof_param_search import HP_NBoF, HP_NBoF_FI_FIXED
-from src.models.atnbof.atnbof_param_search import HP_ATNBoF, HP_ATNBoF_FI_FIXED
-from src.models.tlonbof.tlonbof_param_search import HP_TLONBoF, HP_TLONBoF_FI_FIXED
+from src.models.dla.dla_param_search import HP_DLA, HP_DLA_FI_FIXED, HP_DLA_LOBSTER_FIXED
+from src.models.axial.axiallob_param_search import HP_AXIALLOB, HP_AXIALLOB_FI_FIXED, HP_AXIALLOB_LOBSTER_FIXED
+from src.models.nbof.nbof_param_search import HP_NBoF, HP_NBoF_FI_FIXED, HP_NBoF_LOBSTER_FIXED
+from src.models.atnbof.atnbof_param_search import HP_ATNBoF, HP_ATNBoF_FI_FIXED, HP_ATNBoF_LOBSTER_FIXED
+from src.models.tlonbof.tlonbof_param_search import HP_TLONBoF, HP_TLONBoF_FI_FIXED, HP_TLONBoF_LOBSTER_FIXED
 from src.models.metalob.metalob_param_search import HP_META, HP_META_FIXED
+
 from src.utils.utilities import get_sys_mac
 from src.main_helper import pick_model, pick_dataset
 from collections import namedtuple
@@ -59,29 +59,29 @@ HPSearchTypes = namedtuple('HPSearchTypes', ("sweep", "fixed_fi", "fixed_lob"))
 HPSearchTypes2 = namedtuple('HPSearchTypes', ("sweep", "fixed"))
 
 HP_DICT_MODEL = {
-    cst.Models.MLP:  HPSearchTypes(HP_MLP, HP_MLP_FI_FIXED, None),
-    cst.Models.CNN1: HPSearchTypes(HP_CNN1, HP_CNN1_FI_FIXED, None),
-    cst.Models.CNN2: HPSearchTypes(HP_CNN2, HP_CNN2_FI_FIXED, None),
-    cst.Models.LSTM: HPSearchTypes(HP_LSTM, HP_LSTM_FI_FIXED, None),
-    cst.Models.CNNLSTM: HPSearchTypes(HP_CNNLSTM, HP_CNNLSTM_FI_FIXED, None),
-    cst.Models.DAIN: HPSearchTypes(HP_DAIN, HP_DAIN_FI_FIXED, None),
+    cst.Models.MLP:  HPSearchTypes(HP_MLP, HP_MLP_FI_FIXED, HP_MLP_LOBSTER_FIXED),
+    cst.Models.CNN1: HPSearchTypes(HP_CNN1, HP_CNN1_FI_FIXED, HP_CNN1_LOBSTER_FIXED),
+    cst.Models.CNN2: HPSearchTypes(HP_CNN2, HP_CNN2_FI_FIXED, HP_CNN2_LOBSTER_FIXED),
+    cst.Models.LSTM: HPSearchTypes(HP_LSTM, HP_LSTM_FI_FIXED, HP_LSTM_LOBSTER_FIXED),
+    cst.Models.CNNLSTM: HPSearchTypes(HP_CNNLSTM, HP_CNNLSTM_FI_FIXED, HP_CNNLSTM_LOBSTER_FIXED),
+    cst.Models.DAIN: HPSearchTypes(HP_DAIN, HP_DAIN_FI_FIXED, HP_DAIN_LOBSTER_FIXED),
     cst.Models.DEEPLOB: HPSearchTypes(HP_DEEP, HP_DEEP_FI_FIXED, HP_DEEP_LOBSTER_FIXED),
-    cst.Models.TRANSLOB: HPSearchTypes(HP_TRANS, HP_TRANS_FI_FIXED, None),
-    cst.Models.CTABL: HPSearchTypes(HP_TABL, HP_TABL_FI_FIXED, None),
-    cst.Models.BINCTABL: HPSearchTypes(HP_BINTABL, HP_BINTABL_FI_FIXED, None),
+    cst.Models.TRANSLOB: HPSearchTypes(HP_TRANS, HP_TRANS_FI_FIXED, HP_TRANS_LOBSTER_FIXED),
+    cst.Models.CTABL: HPSearchTypes(HP_TABL, HP_TABL_FI_FIXED, HP_TABL_LOBSTER_FIXED),
+    cst.Models.BINCTABL: HPSearchTypes(HP_BINTABL, HP_BINTABL_FI_FIXED, HP_BINTABL_LOBSTER_FIXED),
     cst.Models.DEEPLOBATT: HPSearchTypes(HP_DEEPATT, HP_DEEPATT_FI_FIXED, HP_DEEPATT_LOBSTER_FIXED),
-    cst.Models.DLA: HPSearchTypes(HP_DLA, HP_DLA_FI_FIXED, None),
-    cst.Models.AXIALLOB: HPSearchTypes(HP_AXIALLOB, HP_AXIALLOB_FI_FIXED, None),
-    # cst.Models.NBoF: HPSearchTypes(HP_NBoF, HP_NBoF_FI_FIXED, None),
-    cst.Models.ATNBoF: HPSearchTypes(HP_ATNBoF, HP_ATNBoF_FI_FIXED, None),
-    cst.Models.TLONBoF: HPSearchTypes(HP_TLONBoF, HP_TLONBoF_FI_FIXED, None),
+    cst.Models.DLA: HPSearchTypes(HP_DLA, HP_DLA_FI_FIXED, HP_DLA_LOBSTER_FIXED),
+    cst.Models.AXIALLOB: HPSearchTypes(HP_AXIALLOB, HP_AXIALLOB_FI_FIXED, HP_AXIALLOB_LOBSTER_FIXED),
+    # cst.Models.NBoF: HPSearchTypes(HP_NBoF, HP_NBoF_FI_FIXED, HP_NBoF_LOBSTER_FIXED),
+    cst.Models.ATNBoF: HPSearchTypes(HP_ATNBoF, HP_ATNBoF_FI_FIXED, HP_ATNBoF_LOBSTER_FIXED),
+    cst.Models.TLONBoF: HPSearchTypes(HP_TLONBoF, HP_TLONBoF_FI_FIXED, HP_TLONBoF_LOBSTER_FIXED),
     cst.Models.METALOB: HPSearchTypes2(HP_META, HP_META_FIXED),
     cst.Models.MAJORITY: HPSearchTypes2(HP_META, HP_META_FIXED)
 }
 
 HP_DICT_DATASET = {
     cst.DatasetFamily.FI:  {},
-    cst.DatasetFamily.LOBSTER:  HP_LOBSTER,
+    cst.DatasetFamily.LOBSTER: HP_LOBSTER,
     cst.DatasetFamily.META: {},
 }
 
@@ -197,7 +197,7 @@ def launch_wandb(config: Configuration):
                 'metric': config.SWEEP_METRIC,
                 'parameters': {
                     **HP_DICT_DATASET[config.CHOSEN_DATASET],
-                    **HP_DICT_MODEL  [config.CHOSEN_MODEL].sweep
+                    **HP_DICT_MODEL[config.CHOSEN_MODEL].sweep
                 }
             },
             project=cst.PROJECT_NAME

@@ -38,19 +38,3 @@ def experiment_FI(model, k, now=None):
 now = "FI-CI-SIAMO-FRA"
 wandb.login(key="54775690baa838985ad1ce959fd2d5dcc8b23b8b")
 experiment_FI(model=cst.Models[sys.argv[1]], k=cst.FI_Horizons[sys.argv[2]], now=now)
-
-
-# TRANSLOB, K5
-# TRANSLOB, K10
-
-# AXIALLOB, K1
-# AXIALLOB, K2
-# AXIALLOB, K3
-# AXIALLOB, K5
-# AXIALLOB, K10
-
-# ATNBoF, K1
-# ATNBoF, K2
-# ATNBoF, K3
-# ATNBoF, K5
-# ATNBoF, K10
