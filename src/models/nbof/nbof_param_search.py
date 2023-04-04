@@ -22,5 +22,11 @@ HP_NBoF_FI_FIXED = {
 }
 
 HP_NBoF_LOBSTER_FIXED = {
-
+    cst.LearningHyperParameter.EPOCHS_UB.value: 100,
+    cst.LearningHyperParameter.OPTIMIZER.value: cst.Optimizers.ADAM.value,
+    cst.LearningHyperParameter.LEARNING_RATE.value: 0.0002154,
+    # cst.LearningHyperParameter.BATCH_SIZE.value: 32,
+    cst.LearningHyperParameter.MLP_HIDDEN.value: 512,
+    cst.LearningHyperParameter.NUM_RBF_NEURONS.value: 16,
+    cst.LearningHyperParameter.NUM_SNAPSHOTS.value: 15
 }

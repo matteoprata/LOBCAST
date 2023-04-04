@@ -43,7 +43,7 @@ class Configuration:
         self.IS_WANDB = 0
         self.IS_TUNE_H_PARAMS = False
 
-        self.SWEEP_METHOD = 'bayes'  # 'grid'
+        self.SWEEP_METHOD = 'grid'  # 'bayes'
 
         self.WANDB_INSTANCE = None
         self.WANDB_RUN_NAME = None
@@ -73,7 +73,7 @@ class Configuration:
         self.HYPER_PARAMETERS[LearningHyperParameter.FORWARD_WINDOW] = cst.WinSize.NONE.value
         self.HYPER_PARAMETERS[LearningHyperParameter.IS_SHUFFLE_TRAIN_SET] = True
         self.HYPER_PARAMETERS[LearningHyperParameter.LABELING_SIGMA_SCALER] = .9
-        self.HYPER_PARAMETERS[LearningHyperParameter.FI_HORIZON] = 10  # in FI = FORWARD_WINDOW  = k in papers
+        self.HYPER_PARAMETERS[LearningHyperParameter.FI_HORIZON] = cst.FI_Horizons.K10.value  # in FI = FORWARD_WINDOW  = k in papers
 
         self.HYPER_PARAMETERS[LearningHyperParameter.MLP_HIDDEN] = 128
         self.HYPER_PARAMETERS[LearningHyperParameter.RNN_HIDDEN] = 32

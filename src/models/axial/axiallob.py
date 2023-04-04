@@ -52,7 +52,7 @@ class GatedAxialAttention(nn.Module):
         if self.flag:
             x = x.permute(0, 2, 1, 3)
         else:
-            x = x.permute(0, 3, 1, 2)  # N, W, C, H
+            x = x.permute(0, 3, 1, 2)  # n_instances, W, C, H
         N, W, C, H = x.shape
         x = x.contiguous().view(N * W, C, H)
 
@@ -80,7 +80,7 @@ class GatedAxialAttention(nn.Module):
         stacked_similarity = torch.cat([qk, qr, kr], dim=1)
         stacked_similarity = self.bn_similarity(stacked_similarity).view(N * W, 3, self.heads, H, H).sum(dim=1)
         # stacked_similarity = self.bn_qr(qr) + self.bn_kr(kr) + self.bn_qk(qk)
-        # (N, heads, H, H, W)
+        # (n_instances, heads, H, H, W)
         similarity = torch.softmax(stacked_similarity, dim=3)
         sv = torch.einsum('bgij,bgcj->bgci', similarity, v)
         sve = torch.einsum('bgij,cij->bgci', similarity, v_embedding)

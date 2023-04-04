@@ -10,7 +10,7 @@ def callback_save_model(config, run_name):
         save_top_k=1,
         mode='max',
         dirpath=cst.DIR_SAVED_MODEL + config.WANDB_SWEEP_NAME,
-        filename="run=" + run_name + "-{epoch}-{" + monitor_var + ':.2f}'
+        filename=config.WANDB_SWEEP_NAME + "-run=" + run_name + "-{epoch}-{" + monitor_var + ':.2f}'
     )
     return check_point_callback
 
@@ -21,7 +21,7 @@ def early_stopping(config):
     return pl.callbacks.EarlyStopping(
         monitor=monitor_var,
         min_delta=0.00,
-        patience=10,
+        patience=8,
         verbose=True,
         mode='max',
         # |v stops when if after epoch 1, the

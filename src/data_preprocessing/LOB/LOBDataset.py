@@ -12,6 +12,8 @@ import src.data_preprocessing.preprocessing_utils as ppu
 from src.data_preprocessing.LOB.LOBSTERDataBuilder import LOBSTERDataBuilder
 from src.config import Configuration
 
+LOSS_WEIGHTS_DICT = {m: 1e6 for m in cst.Models}
+# LOSS_WEIGHTS_DICT[cst.Models.ATNBoF] = 1e3
 
 class LOBDataset(data.Dataset):
     """ Characterizes a dataset for PyTorch. """
@@ -101,24 +103,35 @@ class LOBDataset(data.Dataset):
             ind_sf = p
 
         # X and Y ready to go
-        self.x = torch.from_numpy(np.concatenate(Xs, axis=0)).type(torch.FloatTensor)
+        self.x = pd.concat(Xs, axis=0)
         self.x, self.vol_price_mu, self.vol_price_sig = self.__stationary_normalize_data(self.x, self.vol_price_mu, self.vol_price_sig)
 
-        self.y = np.concatenate(Ys, axis=0).astype(int)
+        self.x = torch.from_numpy(self.x.values).type(torch.FloatTensor)
+        y = np.concatenate(Ys, axis=0).astype(float)
+        self.y = torch.from_numpy(y).type(torch.LongTensor)
         self.stock_sym_name = Ss
 
-        self.indexes_chosen = self.__under_sampling(self.y, ignore_indices)
+        self.ys_occurrences = collections.Counter(y)
+        occs = np.array([self.ys_occurrences[k] for k in sorted(self.ys_occurrences)])
+        self.loss_weights = torch.Tensor(LOSS_WEIGHTS_DICT[config.CHOSEN_MODEL] / occs)
+
+        # self.indexes_chosen = self.__under_sampling(self.y, ignore_indices)
         self.x_shape = (self.sample_size, self.x.shape[1])
 
     def __len__(self):
         """ Denotes the total number of samples. """
-        return len(self.indexes_chosen)
+        # len(self.indexes_chosen)
+        return len(self.y)-self.sample_size
 
     def __getitem__(self, index):
         """ Generates samples of data. """
-        id_sample = self.indexes_chosen[index]
-        x, y, s = self.x[id_sample-self.sample_size:id_sample, :], self.y[id_sample], self.stock_sym_name[id_sample]
+        x = self.x[index: index + self.sample_size]
+        y = self.y[index + self.sample_size - 1]
+        s = self.stock_sym_name[index]
         return x, y, s
+        # id_sample = self.indexes_chosen[index]
+        # x, y, s = self.x[id_sample-self.sample_size:id_sample], self.y[id_sample], self.stock_sym_name[id_sample]
+
 
     def __under_sampling(self, y, ignore_indices):
         """ Discard instances of the majority class. """
@@ -126,7 +139,7 @@ class LOBDataset(data.Dataset):
 
         y_without_snap = [y[i] for i in range(len(y)) if i not in ignore_indices]  # removes the indices of the first sample for each stock
 
-        occurrences = self.__compute_occurrences(y_without_snap)
+        occurrences = self.compute_occurrences(y_without_snap)
         i_min_occ = min(occurrences, key=occurrences.get)  # index of the class with the least instances
         n_min_occ = occurrences[i_min_occ]                 # number of occurrences of the minority class
 
@@ -178,6 +191,7 @@ class LOBDataset(data.Dataset):
 
         return data, means_dict, stds_dict
 
-    def __compute_occurrences(self, y):
+    @staticmethod
+    def compute_occurrences(y):
         occurrences = collections.Counter(y)
         return occurrences

@@ -101,16 +101,16 @@ class FIDataBuilder:
 
         self.samples_y -= 1
 
-    def __snapshotting(self):
-        # This is not used
-        """ This creates 4 X n_levels X window_size_backward -> prediction. """
-        print("Snapshotting... (__data has", self.data.shape[0], "rows)")
-
-        n_tot = self.samples_x.shape[0] - self.window
-        X = np.array([self.samples_x[st:st + self.window] for st in tqdm.tqdm(range(0, n_tot))])
-        Y = np.array([self.samples_y[st + self.window - 1] for st in tqdm.tqdm(range(0, n_tot))])
-
-        self.samples_x, self.samples_y = np.asarray(X), np.asarray(Y)
+    # def __snapshotting(self):
+    #     # This is not used
+    #     """ This creates 4 X n_levels X window_size_backward -> prediction. """
+    #     print("Snapshotting... (__data has", self.data.shape[0], "rows)")
+    #
+    #     n_tot = self.samples_x.shape[0] - self.window
+    #     X = np.array([self.samples_x[st:st + self.window] for st in tqdm.tqdm(range(0, n_tot))])
+    #     Y = np.array([self.samples_y[st + self.window - 1] for st in tqdm.tqdm(range(0, n_tot))])
+    #
+    #     self.samples_x, self.samples_y = np.asarray(X), np.asarray(Y)
 
 
     def __prepare_dataset(self):

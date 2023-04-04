@@ -74,7 +74,6 @@ class BiN_CTABL(nn.Module):
         x = self.TABL(x)
         x = torch.squeeze(x)
         x = torch.softmax(x, 1)
-
         return x
 
     def max_norm_(self, w):

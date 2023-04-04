@@ -13,6 +13,8 @@ import random
 import numpy as np
 import wandb
 import traceback
+import time
+import torch
 
 # TORCH
 from pytorch_lightning import Trainer
@@ -23,29 +25,32 @@ from pytorch_lightning.strategies import DDPStrategy
 import src.constants as cst
 import src.models.model_callbacks as cbk
 from src.config import Configuration
+from src.data_preprocessing.META.METADataBuilder import MetaDataBuilder
+from src.metrics.metrics_learning import compute_metrics, compute_sk_cm
+from src.data_preprocessing.FI.FIDataBuilder import FIDataBuilder
 
 # DATASETS
 from src.data_preprocessing.LOB.lobster_param_search import HP_LOBSTER
 
 # MODELS
-from src.models.mlp.mlp_param_search import HP_MLP, HP_MLP_FI_FIXED
-from src.models.tabl.tabl_param_search import HP_TABL, HP_TABL_FI_FIXED
-from src.models.translob.tlb_param_search import HP_TRANS, HP_TRANS_FI_FIXED
-from src.models.cnn1.cnn1_param_search import HP_CNN1, HP_CNN1_FI_FIXED
-from src.models.cnn2.cnn2_param_search import HP_CNN2, HP_CNN2_FI_FIXED
-from src.models.cnnlstm.cnnlstm_param_search import HP_CNNLSTM, HP_CNNLSTM_FI_FIXED
-from src.models.dain.dain_param_search import HP_DAIN, HP_DAIN_FI_FIXED
+from src.models.mlp.mlp_param_search import HP_MLP, HP_MLP_FI_FIXED, HP_MLP_LOBSTER_FIXED
+from src.models.tabl.tabl_param_search import HP_TABL, HP_TABL_FI_FIXED, HP_TABL_LOBSTER_FIXED
+from src.models.translob.tlb_param_search import HP_TRANS, HP_TRANS_FI_FIXED, HP_TRANS_LOBSTER_FIXED
+from src.models.cnn1.cnn1_param_search import HP_CNN1, HP_CNN1_FI_FIXED, HP_CNN1_LOBSTER_FIXED
+from src.models.cnn2.cnn2_param_search import HP_CNN2, HP_CNN2_FI_FIXED, HP_CNN2_LOBSTER_FIXED
+from src.models.cnnlstm.cnnlstm_param_search import HP_CNNLSTM, HP_CNNLSTM_FI_FIXED, HP_CNNLSTM_LOBSTER_FIXED
+from src.models.dain.dain_param_search import HP_DAIN, HP_DAIN_FI_FIXED, HP_DAIN_LOBSTER_FIXED
 from src.models.deeplob.dlb_param_search import HP_DEEP, HP_DEEP_FI_FIXED, HP_DEEP_LOBSTER_FIXED
-from src.models.lstm.lstm_param_search import HP_LSTM, HP_LSTM_FI_FIXED
-from src.models.binctabl.binctabl_param_search import HP_BINTABL, HP_BINTABL_FI_FIXED
+from src.models.lstm.lstm_param_search import HP_LSTM, HP_LSTM_FI_FIXED, HP_LSTM_LOBSTER_FIXED
+from src.models.binctabl.binctabl_param_search import HP_BINTABL, HP_BINTABL_FI_FIXED, HP_BINTABL_LOBSTER_FIXED
 from src.models.deeplobatt.dlbatt_param_search import HP_DEEPATT, HP_DEEPATT_FI_FIXED, HP_DEEPATT_LOBSTER_FIXED
-from src.models.dla.dla_param_search import HP_DLA, HP_DLA_FI_FIXED
-from src.models.axial.axiallob_param_search import HP_AXIALLOB, HP_AXIALLOB_FI_FIXED
-
-from src.models.nbof.nbof_param_search import HP_NBoF, HP_NBoF_FI_FIXED
-from src.models.atnbof.atnbof_param_search import HP_ATNBoF, HP_ATNBoF_FI_FIXED
-from src.models.tlonbof.tlonbof_param_search import HP_TLONBoF, HP_TLONBoF_FI_FIXED
+from src.models.dla.dla_param_search import HP_DLA, HP_DLA_FI_FIXED, HP_DLA_LOBSTER_FIXED
+from src.models.axial.axiallob_param_search import HP_AXIALLOB, HP_AXIALLOB_FI_FIXED, HP_AXIALLOB_LOBSTER_FIXED
+from src.models.nbof.nbof_param_search import HP_NBoF, HP_NBoF_FI_FIXED, HP_NBoF_LOBSTER_FIXED
+from src.models.atnbof.atnbof_param_search import HP_ATNBoF, HP_ATNBoF_FI_FIXED, HP_ATNBoF_LOBSTER_FIXED
+from src.models.tlonbof.tlonbof_param_search import HP_TLONBoF, HP_TLONBoF_FI_FIXED, HP_TLONBoF_LOBSTER_FIXED
 from src.models.metalob.metalob_param_search import HP_META, HP_META_FIXED
+
 from src.utils.utilities import get_sys_mac
 from src.main_helper import pick_model, pick_dataset
 from collections import namedtuple
@@ -54,28 +59,29 @@ HPSearchTypes = namedtuple('HPSearchTypes', ("sweep", "fixed_fi", "fixed_lob"))
 HPSearchTypes2 = namedtuple('HPSearchTypes', ("sweep", "fixed"))
 
 HP_DICT_MODEL = {
-    cst.Models.MLP:  HPSearchTypes(HP_MLP, HP_MLP_FI_FIXED, None),
-    cst.Models.CNN1: HPSearchTypes(HP_CNN1, HP_CNN1_FI_FIXED, None),
-    cst.Models.CNN2: HPSearchTypes(HP_CNN2, HP_CNN2_FI_FIXED, None),
-    cst.Models.LSTM: HPSearchTypes(HP_LSTM, HP_LSTM_FI_FIXED, None),
-    cst.Models.CNNLSTM: HPSearchTypes(HP_CNNLSTM, HP_CNNLSTM_FI_FIXED, None),
-    cst.Models.DAIN: HPSearchTypes(HP_DAIN, HP_DAIN_FI_FIXED, None),
+    cst.Models.MLP:  HPSearchTypes(HP_MLP, HP_MLP_FI_FIXED, HP_MLP_LOBSTER_FIXED),
+    cst.Models.CNN1: HPSearchTypes(HP_CNN1, HP_CNN1_FI_FIXED, HP_CNN1_LOBSTER_FIXED),
+    cst.Models.CNN2: HPSearchTypes(HP_CNN2, HP_CNN2_FI_FIXED, HP_CNN2_LOBSTER_FIXED),
+    cst.Models.LSTM: HPSearchTypes(HP_LSTM, HP_LSTM_FI_FIXED, HP_LSTM_LOBSTER_FIXED),
+    cst.Models.CNNLSTM: HPSearchTypes(HP_CNNLSTM, HP_CNNLSTM_FI_FIXED, HP_CNNLSTM_LOBSTER_FIXED),
+    cst.Models.DAIN: HPSearchTypes(HP_DAIN, HP_DAIN_FI_FIXED, HP_DAIN_LOBSTER_FIXED),
     cst.Models.DEEPLOB: HPSearchTypes(HP_DEEP, HP_DEEP_FI_FIXED, HP_DEEP_LOBSTER_FIXED),
-    cst.Models.TRANSLOB: HPSearchTypes(HP_TRANS, HP_TRANS_FI_FIXED, None),
-    cst.Models.CTABL: HPSearchTypes(HP_TABL, HP_TABL_FI_FIXED, None),
-    cst.Models.BINCTABL: HPSearchTypes(HP_BINTABL, HP_BINTABL_FI_FIXED, None),
+    cst.Models.TRANSLOB: HPSearchTypes(HP_TRANS, HP_TRANS_FI_FIXED, HP_TRANS_LOBSTER_FIXED),
+    cst.Models.CTABL: HPSearchTypes(HP_TABL, HP_TABL_FI_FIXED, HP_TABL_LOBSTER_FIXED),
+    cst.Models.BINCTABL: HPSearchTypes(HP_BINTABL, HP_BINTABL_FI_FIXED, HP_BINTABL_LOBSTER_FIXED),
     cst.Models.DEEPLOBATT: HPSearchTypes(HP_DEEPATT, HP_DEEPATT_FI_FIXED, HP_DEEPATT_LOBSTER_FIXED),
-    cst.Models.DLA: HPSearchTypes(HP_DLA, HP_DLA_FI_FIXED, None),
-    cst.Models.AXIALLOB: HPSearchTypes(HP_AXIALLOB, HP_AXIALLOB_FI_FIXED, None),
-    # cst.Models.NBoF: HPSearchTypes(HP_NBoF, HP_NBoF_FI_FIXED, None),
-    cst.Models.ATNBoF: HPSearchTypes(HP_ATNBoF, HP_ATNBoF_FI_FIXED, None),
-    cst.Models.TLONBoF: HPSearchTypes(HP_TLONBoF, HP_TLONBoF_FI_FIXED, None),
-    cst.Models.METALOB: HPSearchTypes2(HP_META, HP_META_FIXED)
+    cst.Models.DLA: HPSearchTypes(HP_DLA, HP_DLA_FI_FIXED, HP_DLA_LOBSTER_FIXED),
+    cst.Models.AXIALLOB: HPSearchTypes(HP_AXIALLOB, HP_AXIALLOB_FI_FIXED, HP_AXIALLOB_LOBSTER_FIXED),
+    # cst.Models.NBoF: HPSearchTypes(HP_NBoF, HP_NBoF_FI_FIXED, HP_NBoF_LOBSTER_FIXED),
+    cst.Models.ATNBoF: HPSearchTypes(HP_ATNBoF, HP_ATNBoF_FI_FIXED, HP_ATNBoF_LOBSTER_FIXED),
+    cst.Models.TLONBoF: HPSearchTypes(HP_TLONBoF, HP_TLONBoF_FI_FIXED, HP_TLONBoF_LOBSTER_FIXED),
+    cst.Models.METALOB: HPSearchTypes2(HP_META, HP_META_FIXED),
+    cst.Models.MAJORITY: HPSearchTypes2(HP_META, HP_META_FIXED)
 }
 
 HP_DICT_DATASET = {
     cst.DatasetFamily.FI:  {},
-    cst.DatasetFamily.LOBSTER:  HP_LOBSTER,
+    cst.DatasetFamily.LOBSTER: HP_LOBSTER,
     cst.DatasetFamily.META: {},
 }
 
@@ -104,7 +110,7 @@ def _wandb_exe(config: Configuration):
         wandb_instance.log({"model": config.CHOSEN_MODEL.name})
         wandb_instance.log({"seed": config.SEED})
 
-        if config.CHOSEN_DATASET == cst.DatasetFamily.FI:
+        if config.CHOSEN_DATASET in [cst.DatasetFamily.FI, cst.DatasetFamily.META]:
             wandb_instance.log({"fi-k":  config.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON]})
 
         elif config.CHOSEN_DATASET == cst.DatasetFamily.LOBSTER:
@@ -120,7 +126,7 @@ def _wandb_exe(config: Configuration):
         launch_single(config, params_dict)
 
 
-def launch_single(config: Configuration, model_params=None):
+def launch_single(config: Configuration, model_params=None, is_baseline=False):
     def core(model_params):
 
         # selects the parameters for the run
@@ -129,8 +135,10 @@ def launch_single(config: Configuration, model_params=None):
 
             if config.CHOSEN_DATASET == cst.DatasetFamily.FI:
                 model_params = HP_DICT_MODEL[config.CHOSEN_MODEL].fixed_fi
+
             elif config.CHOSEN_DATASET == cst.DatasetFamily.LOBSTER:
                 model_params = HP_DICT_MODEL[config.CHOSEN_MODEL].fixed_lob
+
             elif config.CHOSEN_DATASET == cst.DatasetFamily.META:
                 model_params = HP_DICT_MODEL[config.CHOSEN_MODEL].fixed
 
@@ -142,6 +150,7 @@ def launch_single(config: Configuration, model_params=None):
 
         config.dynamic_config_setup()
         data_module = pick_dataset(config)
+
         nn_engine = pick_model(config, data_module)
 
         trainer = Trainer(
@@ -153,7 +162,6 @@ def launch_single(config: Configuration, model_params=None):
                 cbk.callback_save_model(config, config.WANDB_RUN_NAME),
                 cbk.early_stopping(config)
             ],
-            # strategy=DDPStrategy(find_unused_parameters=False)
         )
         trainer.fit(nn_engine, data_module)
 
@@ -161,11 +169,10 @@ def launch_single(config: Configuration, model_params=None):
         trainer.test(nn_engine, dataloaders=data_module.val_dataloader(), ckpt_path="best")
 
         nn_engine.testing_mode = cst.ModelSteps.TESTING
-        trainer.test(nn_engine, dataloaders=data_module.test_dataloader(), ckpt_path="best")
+        trainer.test(nn_engine, dataloaders=data_module.test_dataloader(), ckpt_path="best")  # todo check validate()
 
         if not config.IS_TUNE_H_PARAMS:
             config.METRICS_JSON.close()
-
     try:
         core(model_params)
     except:
@@ -190,7 +197,7 @@ def launch_wandb(config: Configuration):
                 'metric': config.SWEEP_METRIC,
                 'parameters': {
                     **HP_DICT_DATASET[config.CHOSEN_DATASET],
-                    **HP_DICT_MODEL  [config.CHOSEN_MODEL].sweep
+                    **HP_DICT_MODEL[config.CHOSEN_MODEL].sweep
                 }
             },
             project=cst.PROJECT_NAME
@@ -277,7 +284,6 @@ def experiment_preamble(now, servers):
         print("Running on server", server_name.name)
     else:
         raise "This SERVER is not handled for the experiment."
-
     return now, server_name, server_id, n_servers
 
 

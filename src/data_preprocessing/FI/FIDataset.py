@@ -7,7 +7,7 @@ import numpy as np
 import collections
 
 LOSS_WEIGHTS_DICT = {m: 1e6 for m in cst.Models}
-LOSS_WEIGHTS_DICT[cst.Models.ATNBoF] = 1e3
+# LOSS_WEIGHTS_DICT[cst.Models.ATNBoF] = 1e3
 
 
 class FIDataset(data.Dataset):
@@ -40,4 +40,4 @@ class FIDataset(data.Dataset):
 
     def __getitem__(self, index):
         """ Generates samples of data. """
-        return self.x[index: index+self.num_snapshots], self.y[index+self.num_snapshots], cst.Stocks.FI.value[0]
+        return self.x[index: index+self.num_snapshots], self.y[index+self.num_snapshots-1], cst.Stocks.FI.value[0]

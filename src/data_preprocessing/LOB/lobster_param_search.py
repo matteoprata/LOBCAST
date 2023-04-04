@@ -26,5 +26,4 @@ HP_LOBSTER = {
     # cst.LearningHyperParameter.LABELING_SIGMA_SCALER.value: {
     #     'min': 0.1, 'max': 2.0  # 'values': [0.1, 0.25, 0.5, 0.75]
     # },
-
 }
