@@ -108,12 +108,13 @@ class LOBDataset(data.Dataset):
 
         self.x = torch.from_numpy(self.x.values).type(torch.FloatTensor)
         y = np.concatenate(Ys, axis=0).astype(float)
-        self.y = torch.from_numpy(y).type(torch.LongTensor)
-        self.stock_sym_name = Ss
 
         self.ys_occurrences = collections.Counter(y)
         occs = np.array([self.ys_occurrences[k] for k in sorted(self.ys_occurrences)])
         self.loss_weights = torch.Tensor(LOSS_WEIGHTS_DICT[config.CHOSEN_MODEL] / occs)
+
+        self.y = torch.from_numpy(y).type(torch.LongTensor)
+        self.stock_sym_name = Ss
 
         # self.indexes_chosen = self.__under_sampling(self.y, ignore_indices)
         self.x_shape = (self.sample_size, self.x.shape[1])
@@ -190,8 +191,3 @@ class LOBDataset(data.Dataset):
         # data = data.fillna(method="ffill")
 
         return data, means_dict, stds_dict
-
-    @staticmethod
-    def compute_occurrences(y):
-        occurrences = collections.Counter(y)
-        return occurrences
