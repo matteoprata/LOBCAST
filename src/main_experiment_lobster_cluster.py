@@ -46,7 +46,7 @@ def experiment_lobster(model, backward_window, forward_window, seed, now=None):
         sys.exit()
 
 
-now = "LOBSTER-31-03-2023"
+now = "LOBSTER-05-04-2023"
 wandb.login(key="54775690baa838985ad1ce959fd2d5dcc8b23b8b")
 experiment_lobster(
     model=cst.Models[sys.argv[1]],

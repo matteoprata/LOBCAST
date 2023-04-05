@@ -7,6 +7,7 @@ if module_path not in sys.path:
     sys.path.append(module_path)
 
 from src.main_single import *
+from src.utils.utilities import get_upper_diagonal_windows
 
 DEFAULT_SEEDS = set(range(500, 505))
 DEFAULT_HORIZONS = set(cst.FI_Horizons)
@@ -60,69 +61,71 @@ def experiment_lobster(models_todo, dataset, now=None, servers=None, is_debug=Fa
 
 servers = [cst.Servers.ALIEN1, cst.Servers.ALIEN2, cst.Servers.FISSO1]
 
+backwards, forwards = get_upper_diagonal_windows(windows=[cst.WinSize.SEC10, cst.WinSize.SEC50, cst.WinSize.SEC100])
+
 models_todo = {
     cst.Servers.FISSO1: [
         (cst.Models.DLA, {
-            'k+': [cst.WinSize.SEC100],
-            'k-': [cst.WinSize.SEC50],
-            'seed': [500]
+            'seed': [500],
+            'k-': backwards,
+            'k+': forwards,
         }),
         (cst.Models.CTABL, {
-            'k+': [cst.WinSize.SEC100],
-            'k-': [cst.WinSize.SEC50],
-            'seed': [500]
+            'seed': [500],
+            'k-': backwards,
+            'k+': forwards,
         }),
         (cst.Models.BINCTABL, {
-            'k+': [cst.WinSize.SEC100],
-            'k-': [cst.WinSize.SEC50],
-            'seed': [500]
+            'seed': [500],
+            'k-': backwards,
+            'k+': forwards,
         }),
         (cst.Models.LSTM, {
-            'k+': [cst.WinSize.SEC100],
-            'k-': [cst.WinSize.SEC50],
-            'seed': [500]
+            'seed': [500],
+            'k-': backwards,
+            'k+': forwards,
         }),
         (cst.Models.CNNLSTM, {
-            'k+': [cst.WinSize.SEC100],
-            'k-': [cst.WinSize.SEC50],
-            'seed': [500]
+            'seed': [500],
+            'k-': backwards,
+            'k+': forwards,
         }),
     ],
     cst.Servers.ALIEN1: [
         (cst.Models.DAIN, {
-            'k+': [cst.WinSize.SEC100],
-            'k-': [cst.WinSize.SEC50],
-            'seed': [500]
+            'seed': [500],
+            'k-': backwards,
+            'k+': forwards,
         }),
         (cst.Models.MLP, {
-            'k+': [cst.WinSize.SEC100],
-            'k-': [cst.WinSize.SEC50],
-            'seed': [500]
+            'seed': [500],
+            'k-': backwards,
+            'k+': forwards,
         }),
         (cst.Models.CNN2, {
-            'k+': [cst.WinSize.SEC100],
-            'k-': [cst.WinSize.SEC50],
-            'seed': [500]
+            'seed': [500],
+            'k-': backwards,
+            'k+': forwards,
         }),
     ],
     cst.Servers.ALIEN2: [
-        (cst.Models.TLONBoF, {
-            'k+': [cst.WinSize.SEC100],
-            'k-': [cst.WinSize.SEC50],
-            'seed': [500]
-        }),
         (cst.Models.CNN1, {
-            'k+': [cst.WinSize.SEC100],
-            'k-': [cst.WinSize.SEC50],
-            'seed': [500]
+            'seed': [500],
+            'k-': backwards,
+            'k+': forwards,
+        }),
+        (cst.Models.TLONBoF, {
+            'seed': [500],
+            'k-': backwards,
+            'k+': forwards,
         }),
         (cst.Models.DEEPLOB, {
-            'k+': [cst.WinSize.SEC100],
-            'k-': [cst.WinSize.SEC50],
-            'seed': [500]
+            'seed': [500],
+            'k-': backwards,
+            'k+': forwards,
         }),
     ]
 }
 
-now = "LOBSTER-31-03-2023"
+now = "LOBSTER-05-04-2023"
 experiment_lobster(models_todo, dataset=cst.DatasetFamily.LOBSTER, now=now, servers=servers, is_debug=False)
