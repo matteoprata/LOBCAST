@@ -4,7 +4,7 @@ import torch
 import numpy as np
 
 
-ALFA = 0.00024
+ALFA = 0.00016
 
 
 class LearningHyperParameter(str, Enum):
@@ -252,9 +252,9 @@ class Servers(Enum):
 
 
 MACIDsServer = {
-    '73:b5:cc:b3:5a:9a': Servers.ALIEN1,
-    'ff:6f:33:5d:20:a0': Servers.ALIEN2,
-    '3e:18:01:db:23:0e': Servers.FISSO1
+    '53:97:71:de:8c:60': Servers.ALIEN1,
+    '17:d7:73:74:d9:f2': Servers.ALIEN2,
+    '86:96:16:b3:db:46': Servers.FISSO1
 }
 
 ServerMACIDs = {v: k for k, v in MACIDsServer.items()}
