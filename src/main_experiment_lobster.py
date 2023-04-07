@@ -49,8 +49,8 @@ def experiment_lobster(models_todo, dataset, now=None, servers=None, is_debug=Fa
 
                         cf.CHOSEN_MODEL = mod
 
-                        cf.IS_WANDB = 1 if not is_debug else 0
-                        cf.IS_TUNE_H_PARAMS = 1
+                        cf.IS_WANDB = int(not is_debug)
+                        cf.IS_TUNE_H_PARAMS = 0
 
                         launch_wandb(cf)
 

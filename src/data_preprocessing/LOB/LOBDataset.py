@@ -107,13 +107,22 @@ class LOBDataset(data.Dataset):
         self.x, self.vol_price_mu, self.vol_price_sig = self.__stationary_normalize_data(self.x, self.vol_price_mu, self.vol_price_sig)
 
         self.x = torch.from_numpy(self.x.values).type(torch.FloatTensor)
+
         y = np.concatenate(Ys, axis=0).astype(float)
 
-        self.ys_occurrences = collections.Counter(y)
-        occs = np.array([self.ys_occurrences[k] for k in sorted(self.ys_occurrences)])
-        self.loss_weights = torch.Tensor(LOSS_WEIGHTS_DICT[config.CHOSEN_MODEL] / occs)
+        if config.CHOSEN_MODEL == cst.Models.DEEPLOBATT:
+            self.ys_occurrences = dict()
+            for i, window in enumerate(cst.WinSize):
+                if window.value is not None:
+                    y_i = y[:, i]
+                    self.ys_occurrences[window] = collections.Counter(y_i)
+        else:
+            self.ys_occurrences = collections.Counter(y)
+            occs = np.array([self.ys_occurrences[c] for c in sorted(self.ys_occurrences)])
+            self.loss_weights = torch.Tensor(LOSS_WEIGHTS_DICT[config.CHOSEN_MODEL] / occs)
 
         self.y = torch.from_numpy(y).type(torch.LongTensor)
+
         self.stock_sym_name = Ss
 
         # self.indexes_chosen = self.__under_sampling(self.y, ignore_indices)

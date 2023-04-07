@@ -5,8 +5,8 @@ HP_DEEP = {
     cst.LearningHyperParameter.EPOCHS_UB.value: {'values': [100]},
     cst.LearningHyperParameter.OPTIMIZER.value: {'values': [cst.Optimizers.ADAM.value]},
     cst.LearningHyperParameter.EPS.value: {'values': [1]},
-    cst.LearningHyperParameter.BATCH_SIZE.value:    {'values': [32]},
-    cst.LearningHyperParameter.LEARNING_RATE.value: {'values': [0.01]}  # {'max': 1e-2, 'min': 1e-5}
+    cst.LearningHyperParameter.BATCH_SIZE.value:    {'values': [32, 64]},
+    cst.LearningHyperParameter.LEARNING_RATE.value: {'max': 1e-2, 'min': 1e-5}  # 'values': [0.01]
 }
 
 HP_DEEP_FI_FIXED = {
@@ -23,6 +23,4 @@ HP_DEEP_LOBSTER_FIXED = {
     cst.LearningHyperParameter.LEARNING_RATE.value: 0.01,
     cst.LearningHyperParameter.BATCH_SIZE.value: 32,
     cst.LearningHyperParameter.NUM_SNAPSHOTS.value: 100,
-    cst.LearningHyperParameter.BACKWARD_WINDOW.value: 100,
-    cst.LearningHyperParameter.FORWARD_WINDOW.value: 100,
 }

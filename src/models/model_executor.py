@@ -212,7 +212,6 @@ class NNEngine(pl.LightningModule):
         losses = np.array(losses)
 
         if self.config.CHOSEN_MODEL == cst.Models.DEEPLOBATT:
-            truths = np.argmax(truths, axis=1)
             index = get_index_from_window(self.config)
             truths = truths[:, index]
             preds = preds[:, index]

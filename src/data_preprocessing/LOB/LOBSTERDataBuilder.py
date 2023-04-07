@@ -128,7 +128,7 @@ class LOBSTERDataBuilder:
                 self.__data = ppu.add_lob_labels_march_2023(self.__data, winsize.value, self.window_size_backward, cst.ALFA)
                 self.__data = self.__data.rename(columns={'y': f'y{winsize.value}'})
             self.__data['y'] = self.__data[[f'y{winsize.value}' for winsize in cst.WinSize if winsize.value is not None]].values.tolist()
-
+            self.__data = self.__data.drop([f'y{winsize.value}' for winsize in cst.WinSize if winsize.value is not None], axis=1)
         else:
             self.__data = ppu.add_lob_labels_march_2023(self.__data, self.window_size_forward, self.window_size_backward, cst.ALFA)
 
@@ -176,4 +176,7 @@ class LOBSTERDataBuilder:
         return self.__data.iloc[:, :-5]
 
     def get_Y_n(self):
-        return self.__data[ppu.DataCols.PREDICTION.value]
+        if self.config.CHOSEN_MODEL == cst.Models.DEEPLOBATT:
+            return np.asarray(self.__data[ppu.DataCols.PREDICTION.value].values.tolist())
+        else:
+            return self.__data[ppu.DataCols.PREDICTION.value]
