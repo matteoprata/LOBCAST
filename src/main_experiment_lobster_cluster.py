@@ -29,8 +29,8 @@ def experiment_lobster(model, backward_window, forward_window, seed, now=None):
 
         cf.CHOSEN_MODEL = model
 
-        cf.HYPER_PARAMETERS[cst.LearningHyperParameter.FORWARD_WINDOW] = backward_window.value
-        cf.HYPER_PARAMETERS[cst.LearningHyperParameter.BACKWARD_WINDOW] = forward_window.value
+        cf.HYPER_PARAMETERS[cst.LearningHyperParameter.BACKWARD_WINDOW] = backward_window.value
+        cf.HYPER_PARAMETERS[cst.LearningHyperParameter.FORWARD_WINDOW] = forward_window.value
 
         cf.IS_WANDB = 1
         cf.IS_TUNE_H_PARAMS = False

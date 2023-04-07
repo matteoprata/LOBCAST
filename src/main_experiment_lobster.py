@@ -23,12 +23,12 @@ def experiment_lobster(models_todo, dataset, now=None, servers=None, is_debug=Fa
         seeds = DEFAULT_SEEDS if seeds == 'all' else seeds
 
         for see in seeds:
-            horizons_wf = plan['k+']
-            horizons_wb = plan['k-']
+            backwards = plan['k-']
+            forwards = plan['k+']
 
-            for kp, km in zip(horizons_wb, horizons_wf):
+            for window_backward, window_forward in zip(backwards, forwards):
 
-                    print(f"Running LOBSTER experiment: model={mod}, bw={km}, fw={kp}, seed={see}")
+                    print(f"Running LOBSTER experiment: model={mod}, bw={window_backward}, fw={window_forward}, seed={see}")
 
                     try:
                         cf: Configuration = Configuration(now)
@@ -44,18 +44,18 @@ def experiment_lobster(models_todo, dataset, now=None, servers=None, is_debug=Fa
                         cf.CHOSEN_STOCKS[cst.STK_OPEN.TEST] = cst.Stocks.ALL
                         cf.CHOSEN_PERIOD = cst.Periods.JULY2021
 
-                        cf.HYPER_PARAMETERS[cst.LearningHyperParameter.FORWARD_WINDOW] = kp.value
-                        cf.HYPER_PARAMETERS[cst.LearningHyperParameter.BACKWARD_WINDOW] = km.value
+                        cf.HYPER_PARAMETERS[cst.LearningHyperParameter.BACKWARD_WINDOW] = window_backward.value
+                        cf.HYPER_PARAMETERS[cst.LearningHyperParameter.FORWARD_WINDOW] = window_forward.value
 
                         cf.CHOSEN_MODEL = mod
 
                         cf.IS_WANDB = 1 if not is_debug else 0
-                        cf.IS_TUNE_H_PARAMS = 0
+                        cf.IS_TUNE_H_PARAMS = 1
 
                         launch_wandb(cf)
 
                     except KeyboardInterrupt:
-                        print("There was a problem running on", server_name.name, "LOBSTER experiment on {}, with K-={}, K+={}".format(mod, km, kp))
+                        print("There was a problem running on", server_name.name, "LOBSTER experiment on {}, with K-={}, K+={}".format(mod, window_backward, window_forward))
                         sys.exit()
 
 
@@ -109,23 +109,24 @@ models_todo = {
         }),
     ],
     cst.Servers.ALIEN2: [
-        (cst.Models.CNN1, {
-            'seed': [500],
-            'k-': backwards,
-            'k+': forwards,
-        }),
-        (cst.Models.TLONBoF, {
-            'seed': [500],
-            'k-': backwards,
-            'k+': forwards,
-        }),
+        # (cst.Models.CNN1, {
+        #     'seed': [500],
+        #     'k-': backwards,
+        #     'k+': forwards,
+        # }),
+        # (cst.Models.TLONBoF, {
+        #     'seed': [500],
+        #     'k-': backwards,
+        #     'k+': forwards,
+        # }),
         (cst.Models.DEEPLOB, {
             'seed': [500],
-            'k-': backwards,
-            'k+': forwards,
+            'k-': [cst.WinSize.SEC100],
+            'k+': [cst.WinSize.SEC10],
         }),
     ]
 }
 
-now = "LOBSTER-05-04-2023"
+# now = "LOBSTER-05-04-2023"
+now = "LOBSTER_DEEPLOB_SWEEP_07-04-2023"
 experiment_lobster(models_todo, dataset=cst.DatasetFamily.LOBSTER, now=now, servers=servers, is_debug=False)
