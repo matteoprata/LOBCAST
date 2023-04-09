@@ -126,12 +126,11 @@ def prepare_data_LOBSTER(config: Configuration):
         vol_price_mu=vol_price_mu, vol_price_sig=vol_price_sig
     )
 
-    print()
+
     print("train", train_set.ys_occurrences)
     print("val",   val_set.ys_occurrences)
     print("test",  test_set.ys_occurrences)
 
-    print()
     print("Samples in the splits:")
     print(len(train_set), len(val_set), len(test_set))
     print()

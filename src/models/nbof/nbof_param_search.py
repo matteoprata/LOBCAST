@@ -7,8 +7,8 @@ HP_NBoF = {
     cst.LearningHyperParameter.NUM_RBF_NEURONS.value: {'values': [16]},
     cst.LearningHyperParameter.NUM_SNAPSHOTS.value: {'values': [15]},
 
-    cst.LearningHyperParameter.BATCH_SIZE.value: {'values': [32, 64, 128]},
-    cst.LearningHyperParameter.LEARNING_RATE.value: {'max': 1e-2, 'min': 1e-5}
+    cst.LearningHyperParameter.BATCH_SIZE.value: {'values': [32, 64]},
+    cst.LearningHyperParameter.LEARNING_RATE.value: {'values': [1e-3, 1e-4, 1e-5]}
 }
 
 HP_NBoF_FI_FIXED = {

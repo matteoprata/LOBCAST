@@ -51,7 +51,7 @@ class LOBDataset(data.Dataset):
             stocks_open = config.CHOSEN_STOCKS[cst.STK_OPEN.TEST].value   # = [NVDA]
 
         for stock in stocks_open:
-            path = cst.DATASET_LOBSTER + f'_data_dwn_48_332__{stock}_{config.CHOSEN_PERIOD.value["train"][0]}_{config.CHOSEN_PERIOD.value["test"][1]}_10'
+            path = cst.DATASET_LOBSTER + f'_data_dwn_48_332__{stock}_{config.CHOSEN_PERIOD.value["first_day"]}_{config.CHOSEN_PERIOD.value["last_day"]}_10'
 
             # normalization_mean = self.vol_price_mu[stock] if stock in self.vol_price_mu else None
             # normalization_std = self.vol_price_sig[stock] if stock in self.vol_price_sig else None
