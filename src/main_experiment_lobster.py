@@ -71,27 +71,39 @@ models_todo = {
             'k-': backwards,
             'k+': forwards,
         }),
+        (cst.Models.DEEPLOBATT, {
+            'seed': [500],
+            'k-': backwards,
+            'k+': forwards,
+        }),
     ],
 
     cst.Servers.ALIEN1: [
-        (cst.Models.CNN2, {
+        (cst.Models.DEEPLOB, {
             'seed': [500],
             'k-': backwards,
             'k+': forwards,
         }),
-        (cst.Models.CNN1, {
-            'seed': [500],
-            'k-': backwards,
-            'k+': forwards,
-        }),
-        (cst.Models.BINCTABL, {
+        (cst.Models.ATNBoF, {
             'seed': [500],
             'k-': backwards,
             'k+': forwards,
         }),
     ],
+
     cst.Servers.ALIEN2: [
 
+        (cst.Models.AXIALLOB, {
+            'seed': [500],
+            'k-': backwards,
+            'k+': forwards,
+        }),
+
+        (cst.Models.TRANSLOB, {
+            'seed': [500],
+            'k-': backwards,
+            'k+': forwards,
+        }),
     ]
 }
 

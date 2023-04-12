@@ -6,7 +6,7 @@ HP_DEEP = {
     cst.LearningHyperParameter.OPTIMIZER.value: {'values': [cst.Optimizers.ADAM.value]},
     cst.LearningHyperParameter.EPS.value: {'values': [1]},
 
-    cst.LearningHyperParameter.BATCH_SIZE.value: {'values': [32, 64]},
+    cst.LearningHyperParameter.BATCH_SIZE.value: {'values': [64]},
     cst.LearningHyperParameter.LEARNING_RATE.value: {'values': [1e-3, 1e-4, 1e-5]}
 }
 
