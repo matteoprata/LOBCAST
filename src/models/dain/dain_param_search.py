@@ -16,8 +16,8 @@ HP_DAIN = {
     cst.LearningHyperParameter.MLP_HIDDEN.value: {'values': [512]},
     cst.LearningHyperParameter.P_DROPOUT.value: {'values': [0.5]},
 
-    cst.LearningHyperParameter.BATCH_SIZE.value: {'values': [32, 64]},
-    cst.LearningHyperParameter.LEARNING_RATE.value: {'values': [1e-3, 1e-4, 1e-5]}
+    cst.LearningHyperParameter.BATCH_SIZE.value: {'values': [32]},
+    cst.LearningHyperParameter.LEARNING_RATE.value: {'values': [1e-5]}
 }
 
 HP_DAIN_FI_FIXED = {

@@ -6,8 +6,8 @@ HP_DEEPATT = {
     cst.LearningHyperParameter.EPS.value: {'values': [1e-7]},  # 'max': 0.001, 'min': 0.0001
     cst.LearningHyperParameter.NUM_SNAPSHOTS.value: {'values': [50]},  # [50, 100]
 
-    cst.LearningHyperParameter.BATCH_SIZE.value: {'values': [32, 64]},
-    cst.LearningHyperParameter.LEARNING_RATE.value: {'values': [1e-3, 1e-4, 1e-5]}
+    cst.LearningHyperParameter.BATCH_SIZE.value: {'values': [32]},
+    cst.LearningHyperParameter.LEARNING_RATE.value: {'values': [1e-5]}
 }
 
 HP_DEEPATT_FI_FIXED = {

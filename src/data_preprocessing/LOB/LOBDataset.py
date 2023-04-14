@@ -15,6 +15,7 @@ from src.config import Configuration
 LOSS_WEIGHTS_DICT = {m: 1e6 for m in cst.Models}
 # LOSS_WEIGHTS_DICT[cst.Models.ATNBoF] = 1e3
 
+
 class LOBDataset(data.Dataset):
     """ Characterizes a dataset for PyTorch. """
 

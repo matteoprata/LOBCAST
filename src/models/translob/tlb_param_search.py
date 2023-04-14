@@ -6,8 +6,8 @@ HP_TRANS = {
     cst.LearningHyperParameter.OPTIMIZER.value: {'values': [cst.Optimizers.ADAM.value]},
     cst.LearningHyperParameter.WEIGHT_DECAY.value: {'values': [0]},
 
-    cst.LearningHyperParameter.BATCH_SIZE.value: {'values': [32, 64]},
-    cst.LearningHyperParameter.LEARNING_RATE.value: {'values': [1e-3, 1e-4, 1e-5]}
+    cst.LearningHyperParameter.BATCH_SIZE.value: {'values': [64]},
+    cst.LearningHyperParameter.LEARNING_RATE.value: {'values': [1e-4]}
 }
 
 HP_TRANS_FI_FIXED = {
