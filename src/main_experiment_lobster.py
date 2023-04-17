@@ -68,74 +68,90 @@ forwards  = [cst.WinSize.SEC100, cst.WinSize.SEC50,  cst.WinSize.SEC10,  cst.Win
 models_todo = {
     cst.Servers.FISSO1: [
         (cst.Models.MLP, {
-            'seed': [501],
+            'seed': [500, 502],
             'k-': backwards,
             'k+': forwards,
         }),
         (cst.Models.BINCTABL, {
-            'seed': [501],
+            'seed': [500, 502],
             'k-': backwards,
             'k+': forwards,
         }),
         (cst.Models.CTABL, {
-            'seed': [501],
+            'seed': [500, 502],
             'k-': backwards,
             'k+': forwards,
         }),
         (cst.Models.DLA, {
-            'seed': [501],
+            'seed': [500, 502],
             'k-': backwards,
             'k+': forwards,
         }),
     ],
 
-    cst.Servers.ALIEN1: [
+    # cst.Servers.ALIEN1: [
+    #
+    #     (cst.Models.CNN1, {
+    #         'seed': [501],
+    #         'k-': backwards,
+    #         'k+': forwards,
+    #     }),
+    #     (cst.Models.LSTM, {
+    #         'seed': [501],
+    #         'k-': backwards,
+    #         'k+': forwards,
+    #     }),
+    #     (cst.Models.DAIN, {
+    #         'seed': [501],
+    #         'k-': backwards,
+    #         'k+': forwards,
+    #     }),
+    #     (cst.Models.DEEPLOB, {
+    #         'seed': [501],
+    #         'k-': backwards,
+    #         'k+': forwards,
+    #     }),
+    # ],
 
-        (cst.Models.CNN1, {
+    cst.Servers.ALIEN1: [
+        (cst.Models.AXIALLOB, {
             'seed': [501],
-            'k-': backwards,
-            'k+': forwards,
-        }),
-        (cst.Models.LSTM, {
-            'seed': [501],
-            'k-': backwards,
-            'k+': forwards,
-        }),
-        (cst.Models.DAIN, {
-            'seed': [501],
-            'k-': backwards,
-            'k+': forwards,
-        }),
-        (cst.Models.DEEPLOB, {
-            'seed': [501],
-            'k-': backwards,
-            'k+': forwards,
+            'k-': [cst.WinSize.SEC10],
+            'k+': [cst.WinSize.SEC10],
         }),
     ],
 
     cst.Servers.ALIEN2: [
+        (cst.Models.AXIALLOB, {
+            'seed': [501],
+            'k-': [cst.WinSize.SEC50],
+            'k+': [cst.WinSize.SEC10],
+        }),
+    ],
 
-        (cst.Models.CNNLSTM, {
-            'seed': [501],
-            'k-': backwards,
-            'k+': forwards,
-        }),
-        (cst.Models.CNN2, {
-            'seed': [501],
-            'k-': backwards,
-            'k+': forwards,
-        }),
-        (cst.Models.TLONBoF, {
-            'seed': [501],
-            'k-': backwards,
-            'k+': forwards,
-        }),
-        (cst.Models.DEEPLOBATT, {
-            'seed': [501],
-            'k-': backwards,
-            'k+': forwards,
-        }),
-    ]
+    # cst.Servers.ALIEN2: [
+    #
+    #     (cst.Models.CNNLSTM, {
+    #         'seed': [501],
+    #         'k-': backwards,
+    #         'k+': forwards,
+    #     }),
+    #     (cst.Models.CNN2, {
+    #         'seed': [501],
+    #         'k-': backwards,
+    #         'k+': forwards,
+    #     }),
+    #     (cst.Models.TLONBoF, {
+    #         'seed': [501],
+    #         'k-': backwards,
+    #         'k+': forwards,
+    #     }),
+    #     (cst.Models.DEEPLOBATT, {
+    #         'seed': [501],
+    #         'k-': backwards,
+    #         'k+': forwards,
+    #     }),
+    # ]
 }
 
 now = 'LOBSTER-DEFINITIVE-14-04-2023'
