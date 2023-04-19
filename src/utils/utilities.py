@@ -80,6 +80,21 @@ def sample_color(index, cmap='tab10'):
     return color
 
 
+def sample_marker(index):
+    MARKERS = ["s", "p", "P", "*", "h", "H", "+", "x", "X", "D", "d", "|", "_", 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, ".", ",", "o", "v", "^", "<", ">", "1", "2", "3", "4", "8"]
+    return MARKERS[index]
+
+
+def sample_pattern(index):
+    MARKERS = ['/', '\\', '|', '-', '+', 'x', 'o', 'O', '.', '*'] + ['/o', '\\|', '|*', '-\\', '+o', 'x*', 'o-', 'O|', 'O.', '*-']
+    return MARKERS[index]
+
+
+def sample_line(index):
+    MARKERS = ['-', '--', '-.', ':', 'None', ' ', '', 'solid', 'dashed', 'dashdot', 'dotted', 'loosely dotted', 'densely dotted', 'loosely dashed', 'densely dashed', 'loosely dashdotted', 'densely dashdotted', 'loosely dashdotdotted', 'dashdotdotted', 'densely dashdotdotted']
+    return MARKERS[index]
+
+
 def get_upper_diagonal_windows(windows: list = cst.WinSize):
     backwards, forwards = list(), list()
     for backward_window in windows:
@@ -89,6 +104,11 @@ def get_upper_diagonal_windows(windows: list = cst.WinSize):
                     backwards.append(backward_window)
                     forwards.append(forward_window)
     return backwards, forwards
+
+
+def make_dir(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
 
 
 if __name__ == '__main__':

@@ -456,9 +456,7 @@ MODELS_17 = list(set(list(Models)))
 MODELS_17 = [m for m in MODELS_YEAR_DICT if m in MODELS_17]
 
 
-def model_dataset(model):
+def model_dataset(model, bias="FI"):
     if model in [Models.MAJORITY, Models.METALOB]:
         return "Meta"
-    else:
-        return "FI"
-
+    return bias

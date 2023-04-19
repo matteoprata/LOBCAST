@@ -6,7 +6,7 @@ import src.utils.utilities as util
 import src.constants as cst
 
 import numpy as np
-# import seaborn as sb
+import seaborn as sb
 import pandas as pd
 import matplotlib.gridspec as gridspec
 import os
@@ -24,15 +24,24 @@ def setup_plotting_env():
     plt.rcParams["font.family"] = "serif"
 
 
-def reproduced_metrics(path, metrics, list_models, list_horizons, list_seeds, jolly_seed=None):
+def reproduced_metrics(path, metrics, list_models, list_horizons, list_seeds, dataset_type, train_src="ALL", test_src="ALL", time_period=cst.Periods.JULY2021.name, jolly_seed=None):
     METRICS = np.zeros(shape=(len(list_seeds), len(list_models), len(list_horizons), len(metrics)))
 
     for imod, mod in enumerate(list_models):
         for ik, k in enumerate(list_horizons):
             for iss, s in enumerate(list_seeds):
-                fname = "model={}-seed={}-trst=FI-test=FI-data={}-peri=FI-bw=None-fw=None-fiw={}.json".format(mod.name, s, cst.model_dataset(mod), k.value)
 
-                if mod == cst.Models.MAJORITY:  # only seed for the baseline
+                bw, fw = None, None
+                if dataset_type == cst.DatasetFamily.LOBSTER:
+                    bw, fw = k
+                    bw, fw = bw.value, fw.value
+                    k = cst.FI_Horizons.K10
+
+                fname = "model={}-seed={}-trst={}-test={}-data={}-peri={}-bw={}-fw={}-fiw={}.json".format(
+                    mod.name, s, train_src, test_src, cst.model_dataset(mod, bias=dataset_type), time_period, bw, fw, k.value
+                )
+
+                if mod == cst.Models.MAJORITY:  # only 1 seed for the baseline
                     if s == jolly_seed:
                         jsn = util.read_json(path + fname)
                         vec = np.zeros(shape=(len(metrics)))
@@ -47,13 +56,21 @@ def reproduced_metrics(path, metrics, list_models, list_horizons, list_seeds, jo
     return METRICS
 
 
-def inference_data(path, list_models, seed=502, horizon=10):
+def inference_data(path, list_models, dataset_type, seed=501, horizon=10, bw=50, fw=50, train_src="ALL", test_src="ALL", time_period=cst.Periods.JULY2021.name):
     INFERENCE = np.zeros(shape=(2, len(list_models)))
     for imod, mod in enumerate(list_models):
         if mod == cst.Models.MAJORITY:
             continue
 
-        fname = "model={}-seed={}-trst=FI-test=FI-data={}-peri=FI-bw=None-fw=None-fiw={}.json".format(mod.name, seed, cst.model_dataset(mod), horizon)
+        if dataset_type == cst.DatasetFamily.LOBSTER:
+            horizon = cst.FI_Horizons.K10.value
+        elif dataset_type == cst.DatasetFamily.FI:
+            bw, fw = None, None
+
+        fname = "model={}-seed={}-trst={}-test={}-data={}-peri={}-bw={}-fw={}-fiw={}.json".format(
+            mod.name, seed, train_src, test_src, cst.model_dataset(mod, bias=dataset_type), time_period, bw, fw, horizon
+        )
+
         jsn = util.read_json(path + fname)
         INFERENCE[0, imod] = jsn['inference_mean']
         INFERENCE[1, imod] = jsn['inference_std']
@@ -74,13 +91,23 @@ def original_metrics(metrics, list_models, list_horizons):
     return METRICS_ORI
 
 
-def confusion_metrix(path, list_models, list_seeds, jolly_seed=None):
-    CMS = np.zeros(shape=(len(list_seeds), len(list_models), len(cst.FI_Horizons), 3, 3))
+def confusion_metrix(path, list_models, list_horizons, list_seeds, dataset_type, train_src="ALL", test_src="ALL", time_period=cst.Periods.JULY2021.name, jolly_seed=None):
+    CMS = np.zeros(shape=(len(list_seeds), len(list_models), len(list_horizons), 3, 3))
 
     for imod, mod in enumerate(list_models):
-        for ik, k in enumerate(cst.FI_Horizons):
+        for ik, k in enumerate(list_horizons):
             for iss, s in enumerate(list_seeds):
-                fname = "model={}-seed={}-trst=FI-test=FI-data={}-peri=FI-bw=None-fw=None-fiw={}.json".format(mod.name, s, cst.model_dataset(mod), k.value)
+
+                bw, fw = None, None
+                if dataset_type == cst.DatasetFamily.LOBSTER:
+                    bw, fw = k
+                    bw, fw = bw.value, fw.value
+                    k = cst.FI_Horizons.K10
+
+                fname = "model={}-seed={}-trst={}-test={}-data={}-peri={}-bw={}-fw={}-fiw={}.json".format(
+                    mod.name, s, train_src, test_src, cst.model_dataset(mod, bias=dataset_type), time_period, bw, fw,
+                    k.value
+                )
 
                 if mod == cst.Models.MAJORITY:  # only seed for the baseline
                     if s == jolly_seed:
@@ -107,9 +134,13 @@ def confusion_metrix(path, list_models, list_seeds, jolly_seed=None):
 #     return improvement
 
 
-def metrics_vs_models_k(met_name, met_vec, out_dir, list_models, met_vec_original=None):
+def metrics_vs_models_k(met_name, horizons, met_vec, out_dir, list_models, dataset_type, chosen_horizons_mask, met_vec_original=None):
 
-    labels = ["K=" + str(k.value) for k in cst.FI_Horizons]
+    horizons = np.array(horizons)
+    if dataset_type == cst.DatasetFamily.FI:
+        labels = ["K=" + k.value for k in horizons[chosen_horizons_mask]]
+    else:
+        labels = ["BW={}, FW={}".format(bw.value, fw.value) for bw, fw in horizons[chosen_horizons_mask]]
 
     fmt = "%.2f"
     miny, maxy = -1, 1.1
@@ -133,42 +164,76 @@ def metrics_vs_models_k(met_name, met_vec, out_dir, list_models, met_vec_origina
 
     R = []  # the bars
     for iri, ri in enumerate(list_models):
-        r_bar_i = ax.bar(x + width * ranges[iri], avg_met[iri, :], width, yerr=std_met[iri, :], label=ri.name,
-                         color=util.sample_color(iri, "tab20"), align='center')
+        r_bar_i = ax.bar(x + width * ranges[iri], avg_met[iri, chosen_horizons_mask], width, yerr=std_met[iri, chosen_horizons_mask], label=ri.name,
+                         color=util.sample_color(iri, "tab20"), align='center')  # edgecolor='black' hatch=util.sample_pattern(iri))
         R += [r_bar_i]
 
-    diffp = ((avg_met - met_vec_original) / met_vec_original * 100)  # text of the diff
-    for iri, ri in enumerate(R):
-
-        diffp_show = []
-        for i, val in enumerate(diffp[iri, :]):
-            our = round(avg_met[iri, i]) if "MCC" not in met_name else round(avg_met[iri, i], 2)
-            if not np.isnan(val):
-                diffp_show += ["{}% (".format(our) + "{0:+}%)".format(round(val))]
-            else:
-                diffp_show += ["{}% ($\cdot$)".format(our)]
-            if "MCC" in met_name:
-                diffp_show = [s.replace('%', '') for s in diffp_show]
-
-        ax.bar_label(ri, labels=diffp_show, padding=3, fmt=fmt, rotation=90, fontsize=10)
-
     if met_vec_original is not None:
+        diffp = ((avg_met - met_vec_original) / met_vec_original * 100)  # text of the diff
+        for iri, ri in enumerate(R):
+
+            diffp_show = []
+            for i, val in enumerate(diffp[iri, :]):
+                our = round(avg_met[iri, i]) if "MCC" not in met_name else round(avg_met[iri, i], 2)
+                if not np.isnan(val):
+                    diffp_show += ["{}% (".format(our) + "{0:+}%)".format(round(val))]
+                else:
+                    diffp_show += ["{}% ($\cdot$)".format(our)]
+                if "MCC" in met_name:
+                    diffp_show = [s.replace('%', '') for s in diffp_show]
+
+            ax.bar_label(ri, labels=diffp_show, padding=3, fmt=fmt, rotation=90, fontsize=10)
+
         for iri, ri in enumerate(list_models):
             label = 'original' if iri == 0 else ''
-            ax.bar(x + width * ranges[iri], met_vec_original[iri, :], width, alpha=1, bottom=0, fill=False,
+            ax.bar(x + width * ranges[iri], met_vec_original[iri, chosen_horizons_mask], width, alpha=1, bottom=0, fill=False,
                    edgecolor='black', label=label, align='center')
 
     # Add some text for labels, title and custom x-axis tick labels, etc.
     ax.set_ylabel(met_name)
-    ax.set_title("FI-2010 " + met_name)
+    ax.set_title("{} {}".format(dataset_type.name, met_name))
     ax.set_xticks(x, labels)  # , rotation=0, ha="right", rotation_mode="anchor")
 
     ax.legend(fontsize=12, ncol=6, handleheight=2, labelspacing=0.05)
 
-    plt.ylim(miny, maxy)
+    # plt.ylim(miny, maxy)
     fig.tight_layout()
 
     plt.savefig(out_dir + "ka" + met_name + ".pdf")
+    plt.show()
+    plt.close(fig)
+
+
+def metrics_vs_models_k_line(met_name, horizons, met_vec, out_dir, list_models, dataset_type, chosen_horizons_mask, type=None):
+
+    horizons = np.array(horizons)
+    labels = ["BW={}, FW={}".format(bw.value, fw.value) for bw, fw in horizons[chosen_horizons_mask]]
+
+    if "MCC" not in met_name:
+        met_vec = met_vec * 100
+
+    avg_met = np.average(met_vec, axis=0)  # avg seeds
+    std_met = np.std(met_vec, axis=0)
+
+    x = np.arange(len(labels))
+
+    fig, ax = plt.subplots(figsize=(9, 7))
+
+    for iri, ri in enumerate(list_models):
+        ax.fill_between(x, std_met[iri, chosen_horizons_mask], -std_met[iri, chosen_horizons_mask], alpha=.3, linewidth=0, color=util.sample_color(iri, "tab20"))
+        ax.plot(x, avg_met[iri, chosen_horizons_mask], label=ri.name, color=util.sample_color(iri, "tab20"), marker=util.sample_marker(iri))
+
+    ax.relim()
+    # Add some text for labels, title and custom x-axis tick labels, etc.
+    ax.set_ylabel(met_name)
+    ax.set_title("{} {}".format(dataset_type.name, met_name))
+    ax.set_xticks(x, labels)
+
+    ax.legend(fontsize=12, ncol=4, handleheight=2, labelspacing=0.05)
+
+    fig.tight_layout()
+
+    plt.savefig(out_dir + type + "-line" + met_name + ".pdf")
     plt.show()
     plt.close(fig)
 
@@ -205,54 +270,55 @@ def plot_inference_time(met_vec, met_vec_err, list_models, out_dir):
     plt.close(fig)
 
 
-# def confusion_matrices(cms, list_models, out_dir):
-#     fig = plt.figure(figsize=(30, 30 * 2.5))
-#     gs = gridspec.GridSpec(len(list_models), len(cst.FI_Horizons) + 1,
-#                            width_ratios=[6 for _ in range(len(cst.FI_Horizons))] + [1], figure=fig)
-#
-#     annot_kws = {
-#         'fontsize': 16,
-#         'fontweight': 'bold',
-#         'fontfamily': 'serif'
-#     }
-#
-#     for imod, mod in enumerate(list_models):
-#         for ik, k in enumerate(cst.FI_Horizons):
-#             cbar = False  # ik == 0 and imod == 0
-#             csm_norm = cms[imod, ik] / np.sum(cms[imod, ik], axis=1)[:, None]
-#
-#             axi = fig.add_subplot(gs[imod, ik])
-#             sb.heatmap(csm_norm, annot=True, ax=axi, cbar=cbar, fmt=".2%", cmap="Blues", annot_kws=annot_kws)
-#
-#             axi.set_xticklabels([p.name for p in cst.Predictions], rotation=0, fontsize=12)
-#             axi.set_yticklabels([p.name for p in cst.Predictions], rotation=90, fontsize=12)
-#
-#             if imod == 0:
-#                 axi.set_title("K={}".format(k.value), fontsize=30, fontweight="bold", pad=25)
-#
-#             if ik == 0:
-#                 axi.set_ylabel(mod.name, fontsize=30, fontweight="bold", labelpad=25)
-#
-#     legend_ax = fig.add_subplot(gs[:, -1])
-#
-#     sm = plt.cm.ScalarMappable(cmap="Blues", norm=plt.Normalize(0, 100))
-#     sm.set_array([])
-#
-#     fig.colorbar(sm, cax=legend_ax)
-#
-#     fig.supylabel('Real', x=0.02, fontsize=25)
-#     fig.supxlabel('Predicted', y=.965, fontsize=25)
-#     fig.suptitle('FI-2010 Confusion Matrix', y=.98, fontsize=30, fontweight="bold")
-#
-#     fig.tight_layout()
-#     fig.subplots_adjust(top=.95, left=.087)
-#
-#     fig.savefig(out_dir + "cm-fi.pdf")
-#     plt.show()
-#     plt.close(fig)
+def confusion_matrices(cms, list_models, out_dir, chosen_horizons, dataset):
+    fig = plt.figure(figsize=(30, 30 * 2.5))
+    gs = gridspec.GridSpec(len(list_models), len(chosen_horizons) + 1,
+                           width_ratios=[6 for _ in range(len(chosen_horizons))] + [1], figure=fig)
+
+    annot_kws = {
+        'fontsize': 16,
+        'fontweight': 'bold',
+        'fontfamily': 'serif'
+    }
+
+    for imod, mod in enumerate(list_models):
+        for ik, k in enumerate(chosen_horizons):
+            cbar = False  # ik == 0 and imod == 0
+            csm_norm = cms[imod, ik] / np.sum(cms[imod, ik], axis=1)[:, None]
+
+            axi = fig.add_subplot(gs[imod, ik])
+            sb.heatmap(csm_norm, annot=True, ax=axi, cbar=cbar, fmt=".2%", cmap="Blues", annot_kws=annot_kws)
+
+            axi.set_xticklabels([p.name for p in cst.Predictions], rotation=0, fontsize=12)
+            axi.set_yticklabels([p.name for p in cst.Predictions], rotation=90, fontsize=12)
+
+            if imod == 0:
+                k = k.value if dataset == cst.DatasetFamily.FI else (k[0].value, k[1].value)
+                axi.set_title("K={}".format(k), fontsize=30, fontweight="bold", pad=25)
+
+            if ik == 0:
+                axi.set_ylabel(mod.name, fontsize=30, fontweight="bold", labelpad=25)
+
+    legend_ax = fig.add_subplot(gs[:, -1])
+
+    sm = plt.cm.ScalarMappable(cmap="Blues", norm=plt.Normalize(0, 100))
+    sm.set_array([])
+
+    fig.colorbar(sm, cax=legend_ax)
+
+    fig.supylabel('Real', x=0.02, fontsize=25)
+    fig.supxlabel('Predicted', y=.965, fontsize=25)
+    fig.suptitle('FI-2010 Confusion Matrix', y=.98, fontsize=30, fontweight="bold")
+
+    fig.tight_layout()
+    fig.subplots_adjust(top=.95, left=.087)
+
+    fig.savefig(out_dir + "cm-fi.pdf")
+    plt.show()
+    plt.close(fig)
 
 
-def scatter_plot_year(met_name, met_data, list_models, list_models_years, out_dir):
+def scatter_plot_year(met_name, met_data, list_models, list_models_years, out_dir, dataset_type):
     X = list_models_years
     met_data = np.average(met_data, axis=0)  # seeds
 
@@ -276,7 +342,7 @@ def scatter_plot_year(met_name, met_data, list_models, list_models_years, out_di
     plt.ylabel(met_name)
     plt.xticks([int(i) for i in maxes.index])
     plt.legend(fontsize=20, loc="upper left")
-    plt.title("FI-2010 {} in the Years".format(met_name))
+    plt.title("{} {} in the Years".format(dataset_type, met_name))
     plt.tight_layout()
     plt.savefig(out_dir + "year-" + met_name + ".pdf")
     plt.show()
@@ -284,110 +350,185 @@ def scatter_plot_year(met_name, met_data, list_models, list_models_years, out_di
 
 # ADJUST
 
-# def plot_corr_matrix(list_models, fw_win, preds, out_dir):
-#
-#     # collect data
-#     # models = sorted([model.name for model in cst.Models if (model not in [cst.Models.METALOB, cst.Models.ATNBoF])])
-#     #
-#     # # we swap the order of DeepLOBATT and DeepLOB, because in the json there is DEEPLOBATT first
-#     # models[8], models[9] = models[9], models[8]
-#
-#     data = {}
-#     for imod, mod in enumerate(list_models):
-#         data[mod] = preds[:, imod]
-#
-#     # form dataframe
-#     dataframe = pd.DataFrame(data, columns=list(data.keys()))
-#
-#     # form correlation matrix
-#     corr_matrix = dataframe.corr()
-#
-#     ticks = [m.name for m in list_models]
-#     heatmap = sb.heatmap(corr_matrix, annot=True, fmt=".2f", yticklabels=ticks, xticklabels=ticks)
-#     heatmap.set(title=f"Correlation matrix for K={fw_win}")
-#
-#     heatmap.figure.set_size_inches(20, 20)
-#
-#     # save heatmap as PNG file
-#     heatmap.figure.savefig(out_dir + f"correlation_matrix_k={fw_win}.pdf", bbox_inches='tight')
-#     plt.show()
-#     plt.close()
+def plot_corr_matrix(list_models, fw_win, preds, out_dir):
+
+    # collect data
+    # models = sorted([model.name for model in cst.Models if (model not in [cst.Models.METALOB, cst.Models.ATNBoF])])
+    #
+    # # we swap the order of DeepLOBATT and DeepLOB, because in the json there is DEEPLOBATT first
+    # models[8], models[9] = models[9], models[8]
+
+    data = {}
+    for imod, mod in enumerate(list_models):
+        data[mod] = preds[:, imod]
+
+    # form dataframe
+    dataframe = pd.DataFrame(data, columns=list(data.keys()))
+
+    # form correlation matrix
+    corr_matrix = dataframe.corr()
+
+    ticks = [m.name for m in list_models]
+    heatmap = sb.heatmap(corr_matrix, annot=True, fmt=".2f", yticklabels=ticks, xticklabels=ticks)
+    heatmap.set(title=f"Correlation matrix for K={fw_win}")
+
+    heatmap.figure.set_size_inches(20, 20)
+
+    # save heatmap as PNG file
+    heatmap.figure.savefig(out_dir + f"correlation_matrix_k={fw_win}.pdf", bbox_inches='tight')
+    plt.show()
+    plt.close()
 
 
-# def plot_agreement_matrix(list_models, fw_win, preds, out_dir):
-#     data = {}
-#     for imod, mod in enumerate(list_models):
-#         data[mod] = preds[:, imod]
-#
-#     agreement_matrix = np.zeros((len(list_models), len(list_models)))
-#     list_names = [m.name for m in list_models]
-#     for i in range(len(list_models)):
-#         for j in range(len(list_models)):
-#             agr = 0
-#             for pred in range(preds.shape[0]):
-#                 if preds[pred, i] == preds[pred, j]:
-#                     agr += 1
-#             agreement_matrix[i, j] = agr / preds.shape[0]
-#
-#     heatmap = sb.heatmap(agreement_matrix, annot=True, fmt=".2f", yticklabels=list_names, xticklabels=list_names)
-#
-#     heatmap.set(title=f'Agreement matrix for K={fw_win}')
-#     heatmap.figure.set_size_inches(20, 20)
-#     heatmap.figure.savefig(out_dir + f"agreement_matrix_K={fw_win}.pdf", bbox_inches='tight')
-#     plt.show()
-#     plt.close()
+def plot_agreement_matrix(list_models, fw_win, preds, out_dir):
+    data = {}
+    for imod, mod in enumerate(list_models):
+        data[mod] = preds[:, imod]
+
+    agreement_matrix = np.zeros((len(list_models), len(list_models)))
+    list_names = [m.name for m in list_models]
+    for i in range(len(list_models)):
+        for j in range(len(list_models)):
+            agr = 0
+            for pred in range(preds.shape[0]):
+                if preds[pred, i] == preds[pred, j]:
+                    agr += 1
+            agreement_matrix[i, j] = agr / preds.shape[0]
+
+    heatmap = sb.heatmap(agreement_matrix, annot=True, fmt=".2f", yticklabels=list_names, xticklabels=list_names)
+
+    heatmap.set(title=f'Agreement matrix for K={fw_win}')
+    heatmap.figure.set_size_inches(20, 20)
+    heatmap.figure.savefig(out_dir + f"agreement_matrix_K={fw_win}.pdf", bbox_inches='tight')
+    plt.show()
+    plt.close()
 
 
-# if __name__ == '__main__':
-#
-#     PATH = "data/experiments/all_models_28_03_23/"
-#     OUT = "data/experiments/pdfs/"
-#
-#     LIST_SEEDS = [500, 501, 502, 503, 504]
-#     LIST_HORIZONS = cst.FI_Horizons
-#
-#     LIST_MODELS = cst.MODELS_17  # cst.TRAINABLE_16
-#     LIST_YEARS =  [cst.MODELS_YEAR_DICT[m] for m in cst.MODELS_YEAR_DICT if m in LIST_MODELS]
-#
-#     os.makedirs(OUT, exist_ok=True)
-#
-#     metrics = ['testing_FI_f1',
-#                'testing_FI_precision',
-#                'testing_FI_recall',
-#                'testing_FI_accuracy',
-#                'testing_FI_mcc'
-#                ]
-#
-#     setup_plotting_env()
-#
-#     MAT_REP = reproduced_metrics(PATH, metrics, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS, jolly_seed=502)
-#     print("Models performance:")
-#     print(np.average(MAT_REP[:, :, :, 0], axis=0)*100)
-#
-#     MAT_ORI = original_metrics(metrics, LIST_MODELS, LIST_HORIZONS)
-#     CMS = confusion_metrix(PATH, LIST_MODELS, LIST_SEEDS, jolly_seed=502)
-#     INFER = inference_data(PATH, LIST_MODELS)
-#     # r_imp = relative_improvement_table(MAT_REP, MAT_ORI, LIST_MODELS)
-#
-#     # n: PLOT 1
-#     for imet, met in enumerate(cst.metrics_name):
-#         metrics_vs_models_k(met, MAT_REP[:, :, :, imet], OUT, LIST_MODELS, MAT_ORI[:, :, imet])  # each mat has shape MODELS x K x METRICA
-#         print("plot done perf", met)
-#
-#     # 1: PLOT 2
-#     confusion_matrices(CMS[1, :], LIST_MODELS, OUT)
-#     print("plot done cm")
-#
-#     # n: PLOT 3
-#     for imet, met in enumerate(cst.metrics_name):
-#         met_data = np.mean(MAT_REP[:, :, :, imet], axis=2)   # MODELS x K x METRICA
-#         scatter_plot_year(met, met_data, LIST_MODELS, LIST_YEARS, OUT)
-#         print("plot done year", met)
-#
-#     plot_inference_time(INFER[0], INFER[1], cst.TRAINABLE_16, OUT)
-#
-#     # 20923 is the number of instances because test set is a portion of the original
-#     logits, pred = MetaDataBuilder.load_predictions_from_jsons(cst.TRAINABLE_16, 502, cst.FI_Horizons.K10.value, n_instances=20923)
-#
-#     plot_corr_matrix(cst.TRAINABLE_16, 10, pred, OUT)
-#     plot_agreement_matrix(cst.TRAINABLE_16, 10, pred, OUT)
+def FI_plots():
+    """ Make FI-2010 plots. """
+
+    MAT_REP = reproduced_metrics(PATH, metrics, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS,
+                                 dataset_type=cst.DatasetFamily.LOBSTER,
+                                 train_src=train_src, test_src=test_src, time_period=time_period, jolly_seed=502)
+
+    print("Models performance:")
+    print(np.average(MAT_REP[:, :, :, 0], axis=0) * 100)
+
+    MAT_ORI = original_metrics(metrics, LIST_MODELS, LIST_HORIZONS)
+    CMS = confusion_metrix(PATH, LIST_MODELS, LIST_SEEDS, jolly_seed=502)
+    INFER = inference_data(PATH, LIST_MODELS)
+    # r_imp = relative_improvement_table(MAT_REP, MAT_ORI, LIST_MODELS)
+
+    # n: PLOT 1
+    for imet, met in enumerate(cst.metrics_name):
+        metrics_vs_models_k(met, MAT_REP[:, :, :, imet], OUT, LIST_MODELS, MAT_ORI[:, :, imet])  # each mat has shape MODELS x K x METRICA
+        print("plot done perf", met)
+
+    # 1: PLOT 2
+    confusion_matrices(CMS[1, :], LIST_MODELS, OUT)
+    print("plot done cm")
+
+    # n: PLOT 3
+    for imet, met in enumerate(cst.metrics_name):
+        met_data = np.mean(MAT_REP[:, :, :, imet], axis=2)  # MODELS x K x METRICA
+        scatter_plot_year(met, met_data, LIST_MODELS, LIST_YEARS, OUT)
+        print("plot done year", met)
+
+    plot_inference_time(INFER[0], INFER[1], cst.TRAINABLE_16, OUT)
+
+    # 20923 is the number of instances because test set is a portion of the original
+    logits, pred = MetaDataBuilder.load_predictions_from_jsons(cst.TRAINABLE_16, 502, cst.FI_Horizons.K10.value,
+                                                               n_instances=20923)
+
+    plot_corr_matrix(cst.TRAINABLE_16, 10, pred, OUT)
+    plot_agreement_matrix(cst.TRAINABLE_16, 10, pred, OUT)
+
+
+def lobster_plots():
+    """ Make FI-2010 plots. """
+
+    backwards = [cst.WinSize.SEC100, cst.WinSize.SEC100, cst.WinSize.SEC100, cst.WinSize.SEC50, cst.WinSize.SEC50, cst.WinSize.SEC10]
+    forwards  = [cst.WinSize.SEC100, cst.WinSize.SEC50, cst.WinSize.SEC10, cst.WinSize.SEC50, cst.WinSize.SEC10, cst.WinSize.SEC10]
+    LIST_HORIZONS = list(zip(backwards, forwards))  # cst.FI_Horizons
+
+    MAT_REP = reproduced_metrics(PATH, metrics, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS, dataset_type=cst.DatasetFamily.LOBSTER,
+                                 train_src=train_src, test_src=test_src, time_period=time_period, jolly_seed=502)
+
+    print("Models performance:")
+    print(np.average(MAT_REP[:, :, :, 0], axis=0) * 100)
+
+    CMS = confusion_metrix(PATH, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS, jolly_seed=502, dataset_type=cst.DatasetFamily.LOBSTER, train_src=train_src, test_src=test_src, time_period=time_period)
+    INFER = inference_data(PATH, LIST_MODELS, dataset_type=cst.DatasetFamily.LOBSTER, train_src=train_src, test_src=test_src, time_period=time_period)
+    # r_imp = relative_improvement_table(MAT_REP, MAT_ORI, LIST_MODELS)
+
+    # n: PLOT 1
+    for imet, met in enumerate(cst.metrics_name):
+        chosen_horizons_mask = [5, 3, 0]
+        metrics_vs_models_k(met, LIST_HORIZONS, MAT_REP[:, :, :, imet], OUT, LIST_MODELS, DATASET, chosen_horizons_mask)  # each mat has shape MODELS x K x METRICA
+
+        chosen_horizons_mask = [2, 1, 0]
+        metrics_vs_models_k_line(met, LIST_HORIZONS, MAT_REP[:, :, :, imet], OUT, LIST_MODELS, DATASET, chosen_horizons_mask, type="var-for")
+
+        chosen_horizons_mask = [5, 4, 2]
+        metrics_vs_models_k_line(met, LIST_HORIZONS, MAT_REP[:, :, :, imet], OUT, LIST_MODELS, DATASET, chosen_horizons_mask, type="var-ba")
+
+        print("plot done perf", met)
+
+    # 1: PLOT 2
+    chosen_horizons_mask = [5, 3, 0]
+    chosen_horizons = np.array(LIST_HORIZONS)[chosen_horizons_mask]
+    confusion_matrices(CMS[0, :], LIST_MODELS, OUT, chosen_horizons, DATASET)
+    print("plot done cm")
+    exit()
+
+    # n: PLOT 3
+    for imet, met in enumerate(cst.metrics_name):
+        met_data = np.mean(MAT_REP[:, :, :, imet], axis=2)  # MODELS x K x METRICA
+        scatter_plot_year(met, met_data, LIST_MODELS, LIST_YEARS, OUT, DATASET)
+        print("plot done year", met)
+
+    plot_inference_time(INFER[0], INFER[1], LIST_MODELS, OUT)
+
+    # # 20923 is the number of instances because test set is a portion of the original
+    # logits, pred = MetaDataBuilder.load_predictions_from_jsons(cst.TRAINABLE_16, 502, cst.FI_Horizons.K10.value, n_instances=20923)
+    #
+    # plot_corr_matrix(cst.TRAINABLE_16, 10, pred, OUT)
+    # plot_agreement_matrix(cst.TRAINABLE_16, 10, pred, OUT)
+
+
+if __name__ == '__main__':
+
+    PATH = "data/experiments/all_models_18_04_23/"
+    OUT = "all_models_18_04_23/pdfs/"
+
+    DATASET = cst.DatasetFamily.LOBSTER
+
+    train_src = "ALL"
+    test_src = "ALL" if DATASET == cst.DatasetFamily.LOBSTER else "FI"
+    time_period = cst.Periods.JULY2021.name
+
+    LIST_SEEDS = [501]
+
+    # backwards = [cst.WinSize.SEC100, cst.WinSize.SEC100, cst.WinSize.SEC100, cst.WinSize.SEC50, cst.WinSize.SEC50, cst.WinSize.SEC10]
+    # forwards  = [cst.WinSize.SEC100, cst.WinSize.SEC50, cst.WinSize.SEC10, cst.WinSize.SEC50, cst.WinSize.SEC10, cst.WinSize.SEC10]
+
+    backwards = [cst.WinSize.SEC10, cst.WinSize.SEC50, cst.WinSize.SEC100]
+    forwards  = [cst.WinSize.SEC10, cst.WinSize.SEC50, cst.WinSize.SEC100]
+    LIST_HORIZONS = list(zip(backwards, forwards))  # cst.FI_Horizons
+
+    LIST_MODELS = cst.MODELS_15
+    LIST_MODELS = [m for m in cst.MODELS_15 if m not in [cst.Models.AXIALLOB, cst.Models.ATNBoF]]
+    LIST_YEARS  = [cst.MODELS_YEAR_DICT[m] for m in cst.MODELS_YEAR_DICT if m in LIST_MODELS]
+
+    os.makedirs(OUT, exist_ok=True)
+
+    metrics = ['testing_{}_f1'.format(test_src),
+               'testing_{}_precision'.format(test_src),
+               'testing_{}_recall'.format(test_src),
+               'testing_{}_accuracy'.format(test_src),
+               'testing_{}_mcc'.format(test_src),
+               ]
+
+    setup_plotting_env()
+
+    lobster_plots()

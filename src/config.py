@@ -31,7 +31,7 @@ class Configuration:
         self.TRAIN_SPLIT_VAL = .8  # FI only
         self.META_TRAIN_VAL_TEST_SPLIT = (.7, .15, .15)  # META Only
 
-        self.CHOSEN_DATASET = cst.DatasetFamily.META
+        self.CHOSEN_DATASET = cst.DatasetFamily.FI
         self.CHOSEN_PERIOD = cst.Periods.FI
         self.CHOSEN_MODEL = cst.Models.METALOB
 
