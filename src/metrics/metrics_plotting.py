@@ -164,12 +164,21 @@ def metrics_vs_models_k(met_name, horizons, met_vec, out_dir, list_models, datas
 
     R = []  # the bars
     for iri, ri in enumerate(list_models):
-        r_bar_i = ax.bar(x + width * ranges[iri], avg_met[iri, chosen_horizons_mask], width, yerr=std_met[iri, chosen_horizons_mask], label=ri.name,
-                         color=util.sample_color(iri, "tab20"), align='center')  # edgecolor='black' hatch=util.sample_pattern(iri))
-        R += [r_bar_i]
+        if dataset_type == cst.DatasetFamily.FI:
+            r_bar_i = ax.bar(x + width * ranges[iri], avg_met[iri, chosen_horizons_mask], width, yerr=std_met[iri, chosen_horizons_mask], label=ri.name,
+                             color=util.sample_color(iri, "tab20"), align='center')  # hatch=util.sample_pattern(iri))
+
+            R += [r_bar_i]
+
+        elif dataset_type == cst.DatasetFamily.LOBSTER:
+            r_bar_i = ax.bar(x + width * ranges[iri], avg_met[iri, chosen_horizons_mask], width, yerr=std_met[iri, chosen_horizons_mask],
+                             label=ri.name, color=util.sample_color(iri, "tab20"), align='center', edgecolor='black')  # hatch=util.sample_pattern(iri))
+
+            bar_value = ["{}%".format(round(it, 2)) for it in avg_met[iri, chosen_horizons_mask]]
+            ax.bar_label(r_bar_i, labels=bar_value, padding=3, fmt=fmt, rotation=90, fontsize=10)
 
     if met_vec_original is not None:
-        diffp = ((avg_met - met_vec_original) / met_vec_original * 100)  # text of the diff
+        diffp = ((avg_met - met_vec_original) / met_vec_original * 100)  # text of the diff TODO check seems a wrong diff
         for iri, ri in enumerate(R):
 
             diffp_show = []
@@ -185,7 +194,7 @@ def metrics_vs_models_k(met_name, horizons, met_vec, out_dir, list_models, datas
             ax.bar_label(ri, labels=diffp_show, padding=3, fmt=fmt, rotation=90, fontsize=10)
 
         for iri, ri in enumerate(list_models):
-            label = 'original' if iri == 0 else ''
+            label = 'original' if iri == 0 else ''  # black bars in FI
             ax.bar(x + width * ranges[iri], met_vec_original[iri, chosen_horizons_mask], width, alpha=1, bottom=0, fill=False,
                    edgecolor='black', label=label, align='center')
 
@@ -193,6 +202,11 @@ def metrics_vs_models_k(met_name, horizons, met_vec, out_dir, list_models, datas
     ax.set_ylabel(met_name)
     ax.set_title("{} {}".format(dataset_type.name, met_name))
     ax.set_xticks(x, labels)  # , rotation=0, ha="right", rotation_mode="anchor")
+
+    if dataset_type == cst.DatasetFamily.FI:
+        ax.set_ylim((0, 90))
+    elif dataset_type == cst.DatasetFamily.LOBSTER:
+        ax.set_ylim((0, 75))
 
     ax.legend(fontsize=12, ncol=6, handleheight=2, labelspacing=0.05)
 
@@ -404,44 +418,44 @@ def plot_agreement_matrix(list_models, fw_win, preds, out_dir):
     plt.close()
 
 
-def FI_plots():
-    """ Make FI-2010 plots. """
-
-    MAT_REP = reproduced_metrics(PATH, metrics, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS,
-                                 dataset_type=cst.DatasetFamily.LOBSTER,
-                                 train_src=train_src, test_src=test_src, time_period=time_period, jolly_seed=502)
-
-    print("Models performance:")
-    print(np.average(MAT_REP[:, :, :, 0], axis=0) * 100)
-
-    MAT_ORI = original_metrics(metrics, LIST_MODELS, LIST_HORIZONS)
-    CMS = confusion_metrix(PATH, LIST_MODELS, LIST_SEEDS, jolly_seed=502)
-    INFER = inference_data(PATH, LIST_MODELS)
-    # r_imp = relative_improvement_table(MAT_REP, MAT_ORI, LIST_MODELS)
-
-    # n: PLOT 1
-    for imet, met in enumerate(cst.metrics_name):
-        metrics_vs_models_k(met, MAT_REP[:, :, :, imet], OUT, LIST_MODELS, MAT_ORI[:, :, imet])  # each mat has shape MODELS x K x METRICA
-        print("plot done perf", met)
-
-    # 1: PLOT 2
-    confusion_matrices(CMS[1, :], LIST_MODELS, OUT)
-    print("plot done cm")
-
-    # n: PLOT 3
-    for imet, met in enumerate(cst.metrics_name):
-        met_data = np.mean(MAT_REP[:, :, :, imet], axis=2)  # MODELS x K x METRICA
-        scatter_plot_year(met, met_data, LIST_MODELS, LIST_YEARS, OUT)
-        print("plot done year", met)
-
-    plot_inference_time(INFER[0], INFER[1], cst.TRAINABLE_16, OUT)
-
-    # 20923 is the number of instances because test set is a portion of the original
-    logits, pred = MetaDataBuilder.load_predictions_from_jsons(cst.TRAINABLE_16, 502, cst.FI_Horizons.K10.value,
-                                                               n_instances=20923)
-
-    plot_corr_matrix(cst.TRAINABLE_16, 10, pred, OUT)
-    plot_agreement_matrix(cst.TRAINABLE_16, 10, pred, OUT)
+# def FI_plots():
+#     """ Make FI-2010 plots. """
+#
+#     MAT_REP = reproduced_metrics(PATH, metrics, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS,
+#                                  dataset_type=cst.DatasetFamily.LOBSTER,
+#                                  train_src=train_src, test_src=test_src, time_period=time_period, jolly_seed=502)
+#
+#     print("Models performance:")
+#     print(np.average(MAT_REP[:, :, :, 0], axis=0) * 100)
+#
+#     MAT_ORI = original_metrics(metrics, LIST_MODELS, LIST_HORIZONS)
+#     CMS = confusion_metrix(PATH, LIST_MODELS, LIST_SEEDS, jolly_seed=502)
+#     INFER = inference_data(PATH, LIST_MODELS)
+#     # r_imp = relative_improvement_table(MAT_REP, MAT_ORI, LIST_MODELS)
+#
+#     # n: PLOT 1
+#     for imet, met in enumerate(cst.metrics_name):
+#         metrics_vs_models_k(met, MAT_REP[:, :, :, imet], OUT, LIST_MODELS, MAT_ORI[:, :, imet])  # each mat has shape MODELS x K x METRICA
+#         print("plot done perf", met)
+#
+#     # 1: PLOT 2
+#     confusion_matrices(CMS[1, :], LIST_MODELS, OUT)
+#     print("plot done cm")
+#
+#     # n: PLOT 3
+#     for imet, met in enumerate(cst.metrics_name):
+#         met_data = np.mean(MAT_REP[:, :, :, imet], axis=2)  # MODELS x K x METRICA
+#         scatter_plot_year(met, met_data, LIST_MODELS, LIST_YEARS, OUT)
+#         print("plot done year", met)
+#
+#     plot_inference_time(INFER[0], INFER[1], cst.TRAINABLE_16, OUT)
+#
+#     # 20923 is the number of instances because test set is a portion of the original
+#     logits, pred = MetaDataBuilder.load_predictions_from_jsons(cst.TRAINABLE_16, 502, cst.FI_Horizons.K10.value,
+#                                                                n_instances=20923)
+#
+#     plot_corr_matrix(cst.TRAINABLE_16, 10, pred, OUT)
+#     plot_agreement_matrix(cst.TRAINABLE_16, 10, pred, OUT)
 
 
 def lobster_plots():
@@ -464,7 +478,7 @@ def lobster_plots():
     # n: PLOT 1
     for imet, met in enumerate(cst.metrics_name):
         chosen_horizons_mask = [5, 3, 0]
-        metrics_vs_models_k(met, LIST_HORIZONS, MAT_REP[:, :, :, imet], OUT, LIST_MODELS, DATASET, chosen_horizons_mask)  # each mat has shape MODELS x K x METRICA
+        metrics_vs_models_k(met, LIST_HORIZONS, MAT_REP[:, :, :, imet], OUT, LIST_MODELS, dataset_type=DATASET, chosen_horizons_mask=chosen_horizons_mask)  # each mat has shape MODELS x K x METRICA
 
         chosen_horizons_mask = [2, 1, 0]
         metrics_vs_models_k_line(met, LIST_HORIZONS, MAT_REP[:, :, :, imet], OUT, LIST_MODELS, DATASET, chosen_horizons_mask, type="var-for")
