@@ -2,12 +2,11 @@
 import src.constants as cst
 
 HP_CNN1 = {
-
     cst.LearningHyperParameter.EPOCHS_UB.value: {'values': [100]},
     cst.LearningHyperParameter.OPTIMIZER.value: {'values': [cst.Optimizers.ADAM.value]},
-    cst.LearningHyperParameter.BATCH_SIZE.value: {'values': [64]},
-    cst.LearningHyperParameter.LEARNING_RATE.value: {'values': [1e-3]}
 
+    cst.LearningHyperParameter.BATCH_SIZE.value: {'values': [32, 64, 128]},
+    cst.LearningHyperParameter.LEARNING_RATE.value: {'values': [1e-2, 1e-3, 1e-4, 1e-5]}
 }
 
 HP_CNN1_FI_FIXED = {

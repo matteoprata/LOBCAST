@@ -32,7 +32,7 @@ class LOBSTERDataBuilder:
         label_threshold_pos=None,
         label_threshold_neg=None,
         label_dynamic_scaler=None,
-        data_granularity=cst.Granularity.Sec1,
+        data_granularity=cst.Granularity.Events10,
         is_data_preload=None,
     ):
         self.config = config
@@ -42,6 +42,7 @@ class LOBSTERDataBuilder:
         self.normalization_type = normalization_type
         self.data_granularity = data_granularity
         self.is_data_preload = is_data_preload
+
         self.start_end_trading_day = start_end_trading_day
         self.crop_trading_day_by = crop_trading_day_by
 
@@ -59,12 +60,14 @@ class LOBSTERDataBuilder:
 
         # to store the datasets
         self.STOCK_NAME = stock_name
-        self.F_NAME_PICKLE = "{}_{}_{}_{}_{}.pickle".format(
+
+        self.F_NAME_PICKLE = "{}_{}_{}_{}_{}_{}.pickle".format(
             self.config.CHOSEN_PERIOD.name,
             self.STOCK_NAME,
             self.start_end_trading_day[0],
             self.start_end_trading_day[1],
-            self.dataset_type.value
+            self.dataset_type.value,
+            self.data_granularity
         )
 
         self.__data, self.__samples_x, self.__samples_y = None, None, None   # NX40, MX100X40, MX1
@@ -75,7 +78,7 @@ class LOBSTERDataBuilder:
         exists = os.path.exists(cst.DATA_PICKLES + self.F_NAME_PICKLE)
 
         if self.is_data_preload and exists:
-            print("Reloaded, not recomputed, nice!")
+            # print("Reloaded, not recomputed, nice!")
             self.__data = self.__deserialize_dataset()
         else:
             out_df = lbu.from_folder_to_unique_df(
@@ -92,6 +95,23 @@ class LOBSTERDataBuilder:
                     (np.where((out_df.index > '2021-08-03') & (out_df.index < '2021-08-05')))[0]
                 ]
             )
+            # print(out_df)
+            # print()
+            # print(out_df.columns)
+            # print(out_df.index)
+            # print(out_df.shape)
+
+            days = list()
+            for date in out_df.index:
+                date = str(date)
+                yyyymmdd = date.split()[0]
+                day = yyyymmdd.split('-')[2]
+                days.append(int(day))
+
+            days = set(days)
+            print()
+            print()
+            print(self.dataset_type, '\t', self.STOCK_NAME, '\tdays:', sorted(days))
 
             self.__data = out_df
 
@@ -121,6 +141,7 @@ class LOBSTERDataBuilder:
 
     def __label_dataset(self):
 
+        print(self.STOCK_NAME)
         if self.config.CHOSEN_MODEL == cst.Models.DEEPLOBATT:
             for winsize in cst.WinSize:
                 if winsize.value is None:
@@ -130,7 +151,12 @@ class LOBSTERDataBuilder:
             self.__data['y'] = self.__data[[f'y{winsize.value}' for winsize in cst.WinSize if winsize.value is not None]].values.tolist()
             self.__data = self.__data.drop([f'y{winsize.value}' for winsize in cst.WinSize if winsize.value is not None], axis=1)
         else:
-            self.__data = ppu.add_lob_labels_march_2023(self.__data, self.window_size_forward, self.window_size_backward, cst.ALFA)
+            self.__data = ppu.add_lob_labels_march_2023(
+                self.__data,
+                self.window_size_forward,
+                self.window_size_backward,
+                cst.ALFA
+            )
 
     # def plot_dataset(self):
     #     ppu.plot_dataframe_stats(
@@ -142,17 +168,17 @@ class LOBSTERDataBuilder:
 
     def __serialize_dataset(self):
         if not os.path.exists(cst.DATA_PICKLES + self.F_NAME_PICKLE):
-            print("Serialization...", self.F_NAME_PICKLE)
+            # print("Serialization...", self.F_NAME_PICKLE)
             util.write_data(self.__data, cst.DATA_PICKLES, self.F_NAME_PICKLE)
 
     def __deserialize_dataset(self):
-        print("Deserialization...", self.F_NAME_PICKLE)
+        # print("Deserialization...", self.F_NAME_PICKLE)
         out = util.read_data(cst.DATA_PICKLES + self.F_NAME_PICKLE)
         return out
 
     def __prepare_dataset(self):
         """ Crucial call! """
-        print("Generating dataset", self.dataset_type)
+        # print("Generating dataset", self.dataset_type)
 
         self.__read_dataset()
         self.__label_dataset()

@@ -7,11 +7,16 @@ if module_path not in sys.path:
     sys.path.append(module_path)
 
 from src.main_single import *
-from src.utils.utilities import get_upper_diagonal_windows
 
 DEFAULT_SEEDS = set(range(500, 505))
 DEFAULT_MODELS = cst.MODELS_15
-
+DEFAULT_FORWARD_WINDOWS = [
+    # cst.WinSize.EVENTS1,
+    # cst.WinSize.EVENTS2,
+    # cst.WinSize.EVENTS3,
+    cst.WinSize.EVENTS5,
+    # cst.WinSize.EVENTS10
+]
 
 def experiment_lobster(execution_plan, dataset, now=None, servers=None, is_debug=False):
 
@@ -27,9 +32,9 @@ def experiment_lobster(execution_plan, dataset, now=None, servers=None, is_debug
             models = DEFAULT_MODELS if models == 'all' else models
 
             for mod in models:
-                for window_backward, window_forward in zip(instance['k-'], instance['k+']):
+                for window_forward in DEFAULT_FORWARD_WINDOWS:
 
-                        print(f"Running LOBSTER experiment: model={mod}, bw={window_backward}, fw={window_forward}, seed={see}")
+                        print(f"Running LOBSTER experiment: model={mod}, fw={window_forward.value}, seed={see}")
 
                         try:
                             cf: Configuration = Configuration(now)
@@ -45,57 +50,47 @@ def experiment_lobster(execution_plan, dataset, now=None, servers=None, is_debug
                             cf.CHOSEN_STOCKS[cst.STK_OPEN.TEST] = cst.Stocks.ALL
                             cf.CHOSEN_PERIOD = cst.Periods.JULY2021
 
-                            cf.HYPER_PARAMETERS[cst.LearningHyperParameter.BACKWARD_WINDOW] = window_backward.value
+                            cf.HYPER_PARAMETERS[cst.LearningHyperParameter.BACKWARD_WINDOW] = cst.WinSize.EVENTS1.value
+
                             cf.HYPER_PARAMETERS[cst.LearningHyperParameter.FORWARD_WINDOW] = window_forward.value
 
                             cf.CHOSEN_MODEL = mod
 
                             cf.IS_WANDB = int(not is_debug)
-                            cf.IS_TUNE_H_PARAMS = True
+                            cf.IS_TUNE_H_PARAMS = int(not is_debug)
 
                             launch_wandb(cf)
 
                         except KeyboardInterrupt:
-                            print("There was a problem running on", server_name.name, "LOBSTER experiment on {}, with K-={}, K+={}".format(mod, window_backward, window_forward))
+                            print("There was a problem running on", server_name.name, "LOBSTER experiment on {}, with K+={}".format(mod, window_forward))
                             sys.exit()
 
 
 servers = [cst.Servers.ALIEN1, cst.Servers.ALIEN2, cst.Servers.FISSO1]
 
-# backwards, forwards = get_upper_diagonal_windows(windows=[cst.WinSize.SEC10, cst.WinSize.SEC50, cst.WinSize.SEC100])
-backwards = [cst.WinSize.SEC100, cst.WinSize.SEC100, cst.WinSize.SEC100, cst.WinSize.SEC50, cst.WinSize.SEC50, cst.WinSize.SEC10]
-forwards  = [cst.WinSize.SEC100, cst.WinSize.SEC50,  cst.WinSize.SEC10,  cst.WinSize.SEC50, cst.WinSize.SEC10, cst.WinSize.SEC10]
-
 execution_plan = {
 
     cst.Servers.FISSO1: [
         {
-            'seeds': [500, 501, 502],
-            'models': [cst.Models.MLP, cst.Models.BINCTABL, cst.Models.CTABL, cst.Models.DLA],
-            'k-': backwards,
-            'k+': forwards,
+            'seeds': [500],
+            'models': [cst.Models.MLP],
         }
     ],
 
     cst.Servers.ALIEN1: [
         {
-            'seeds': [500, 502],
-            'models': [cst.Models.CNN1, cst.Models.LSTM, cst.Models.DAIN, cst.Models.DEEPLOB],
-            'k-': backwards,
-            'k+': forwards,
+            'seeds': [500],
+            'models': [cst.Models.DAIN],
         },
     ],
 
     cst.Servers.ALIEN2: [
         {
-            'seeds': [500, 502],
-            'models': [cst.Models.CNNLSTM, cst.Models.CNN2, cst.Models.TLONBoF, cst.Models.DEEPLOBATT],
-            'k-': backwards,
-            'k+': forwards,
+            'seeds': [500],
+            'models': [cst.Models.DEEPLOB],
         },
     ],
 }
 
-now = 'LOBSTER-DEFINITIVE-14-04-2023'
+now = 'LOBSTER-DEFINITIVE-EVENTS-2023-04-20'
 experiment_lobster(execution_plan, dataset=cst.DatasetFamily.LOBSTER, now=now, servers=servers, is_debug=False)
-

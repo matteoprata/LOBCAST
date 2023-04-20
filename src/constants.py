@@ -4,7 +4,35 @@ import torch
 import numpy as np
 
 
-ALFA = 0.000141
+'''
+Backward: 1      Forward: 1      Alfa: 1e-06
+train:   0.18    0.63    0.19
+val:     0.19    0.62    0.19
+test:    0.21    0.59    0.2
+
+Backward: 1      Forward: 2      Alfa: 1e-06
+train:   0.24    0.5     0.25
+val:     0.25    0.5     0.25
+test:    0.27    0.47    0.27
+
+Backward: 1      Forward: 3      Alfa: 1e-06
+train:   0.28    0.43    0.29
+val:     0.28    0.43    0.29
+test:    0.3     0.4     0.3
+
+Backward: 1      Forward: 5      Alfa: 1e-06
+train:   0.32    0.36    0.33
+val:     0.32    0.35    0.33
+test:    0.34    0.33    0.33
+
+Backward: 1      Forward: 10     Alfa: 1e-06
+train:   0.37    0.25    0.38
+val:     0.37    0.25    0.38
+test:    0.38    0.23    0.38
+
+'''
+
+ALFA = 1e-6
 
 
 class LearningHyperParameter(str, Enum):
@@ -81,6 +109,12 @@ class WinSize(Enum):
     SEC50 = 50
     SEC100 = 100
 
+    EVENTS1 = 1
+    EVENTS2 = 2
+    EVENTS3 = 3
+    EVENTS5 = 5
+    EVENTS10 = 10
+
     # MIN01 = 60
     # MIN05 = 60 * 5
     # MIN10 = 60 * 10
@@ -129,8 +163,6 @@ class Models(str, Enum):
     MAJORITY = "Majority"
 
 
-
-
 class DatasetFamily(str, Enum):
     FI = "FI"
     LOBSTER = "Lobster"
@@ -165,7 +197,6 @@ class Stocks(list, Enum):
     ALL = ["SOFI", "NFLX", "CSCO", "WING", "SHLS", "LSTR"]
 
 
-
 class Periods(dict, Enum):
     MARCH2020 = {
         'first_day': '2020-03-02', 'last_day': '2020-04-03',
@@ -176,9 +207,9 @@ class Periods(dict, Enum):
 
     JULY2021 = {
         'first_day': '2021-07-01', 'last_day': '2021-08-06',
-        'train': ('2021-07-01', '2021-07-15'),  # 'train': ('2021-07-01', '2021-07-22'),
-        'val': ('2021-07-16', '2021-07-19'),  # 'val': ('2021-07-23', '2021-07-29'),
-        'test': ('2021-07-20', '2021-07-23'),  # 'test': ('2021-07-30', '2021-08-06'),
+        'train': ('2021-07-01', '2021-07-08'),  # 'train': ('2021-07-01', '2021-07-22'),
+        'val': ('2021-07-09', '2021-07-12'),  # 'val': ('2021-07-23', '2021-07-29'),
+        'test': ('2021-07-13', '2021-07-15'),  # 'test': ('2021-07-30', '2021-08-06'),
     }
 
     FI = {}
@@ -202,6 +233,7 @@ class Granularity(Enum):
     Day2 = "2D"
     Day5 = "7D"
     Month1 = "30D"
+    Events10 = 10
 
 
 class OrderEvent(Enum):

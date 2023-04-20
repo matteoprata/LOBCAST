@@ -57,9 +57,9 @@ class LOBDataset(data.Dataset):
             # normalization_mean = self.vol_price_mu[stock] if stock in self.vol_price_mu else None
             # normalization_std = self.vol_price_sig[stock] if stock in self.vol_price_sig else None
 
-            print()
-            print(dataset_type, stocks_list, stock, start_end_trading_day, path, sep="\n")
-            print()
+            # print()
+            # print(dataset_type, stocks_list, stock, start_end_trading_day, path, sep="\n")
+            # print()
 
             databuilder = LOBSTERDataBuilder(
                 stock,
@@ -68,7 +68,7 @@ class LOBDataset(data.Dataset):
                 n_lob_levels=cst.N_LOB_LEVELS,
                 dataset_type=dataset_type,
                 start_end_trading_day=start_end_trading_day,
-                crop_trading_day_by=60*30,
+                crop_trading_day_by=0,
                 window_size_forward=config.HYPER_PARAMETERS[cst.LearningHyperParameter.FORWARD_WINDOW],
                 window_size_backward=config.HYPER_PARAMETERS[cst.LearningHyperParameter.BACKWARD_WINDOW],
                 # normalization_mean=normalization_mean,
@@ -86,7 +86,7 @@ class LOBDataset(data.Dataset):
 
         Xs, Ys, Ss, ignore_indices_len = list(), list(), list(), [0]
         for stock in stocks_list:
-            print("Handling", stock, "for dataset", dataset_type)
+            # print("Handling", stock, "for dataset", dataset_type)
             databuilder = map_stock_databuilder[stock]
 
             data_x, data_y = databuilder.get_X_nx40(), databuilder.get_Y_n()
@@ -176,7 +176,7 @@ class LOBDataset(data.Dataset):
         col_choice = {"volumes": ppu.get_volume_column_name(data.columns),
                       "prices":  ppu.get_price_column_name(data.columns)}
 
-        print("Normalization... (using means", normalization_mean, "and stds", normalization_std, ")")
+        # print("Normalization... (using means", normalization_mean, "and stds", normalization_std, ")")
 
         means_dict, stds_dict = dict(), dict()
         for col_name in col_choice:

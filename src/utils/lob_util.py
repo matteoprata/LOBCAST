@@ -427,12 +427,12 @@ def lobster_to_gran_df(
     if 'Events' in granularity.name or (add_messages and granularity is None):
         orderbook_df[message_df.columns] = message_df[message_df.columns]
         accepted_orders = [o.value for o in
-                           (cst.OrderEvent.EXECUTION, cst.OrderEvent.SUBMISSION, cst.OrderEvent.HIDDEN_EXECUTION)]
+                           (cst.OrderEvent.EXECUTION, cst.OrderEvent.SUBMISSION, cst.OrderEvent.HIDDEN_EXECUTION, cst.OrderEvent.DELETION)]
         orderbook_df = orderbook_df[orderbook_df["event_type"].isin(accepted_orders)]
 
     if 'Events' in granularity.name:
         orderbook_df = orderbook_df.drop(list(message_df.columns), axis=1)
-        orderbook_df = orderbook_df[::granularity.value]
+        orderbook_df = orderbook_df.iloc[::granularity.value]
     else:
         if granularity is not None:
             orderbook_df.set_index("date", inplace=True)

@@ -126,10 +126,26 @@ def prepare_data_LOBSTER(config: Configuration):
         vol_price_mu=vol_price_mu, vol_price_sig=vol_price_sig
     )
 
+    print()
+    print()
+    print()
 
-    print("train", train_set.ys_occurrences)
-    print("val",   val_set.ys_occurrences)
-    print("test",  test_set.ys_occurrences)
+    train_occ = np.asarray([train_set.ys_occurrences[0.0], train_set.ys_occurrences[1.0], train_set.ys_occurrences[2.0]])
+    val_occ = np.asarray([val_set.ys_occurrences[0.0], val_set.ys_occurrences[1.0], val_set.ys_occurrences[2.0]])
+    test_occ = np.asarray([test_set.ys_occurrences[0.0], test_set.ys_occurrences[1.0], test_set.ys_occurrences[2.0]])
+
+    train_occ = np.round(train_occ / np.sum(train_occ), 2)
+    val_occ = np.round(val_occ / np.sum(val_occ), 2)
+    test_occ = np.round(test_occ / np.sum(test_occ), 2)
+
+    print(
+        f'Backward: {config.HYPER_PARAMETERS[cst.LearningHyperParameter.BACKWARD_WINDOW]}\t',
+        f'Forward: {config.HYPER_PARAMETERS[cst.LearningHyperParameter.FORWARD_WINDOW]}\t',
+        f'Alfa: {cst.ALFA}'
+    )
+    print("train:\t", train_occ[0], '\t', train_occ[1], '\t', train_occ[2])
+    print("val:\t",   val_occ[0], '\t', val_occ[1], '\t', val_occ[2])
+    print("test:\t",  test_occ[0], '\t', test_occ[1], '\t', test_occ[2])
 
     print("Samples in the splits:")
     print(len(train_set), len(val_set), len(test_set))

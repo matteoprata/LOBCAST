@@ -51,7 +51,7 @@ from src.models.atnbof.atnbof_param_search import HP_ATNBoF, HP_ATNBoF_FI_FIXED,
 from src.models.tlonbof.tlonbof_param_search import HP_TLONBoF, HP_TLONBoF_FI_FIXED, HP_TLONBoF_LOBSTER_FIXED
 from src.models.metalob.metalob_param_search import HP_META, HP_META_FIXED
 
-from src.utils.utilities import get_sys_mac, make_dir
+from src.utils.utilities import get_sys_mac
 from src.main_helper import pick_model, pick_dataset
 from collections import namedtuple
 

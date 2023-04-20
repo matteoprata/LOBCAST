@@ -86,7 +86,7 @@ def add_lob_labels_march_2023(data, window_size_forward, window_size_backward, a
     data = add_midprices_columns(data, window_size_forward, window_size_backward)  # MID_PRICE, MID_PRICE_FUTURE, MID_PRICE_PAST
 
     # we remove the first and the last rolling_tu because the rolling mean has holes
-    data = data[(window_size_backward - 1):-(window_size_forward - 1)]  # ok checked 6-03-23
+    data = data[(window_size_backward - 1):-window_size_forward]
 
     data[DataCols.PERCENTAGE_CHANGE.value] = get_percentage_change(data, DataCols.MID_PRICE_PAST.value, DataCols.MID_PRICE_FUTURE.value)
 
@@ -103,8 +103,9 @@ def add_lob_labels_march_2023(data, window_size_forward, window_size_backward, a
 
 def add_midprices_columns(data, window_size_forward, window_size_backward):
     data[DataCols.MID_PRICE.value] = get_mid_price(data)
-    data[DataCols.MID_PRICE_FUTURE.value] = data[DataCols.MID_PRICE.value].rolling(window_size_forward).mean().shift(- window_size_forward + 1)  # +1 is correct checked
+    data[DataCols.MID_PRICE_FUTURE.value] = data[DataCols.MID_PRICE.value].rolling(window_size_forward).mean().shift(-window_size_forward)
     data[DataCols.MID_PRICE_PAST.value]   = data[DataCols.MID_PRICE.value].rolling(window_size_backward).mean()
+
     return data
 
 

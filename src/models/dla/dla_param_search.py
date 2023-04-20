@@ -6,9 +6,8 @@ HP_DLA = {
     cst.LearningHyperParameter.RNN_HIDDEN.value: {'values': [100]},  # [32, 40, 48]
     cst.LearningHyperParameter.NUM_SNAPSHOTS.value: {'values': [5]},
 
-    cst.LearningHyperParameter.BATCH_SIZE.value: {'values': [64]},
-    cst.LearningHyperParameter.LEARNING_RATE.value: {'values': [1e-3]}
-
+    cst.LearningHyperParameter.BATCH_SIZE.value: {'values': [32, 64, 128]},
+    cst.LearningHyperParameter.LEARNING_RATE.value: {'values': [1e-2, 1e-3, 1e-4, 1e-5]}
 }
 
 HP_DLA_FI_FIXED = {
