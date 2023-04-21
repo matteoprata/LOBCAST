@@ -73,21 +73,21 @@ execution_plan = {
     cst.Servers.FISSO1: [
         {
             'seeds': [500],
-            'models': [cst.Models.MLP],
+            'models': [cst.Models.BINCTABL, cst.Models.CTABL, cst.Models.DLA],
         }
     ],
 
     cst.Servers.ALIEN1: [
         {
             'seeds': [500],
-            'models': [cst.Models.DAIN],
+            'models': [cst.Models.CNN1, cst.Models.LSTM, cst.Models.CNNLSTM],
         },
     ],
 
     cst.Servers.ALIEN2: [
         {
             'seeds': [500],
-            'models': [cst.Models.DEEPLOB],
+            'models': [cst.Models.CNN2, cst.Models.TLONBoF, cst.Models.DEEPLOBATT],
         },
     ],
 }
