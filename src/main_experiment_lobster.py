@@ -87,7 +87,7 @@ execution_plan = {
     cst.Servers.ALIEN2: [
         {
             'seeds': [500],
-            'models': [cst.Models.CNN2, cst.Models.TLONBoF, cst.Models.DEEPLOBATT],
+            'models': [cst.Models.DEEPLOBATT],
         },
     ],
 }

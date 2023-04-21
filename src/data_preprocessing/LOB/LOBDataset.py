@@ -113,7 +113,7 @@ class LOBDataset(data.Dataset):
 
         if config.CHOSEN_MODEL == cst.Models.DEEPLOBATT:
             self.ys_occurrences = dict()
-            for i, window in enumerate(cst.WinSize):
+            for i, window in enumerate(cst.FI_Horizons):
                 if window.value is not None:
                     y_i = y[:, i]
                     self.ys_occurrences[window] = collections.Counter(y_i)

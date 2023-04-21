@@ -67,6 +67,7 @@ class NNEngine(pl.LightningModule):
     def forward(self, x):
         out = self.neural_architecture(x)
         logits = self.softmax(out)
+
         return out, logits
 
     def training_step(self, batch, batch_idx):
@@ -76,6 +77,7 @@ class NNEngine(pl.LightningModule):
             x, y = batch
 
         out, logits = self(x)
+
         loss = self.loss_fn(out, y)
         return loss
 
@@ -186,6 +188,7 @@ class NNEngine(pl.LightningModule):
             x, y = batch
 
         out, logits = self(x)       # B x 3;   B X 3
+
         loss_val = self.loss_fn(out, y)
 
         # deriving prediction from softmax probs
@@ -212,7 +215,7 @@ class NNEngine(pl.LightningModule):
         losses = np.array(losses)
 
         if self.config.CHOSEN_MODEL == cst.Models.DEEPLOBATT:
-            index = get_index_from_window(self.config)
+            index = cst.HORIZONS_MAPPINGS_FI[self.config.HYPER_PARAMETERS[cst.LearningHyperParameter.FORWARD_WINDOW]]
             truths = truths[:, index]
             preds = preds[:, index]
 

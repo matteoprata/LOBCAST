@@ -143,13 +143,11 @@ class LOBSTERDataBuilder:
 
         print(self.STOCK_NAME)
         if self.config.CHOSEN_MODEL == cst.Models.DEEPLOBATT:
-            for winsize in cst.WinSize:
-                if winsize.value is None:
-                    continue
+            for winsize in cst.FI_Horizons:
                 self.__data = ppu.add_lob_labels_march_2023(self.__data, winsize.value, self.window_size_backward, cst.ALFA)
                 self.__data = self.__data.rename(columns={'y': f'y{winsize.value}'})
-            self.__data['y'] = self.__data[[f'y{winsize.value}' for winsize in cst.WinSize if winsize.value is not None]].values.tolist()
-            self.__data = self.__data.drop([f'y{winsize.value}' for winsize in cst.WinSize if winsize.value is not None], axis=1)
+            self.__data['y'] = self.__data[[f'y{winsize.value}' for winsize in cst.FI_Horizons]].values.tolist()
+            self.__data = self.__data.drop([f'y{winsize.value}' for winsize in cst.FI_Horizons], axis=1)
         else:
             self.__data = ppu.add_lob_labels_march_2023(
                 self.__data,

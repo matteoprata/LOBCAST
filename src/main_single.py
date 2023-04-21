@@ -100,6 +100,9 @@ HP_DICT_DATASET = {
 def _wandb_exe(config: Configuration):
     """ Either a single wandb run or a sweep. """
 
+    if config.IS_WANDB == 0:
+        launch_single(config)
+
     run_name = None
     if not config.IS_TUNE_H_PARAMS:
         config.dynamic_config_setup()
