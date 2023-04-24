@@ -6,8 +6,8 @@ HP_TABL = {
     cst.LearningHyperParameter.OPTIMIZER.value: {'values': [cst.Optimizers.ADAM.value]},
     cst.LearningHyperParameter.NUM_SNAPSHOTS.value: {'values': [10]},
 
-    cst.LearningHyperParameter.BATCH_SIZE.value: {'values': [32, 64, 128]},
-    cst.LearningHyperParameter.LEARNING_RATE.value: {'values': [1e-2, 1e-3, 1e-4, 1e-5]}
+    cst.LearningHyperParameter.BATCH_SIZE.value: {'values': [64]},
+    cst.LearningHyperParameter.LEARNING_RATE.value: {'values': [0.001]}
 }
 
 HP_TABL_FI_FIXED = {
