@@ -8,8 +8,8 @@ HP_ATNBoF = {
     cst.LearningHyperParameter.NUM_RBF_NEURONS.value: {'values': [16]},
     cst.LearningHyperParameter.P_DROPOUT.value: {'values': [0.2]},
 
-    cst.LearningHyperParameter.BATCH_SIZE.value: {'values': [32, 64, 128]},
-    cst.LearningHyperParameter.LEARNING_RATE.value: {'values': [1e-2, 1e-3, 1e-4, 1e-5]}
+    cst.LearningHyperParameter.BATCH_SIZE.value: {'values': [32]},
+    cst.LearningHyperParameter.LEARNING_RATE.value: {'values': [0.00001]}
 }
 
 HP_ATNBoF_FI_FIXED = {

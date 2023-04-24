@@ -6,8 +6,8 @@ HP_DEEP = {
     cst.LearningHyperParameter.OPTIMIZER.value: {'values': [cst.Optimizers.ADAM.value]},
     cst.LearningHyperParameter.EPS.value: {'values': [1]},
 
-    cst.LearningHyperParameter.BATCH_SIZE.value: {'values': [32, 64, 128]},
-    cst.LearningHyperParameter.LEARNING_RATE.value: {'values': [1e-2, 1e-3, 1e-4, 1e-5]}
+    cst.LearningHyperParameter.BATCH_SIZE.value: {'values': [32]},
+    cst.LearningHyperParameter.LEARNING_RATE.value: {'values': [0.01]}
 }
 
 HP_DEEP_FI_FIXED = {

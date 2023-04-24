@@ -11,11 +11,11 @@ from src.main_single import *
 DEFAULT_SEEDS = set(range(500, 505))
 DEFAULT_MODELS = cst.MODELS_15
 DEFAULT_FORWARD_WINDOWS = [
-    # cst.WinSize.EVENTS1,
-    # cst.WinSize.EVENTS2,
-    # cst.WinSize.EVENTS3,
+    cst.WinSize.EVENTS1,
+    cst.WinSize.EVENTS2,
+    cst.WinSize.EVENTS3,
     cst.WinSize.EVENTS5,
-    # cst.WinSize.EVENTS10
+    cst.WinSize.EVENTS10
 ]
 
 def experiment_lobster(execution_plan, dataset, now=None, servers=None, is_debug=False):
@@ -27,18 +27,21 @@ def experiment_lobster(execution_plan, dataset, now=None, servers=None, is_debug
         seeds = instance['seeds']
         seeds = DEFAULT_SEEDS if seeds == 'all' else seeds
 
-        for see in seeds:
+        for seed in seeds:
             models = instance['models']
             models = DEFAULT_MODELS if models == 'all' else models
 
             for mod in models:
-                for window_forward in DEFAULT_FORWARD_WINDOWS:
+                forward_windows = instance['forward_windows']
+                forward_windows = DEFAULT_FORWARD_WINDOWS if forward_windows == 'all' else forward_windows
 
-                        print(f"Running LOBSTER experiment: model={mod}, fw={window_forward.value}, seed={see}")
+                for window_forward in forward_windows:
+
+                        print(f"Running LOBSTER experiment: model={mod}, fw={window_forward.value}, seed={seed}")
 
                         try:
                             cf: Configuration = Configuration(now)
-                            cf.SEED = see
+                            cf.SEED = seed
 
                             set_seeds(cf)
 
@@ -51,7 +54,6 @@ def experiment_lobster(execution_plan, dataset, now=None, servers=None, is_debug
                             cf.CHOSEN_PERIOD = cst.Periods.JULY2021
 
                             cf.HYPER_PARAMETERS[cst.LearningHyperParameter.BACKWARD_WINDOW] = cst.WinSize.EVENTS1.value
-
                             cf.HYPER_PARAMETERS[cst.LearningHyperParameter.FORWARD_WINDOW] = window_forward.value
 
                             cf.CHOSEN_MODEL = mod
@@ -73,21 +75,39 @@ execution_plan = {
     cst.Servers.FISSO1: [
         {
             'seeds': [500],
-            'models': [cst.Models.BINCTABL, cst.Models.CTABL, cst.Models.DLA],
-        }
+            'forward_windows': [cst.WinSize.EVENTS1, cst.WinSize.EVENTS2, cst.WinSize.EVENTS3, cst.WinSize.EVENTS10],
+            'models': [cst.Models.BINCTABL, cst.Models.CTABL, cst.Models.DLA, cst.Models.MLP],
+        },
+        {
+            'seeds': [501],
+            'forward_windows': 'all',
+            'models': [cst.Models.BINCTABL, cst.Models.CTABL, cst.Models.DLA, cst.Models.MLP],
+        },
     ],
 
     cst.Servers.ALIEN1: [
         {
             'seeds': [500],
-            'models': [cst.Models.CNN1, cst.Models.LSTM, cst.Models.CNNLSTM],
+            'forward_windows': [cst.WinSize.EVENTS1, cst.WinSize.EVENTS2, cst.WinSize.EVENTS3, cst.WinSize.EVENTS10],
+            'models': [cst.Models.CNN1, cst.Models.LSTM, cst.Models.CNNLSTM, cst.Models.DEEPLOBATT],
+        },
+        {
+            'seeds': [501],
+            'forward_windows': 'all',
+            'models': [cst.Models.CNN1, cst.Models.LSTM, cst.Models.CNNLSTM, cst.Models.DEEPLOBATT],
         },
     ],
 
     cst.Servers.ALIEN2: [
         {
             'seeds': [500],
-            'models': [cst.Models.DEEPLOBATT],
+            'forward_windows': [cst.WinSize.EVENTS1, cst.WinSize.EVENTS2, cst.WinSize.EVENTS3, cst.WinSize.EVENTS10],
+            'models': [cst.Models.CNN2, cst.Models.TLONBoF, cst.Models.DAIN, cst.Models.DEEPLOB],
+        },
+        {
+            'seeds': [501],
+            'forward_windows': 'all',
+            'models': [cst.Models.CNN2, cst.Models.TLONBoF, cst.Models.DAIN, cst.Models.DEEPLOB],
         },
     ],
 }
