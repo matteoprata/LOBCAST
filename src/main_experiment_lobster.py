@@ -74,40 +74,19 @@ execution_plan = {
 
     cst.Servers.FISSO1: [
         {
-            'seeds': [500],
-            'forward_windows': [cst.WinSize.EVENTS1, cst.WinSize.EVENTS2, cst.WinSize.EVENTS3, cst.WinSize.EVENTS10],
-            'models': [cst.Models.BINCTABL, cst.Models.CTABL, cst.Models.DLA, cst.Models.MLP],
-        },
-        {
             'seeds': [501],
             'forward_windows': 'all',
-            'models': [cst.Models.BINCTABL, cst.Models.CTABL, cst.Models.DLA, cst.Models.MLP],
+            'models': [cst.Models.TRANSLOB],
         },
     ],
 
-    cst.Servers.ALIEN1: [
-        {
-            'seeds': [500],
-            'forward_windows': [cst.WinSize.EVENTS1, cst.WinSize.EVENTS2, cst.WinSize.EVENTS3, cst.WinSize.EVENTS10],
-            'models': [cst.Models.CNN1, cst.Models.LSTM, cst.Models.CNNLSTM, cst.Models.DEEPLOBATT],
-        },
-        {
-            'seeds': [501],
-            'forward_windows': 'all',
-            'models': [cst.Models.CNN1, cst.Models.LSTM, cst.Models.CNNLSTM, cst.Models.DEEPLOBATT],
-        },
-    ],
+    cst.Servers.ALIEN1: [],
 
     cst.Servers.ALIEN2: [
         {
             'seeds': [500],
             'forward_windows': [cst.WinSize.EVENTS1, cst.WinSize.EVENTS2, cst.WinSize.EVENTS3, cst.WinSize.EVENTS10],
-            'models': [cst.Models.CNN2, cst.Models.TLONBoF, cst.Models.DAIN, cst.Models.DEEPLOB],
-        },
-        {
-            'seeds': [501],
-            'forward_windows': 'all',
-            'models': [cst.Models.CNN2, cst.Models.TLONBoF, cst.Models.DAIN, cst.Models.DEEPLOB],
+            'models': [cst.Models.TRANSLOB],
         },
     ],
 }
