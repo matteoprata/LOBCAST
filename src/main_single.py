@@ -13,6 +13,7 @@ import random
 import numpy as np
 import wandb
 import traceback
+import socket
 import time
 import torch
 
@@ -272,15 +273,15 @@ def experiment_preamble(now, servers):
         args = vars(parser.parse_args())
         now = args["now"]
 
-    mac = get_sys_mac()
+    hostname = socket.gethostname()
 
-    n_servers = len(cst.ServerMACIDs) if servers is None else len(servers)
-    servers = cst.ServerMACIDs if servers is None else servers  # list of server
-    servers_mac = [cst.ServerMACIDs[s] for s in servers]  # list of macs
+    n_servers = len(cst.server2hostname) if servers is None else len(servers)
+    servers = cst.server2hostname if servers is None else servers  # list of server
+    servers_hostname = [cst.server2hostname[s] for s in servers]  # list of hostnames
 
-    if mac in servers_mac:
-        server_name = cst.MACIDsServer[mac]
-        server_id = servers_mac.index(mac)
+    if hostname in servers_hostname:
+        server_name = cst.hostname2server[hostname]
+        server_id = servers_hostname.index(hostname)
         print("Running on server", server_name.name)
     else:
         raise "This SERVER is not handled for the experiment."

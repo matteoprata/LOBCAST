@@ -112,4 +112,4 @@ def make_dir(path):
 
 
 if __name__ == '__main__':
-    print(get_sys_mac())
+    print('mac:', get_sys_mac())

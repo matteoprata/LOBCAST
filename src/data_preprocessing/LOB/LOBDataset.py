@@ -75,7 +75,8 @@ class LOBDataset(data.Dataset):
                 # normalization_std=normalization_std,
                 num_snapshots=self.sample_size,
                 label_dynamic_scaler=config.HYPER_PARAMETERS[cst.LearningHyperParameter.LABELING_SIGMA_SCALER],
-                is_data_preload=config.IS_DATA_PRELOAD
+                is_data_preload=config.IS_DATA_PRELOAD,
+                data_granularity=cst.Granularity.Events10
             )
 
             # self.vol_price_mu[stock], self.vol_price_sig[stock] = databuilder.normalization_means, databuilder.normalization_stds

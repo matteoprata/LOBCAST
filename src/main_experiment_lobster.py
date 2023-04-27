@@ -74,19 +74,25 @@ execution_plan = {
 
     cst.Servers.FISSO1: [
         {
-            'seeds': [501],
+            'seeds': [502, 503, 504],
             'forward_windows': 'all',
-            'models': [cst.Models.TRANSLOB],
+            'models': [cst.Models.MLP, cst.Models.CNN2, cst.Models.CNNLSTM, cst.Models.DLA],
         },
     ],
 
-    cst.Servers.ALIEN1: [],
+    cst.Servers.ALIEN1: [
+        {
+            'seeds': [502, 503, 504],
+            'forward_windows': 'all',
+            'models': [cst.Models.DAIN, cst.Models.LSTM, cst.Models.CNN1, cst.Models.DEEPLOB],
+        },
+    ],
 
     cst.Servers.ALIEN2: [
         {
-            'seeds': [500],
-            'forward_windows': [cst.WinSize.EVENTS1, cst.WinSize.EVENTS2, cst.WinSize.EVENTS3, cst.WinSize.EVENTS10],
-            'models': [cst.Models.TRANSLOB],
+            'seeds': [502, 503, 504],
+            'forward_windows': 'all',
+            'models': [cst.Models.CTABL, cst.Models.TLONBoF, cst.Models.BINCTABL, cst.Models.DEEPLOBATT],
         },
     ],
 }

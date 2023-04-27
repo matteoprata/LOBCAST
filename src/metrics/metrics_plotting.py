@@ -56,7 +56,7 @@ def reproduced_metrics(path, metrics, list_models, list_horizons, list_seeds, da
     return METRICS
 
 
-def inference_data(path, list_models, dataset_type, seed=501, horizon=10, bw=50, fw=50, train_src="ALL", test_src="ALL", time_period=cst.Periods.JULY2021.name):
+def inference_data(path, list_models, dataset_type, seed=500, horizon=10, bw=1, fw=5, train_src="ALL", test_src="ALL", time_period=cst.Periods.JULY2021.name):
     INFERENCE = np.zeros(shape=(2, len(list_models)))
     for imod, mod in enumerate(list_models):
         if mod == cst.Models.MAJORITY:
@@ -140,7 +140,7 @@ def metrics_vs_models_k(met_name, horizons, met_vec, out_dir, list_models, datas
     if dataset_type == cst.DatasetFamily.FI:
         labels = ["K=" + k.value for k in horizons[chosen_horizons_mask]]
     else:
-        labels = ["BW={}, FW={}".format(bw.value, fw.value) for bw, fw in horizons[chosen_horizons_mask]]
+        labels = ["K={}".format(fw.value) for bw, fw in horizons[chosen_horizons_mask]]
 
     fmt = "%.2f"
     miny, maxy = -1, 1.1
@@ -206,7 +206,7 @@ def metrics_vs_models_k(met_name, horizons, met_vec, out_dir, list_models, datas
     if dataset_type == cst.DatasetFamily.FI:
         ax.set_ylim((0, 90))
     elif dataset_type == cst.DatasetFamily.LOBSTER:
-        ax.set_ylim((0, 75))
+        ax.set_ylim((0, 90))
 
     ax.legend(fontsize=12, ncol=6, handleheight=2, labelspacing=0.05)
 
@@ -221,7 +221,7 @@ def metrics_vs_models_k(met_name, horizons, met_vec, out_dir, list_models, datas
 def metrics_vs_models_k_line(met_name, horizons, met_vec, out_dir, list_models, dataset_type, chosen_horizons_mask, type=None):
 
     horizons = np.array(horizons)
-    labels = ["BW={}, FW={}".format(bw.value, fw.value) for bw, fw in horizons[chosen_horizons_mask]]
+    labels = ["K={}".format(fw.value) for bw, fw in horizons[chosen_horizons_mask]]
 
     if "MCC" not in met_name:
         met_vec = met_vec * 100
@@ -461,8 +461,9 @@ def plot_agreement_matrix(list_models, fw_win, preds, out_dir):
 def lobster_plots():
     """ Make FI-2010 plots. """
 
-    backwards = [cst.WinSize.SEC100, cst.WinSize.SEC100, cst.WinSize.SEC100, cst.WinSize.SEC50, cst.WinSize.SEC50, cst.WinSize.SEC10]
-    forwards  = [cst.WinSize.SEC100, cst.WinSize.SEC50, cst.WinSize.SEC10, cst.WinSize.SEC50, cst.WinSize.SEC10, cst.WinSize.SEC10]
+    # LOBSTER
+    backwards = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1]
+    forwards  = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS2, cst.WinSize.EVENTS3, cst.WinSize.EVENTS5, cst.WinSize.EVENTS10]
     LIST_HORIZONS = list(zip(backwards, forwards))  # cst.FI_Horizons
 
     MAT_REP = reproduced_metrics(PATH, metrics, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS, dataset_type=cst.DatasetFamily.LOBSTER,
@@ -477,23 +478,22 @@ def lobster_plots():
 
     # n: PLOT 1
     for imet, met in enumerate(cst.metrics_name):
-        chosen_horizons_mask = [5, 3, 0]
+        chosen_horizons_mask = [0, 1, 2, 3, 4]
         metrics_vs_models_k(met, LIST_HORIZONS, MAT_REP[:, :, :, imet], OUT, LIST_MODELS, dataset_type=DATASET, chosen_horizons_mask=chosen_horizons_mask)  # each mat has shape MODELS x K x METRICA
 
-        chosen_horizons_mask = [2, 1, 0]
+        chosen_horizons_mask = [0, 1, 2, 3, 4]
         metrics_vs_models_k_line(met, LIST_HORIZONS, MAT_REP[:, :, :, imet], OUT, LIST_MODELS, DATASET, chosen_horizons_mask, type="var-for")
 
-        chosen_horizons_mask = [5, 4, 2]
+        chosen_horizons_mask = [0, 1, 2, 3, 4]
         metrics_vs_models_k_line(met, LIST_HORIZONS, MAT_REP[:, :, :, imet], OUT, LIST_MODELS, DATASET, chosen_horizons_mask, type="var-ba")
 
         print("plot done perf", met)
 
     # 1: PLOT 2
-    chosen_horizons_mask = [5, 3, 0]
+    chosen_horizons_mask = [0, 1, 2, 3, 4]
     chosen_horizons = np.array(LIST_HORIZONS)[chosen_horizons_mask]
     confusion_matrices(CMS[0, :], LIST_MODELS, OUT, chosen_horizons, DATASET)
     print("plot done cm")
-    exit()
 
     # n: PLOT 3
     for imet, met in enumerate(cst.metrics_name):
@@ -512,8 +512,8 @@ def lobster_plots():
 
 if __name__ == '__main__':
 
-    PATH = "data/experiments/all_models_18_04_23/"
-    OUT = "all_models_18_04_23/pdfs/"
+    PATH = "all_models_25_04_23/jsons/"
+    OUT  = "all_models_25_04_23/pdfs/"
 
     DATASET = cst.DatasetFamily.LOBSTER
 
@@ -521,13 +521,13 @@ if __name__ == '__main__':
     test_src = "ALL" if DATASET == cst.DatasetFamily.LOBSTER else "FI"
     time_period = cst.Periods.JULY2021.name
 
-    LIST_SEEDS = [501]
+    LIST_SEEDS = [500]
 
     # backwards = [cst.WinSize.SEC100, cst.WinSize.SEC100, cst.WinSize.SEC100, cst.WinSize.SEC50, cst.WinSize.SEC50, cst.WinSize.SEC10]
     # forwards  = [cst.WinSize.SEC100, cst.WinSize.SEC50, cst.WinSize.SEC10, cst.WinSize.SEC50, cst.WinSize.SEC10, cst.WinSize.SEC10]
 
-    backwards = [cst.WinSize.SEC10, cst.WinSize.SEC50, cst.WinSize.SEC100]
-    forwards  = [cst.WinSize.SEC10, cst.WinSize.SEC50, cst.WinSize.SEC100]
+    backwards = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1]
+    forwards  = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS2, cst.WinSize.EVENTS3, cst.WinSize.EVENTS5, cst.WinSize.EVENTS10]
     LIST_HORIZONS = list(zip(backwards, forwards))  # cst.FI_Horizons
 
     LIST_MODELS = cst.MODELS_15

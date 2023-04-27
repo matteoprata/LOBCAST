@@ -233,7 +233,9 @@ class Granularity(Enum):
     Day2 = "2D"
     Day5 = "7D"
     Month1 = "30D"
+    Events1 = 1
     Events10 = 10
+
 
 
 class OrderEvent(Enum):
@@ -286,13 +288,13 @@ class Servers(Enum):
     FISSO1 = 3
 
 
-MACIDsServer = {
-    '53:97:71:de:8c:60': Servers.ALIEN1,
-    '75:b7:57:be:f8:7e': Servers.ALIEN2,
-    '9a:d7:87:4b:6f:0d': Servers.FISSO1
+hostname2server = {
+    'novella-Alienware-h2': Servers.ALIEN1,
+    'novella-Alienware-x15-R1': Servers.ALIEN2,
+    'novella-pc': Servers.FISSO1
 }
+server2hostname = {v: k for k, v in hostname2server.items()}
 
-ServerMACIDs = {v: k for k, v in MACIDsServer.items()}
 
 metrics_name = ['F1 Score (%)', 'Precision (%)', 'Recall (%)', 'Accuracy (%)', 'MCC']
 

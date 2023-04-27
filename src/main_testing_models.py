@@ -7,11 +7,9 @@ module_path = os.path.abspath(os.getcwd())
 if module_path not in sys.path:
     sys.path.append(module_path)
 
-from src.config import Configuration
-import src.constants as cst
 from src.main_single import *
 from src.main_helper import pick_dataset, pick_model
-from src.models.model_executor import NNEngine
+from src.utils.utilities import make_dir
 
 
 def core_test(seed, model, dataset, src_data, out_data, horizon=None, win_back=None, win_forward=None):
@@ -88,6 +86,8 @@ def core_test(seed, model, dataset, src_data, out_data, horizon=None, win_back=N
     print("opening", checkpoint_file_path)
     trainer.test(model=model, datamodule=datamodule, ckpt_path=checkpoint_file_path)
 
+    print("done testing")
+    print("start eval ")
     # measure inference time of the best model
     datamodule.batch_size = 2  #
     prediction_time = trainer.predict(model, dataloaders=datamodule.test_dataloader(), ckpt_path=checkpoint_file_path)
@@ -123,15 +123,15 @@ if __name__ == "__main__":
     # kset, mset = cst.FI_Horizons, cst.Models
     dataset_type = cst.DatasetFamily.LOBSTER  # "FI"
 
-    src_data = "all_models_18_04_23/"  # "all_models_28_03_23/"
-    out_data = "data/experiments/all_models_18_04_23/"  # "data/experiments/all_models_28_03_23/"
+    src_data = "all_models_25_04_23/"  # "all_models_28_03_23/"
+    out_data = "all_models_25_04_23/jsons/"  # "data/experiments/all_models_28_03_23/"
 
     model_todo = cst.MODELS_15
-    models_to_avoid = [cst.Models.DAIN, cst.Models.DEEPLOB, cst.Models.AXIALLOB, cst.Models.ATNBoF]  # [cst.Models.METALOB]  # [cst.Models.ATNBoF]
-    seeds = [501]
+    models_to_avoid = []  # [cst.Models.DAIN, cst.Models.DEEPLOB, cst.Models.AXIALLOB, cst.Models.ATNBoF]  # [cst.Models.METALOB]  # [cst.Models.ATNBoF]
+    seeds = [500]
 
     # LOBSTER
-    backwards = [cst.WinSize.SEC100, cst.WinSize.SEC100, cst.WinSize.SEC100, cst.WinSize.SEC50, cst.WinSize.SEC50, cst.WinSize.SEC10]
-    forwards  = [cst.WinSize.SEC100, cst.WinSize.SEC50, cst.WinSize.SEC10, cst.WinSize.SEC50, cst.WinSize.SEC10, cst.WinSize.SEC10]
+    backwards = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1]
+    forwards  = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS2, cst.WinSize.EVENTS3, cst.WinSize.EVENTS5, cst.WinSize.EVENTS10]
 
     launch_lobster_test(seeds, model_todo, models_to_avoid, dataset_type, backwards, forwards, src_data, out_data)
