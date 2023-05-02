@@ -272,6 +272,8 @@ PROJECT_NAME = "LOB-CLASSIFIERS-({})"
 DIR_EXPERIMENTS = "data/experiments/" + PROJECT_NAME
 DIR_SAVED_MODEL = "data/saved_models/" + PROJECT_NAME
 DIR_FI_FINAL_JSONS = "data/experiments/all_models_28_03_23/"
+DIR_LOBSTER_FINAL_JSONS = "data/LOBSTER/Predictions/"
+DIR_OHLC = "data/LOBSTER/ohlc_stocks/"
 
 DATA_SOURCE = "data/"
 DATASET_LOBSTER = "LOBSTER_6/unzipped/"

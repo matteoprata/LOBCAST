@@ -72,10 +72,6 @@ class MetaDataBuilder:
         if is_raw:
             return logits, preds
 
-        n_samples, n_classes, n_models = logits.shape
-        logits = logits.reshape(n_samples, n_classes * n_models)
-        # logits.shape = [n_samples, n_classes*n_models]
-
         return logits, preds
 
     def get_samples_train(self):
