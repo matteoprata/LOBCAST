@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from src.config import Configuration
 
 
-def load_predictions(model, stock, seed, period, horizon, n_instances):
+def load_predictions(model, stock, seed, period, horizon):
 
     file_name = "model={}-seed={}-trst=ALL-test={}-data=Lobster-peri={}-bw=1-fw={}-fiw=10.json".format(model.name,
                                                                                                         seed,
@@ -24,13 +24,6 @@ def load_predictions(model, stock, seed, period, horizon, n_instances):
 
             logits_str = d['LOGITS']
             logits = np.array(json.loads(logits_str))
-
-
-            #print("len OHLC: " + str(n_instances))
-            #print("numero di predizioni: " + str(logits.shape[0]))
-            #print("differenza tra len di OHLC e numero di predizioni: " + str(n_instances - logits.shape[0]))
-            #print()
-
 
             if (model == cst.Models.DEEPLOBATT):
                 horizons = [horizon.value for horizon in cst.FI_Horizons]
@@ -84,7 +77,6 @@ class DLstrategy(Strategy):
             elif self.position.is_long == False and self.position.is_short == False:
                 self.buy(size=1)
 
-
         # we predict the price will go down
         elif int(pred) == 0:
 
@@ -99,49 +91,66 @@ class DLstrategy(Strategy):
 
 
 def run_backtest(cf):
-    Returns = list()
-    for model in cst.Models:
-        if (model.name != "METALOB" and model.name != "MAJORITY"):
-            for stock in cst.Stocks:
-                if (stock.name != "ALL" and stock.name != "FI"):
 
-                    print(f"Backtest ready for stock {stock.name} and model {model.name}")
-                    print(stock.name)
-                    print(model.name)
+    #horizon = cf.HYPER_PARAMETERS['fi_horizon_k']
+    horizons = [horizon.value for horizon in cst.FI_Horizons]
+    for horizon in horizons:
+        Returns = list()
+        for model in cst.Models:
+            if (model.name != "METALOB" and model.name != "MAJORITY"):
+                for stock in cst.Stocks:
+                    if (stock.name != "ALL" and stock.name != "FI"):
 
-                    # load OHLC and predictions
-                    OHLC = load_OHLC(stock, cst.Periods.JULY2021)
-                    n_instances = len(OHLC)
-                    preds = load_predictions(model, stock, cf.SEED, cst.Periods.JULY2021, cf.HYPER_PARAMETERS['fi_horizon_k'], n_instances)
+                        print(f"Backtest ready for stock {stock.name} and model {model.name}")
+                        print(stock.name)
+                        print(model.name)
 
-                    # if the number of predictions is less than the number of instances, we cut the OHLC
-                    if (preds.shape[0] < n_instances):
-                        OHLC = OHLC.iloc[:preds.shape[0]]
+                        # load OHLC and predictions
+                        OHLC = load_OHLC(stock, cst.Periods.JULY2021)
 
-                    # return the values to the original scale
-                    OHLC = OHLC.div(10000)
+                        preds = load_predictions(model, stock, cf.SEED, cst.Periods.JULY2021, horizon)
 
-                    # We add the predictions to the OHLC dataframe and rename the columns as the library requires
-                    OHLC['Preds'] = preds
-                    OHLC.rename(columns={'low': 'Low'}, inplace=True)
-                    OHLC.rename(columns={'high': 'High'}, inplace=True)
-                    OHLC.rename(columns={'open': 'Open'}, inplace=True)
-                    OHLC.rename(columns={'close': 'Close'}, inplace=True)
-                    OHLC = OHLC[['Open', 'High', 'Low', 'Close', 'Preds']]
+                        if (stock.name == "LSTR"):
+                            diff_lstr = len(OHLC) - preds.shape[0] - horizon + 1
+                            OHLC = OHLC.iloc[diff_lstr:]
 
-                    # we run the backtest and print the results
-                    bt = Backtest(OHLC, DLstrategy, cash=10000, commission=.0002, margin=1, trade_on_close=True)
-                    stats = bt.run()
-                    # print(stats)
-                    # bt.plot()
-                    Returns.append(stats[6])
-    plot_returns(Returns)
+                        n_instances = len(OHLC)
+                        '''
+                        print("len OHLC: " + str(n_instances))
+                        print("numero di predizioni: " + str(preds.shape[0]))
+                        print("differenza tra len di OHLC e numero di predizioni: " + str(n_instances - preds.shape[0]))
+                        print()
+                        '''
+                        # we remove the last n_instances - preds.shape[0] rows from the OHLC dataframe
+                        if (preds.shape[0] < n_instances):
+                            diff = n_instances - preds.shape[0]
+                            OHLC = OHLC.iloc[:-diff]
+
+                        # return the values to the original scale
+                        OHLC = OHLC.div(10000)
+
+                        # We add the predictions to the OHLC dataframe and rename the columns as the library requires
+                        OHLC['Preds'] = preds
+                        OHLC.rename(columns={'low': 'Low'}, inplace=True)
+                        OHLC.rename(columns={'high': 'High'}, inplace=True)
+                        OHLC.rename(columns={'open': 'Open'}, inplace=True)
+                        OHLC.rename(columns={'close': 'Close'}, inplace=True)
+                        OHLC = OHLC[['Open', 'High', 'Low', 'Close', 'Preds']]
+
+                        # we run the backtest and print the results
+                        bt = Backtest(OHLC, DLstrategy, cash=10000, commission=.0002, margin=1, trade_on_close=False)
+                        stats = bt.run()
+                        print(stats)
+                        bt.plot()
+                        Returns.append(stats[6])
+        plot_returns(Returns, horizon)
 
 
-def plot_returns(Returns):
+def plot_returns(Returns, horizon):
     Returns = np.array(Returns)
     #Returns = np.random.rand(len(cst.Models)-2, len(cst.Stocks)-2)
     Returns = Returns.reshape((len(cst.Models)-2, len(cst.Stocks)-2))
+
     models = [model.name for model in cst.Models if model.name != "METALOB" and model.name != "MAJORITY"]
     stocks = [stock.name for stock in cst.Stocks if stock.name != "ALL" and stock.name != "FI"]
     fig, ax = plt.subplots(figsize=(30, 12))
