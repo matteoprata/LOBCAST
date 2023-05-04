@@ -214,7 +214,7 @@ def metrics_vs_models_k(met_name, horizons, met_vec, out_dir, list_models, datas
     fig.tight_layout()
 
     plt.savefig(out_dir + "ka" + met_name + ".pdf")
-    plt.show()
+    # plt.show()
     plt.close(fig)
 
 
@@ -246,9 +246,8 @@ def metrics_vs_models_k_line(met_name, horizons, met_vec, out_dir, list_models, 
     ax.legend(fontsize=12, ncol=4, handleheight=2, labelspacing=0.05)
 
     fig.tight_layout()
-
     plt.savefig(out_dir + type + "-line" + met_name + ".pdf")
-    plt.show()
+    # plt.show()
     plt.close(fig)
 
 
@@ -280,7 +279,7 @@ def plot_inference_time(met_vec, met_vec_err, list_models, out_dir):
     fig.tight_layout()
 
     plt.savefig(out_dir + "inference_time.pdf")
-    plt.show()
+    # plt.show()
     plt.close(fig)
 
 
@@ -328,7 +327,7 @@ def confusion_matrices(cms, list_models, out_dir, chosen_horizons, dataset):
     fig.subplots_adjust(top=.95, left=.087)
 
     fig.savefig(out_dir + "cm-fi.pdf")
-    plt.show()
+    # plt.show()
     plt.close(fig)
 
 
@@ -359,7 +358,7 @@ def scatter_plot_year(met_name, met_data, list_models, list_models_years, out_di
     plt.title("{} {} in the Years".format(dataset_type, met_name))
     plt.tight_layout()
     plt.savefig(out_dir + "year-" + met_name + ".pdf")
-    plt.show()
+    # plt.show()
     plt.close()
 
 # ADJUST
@@ -390,7 +389,7 @@ def plot_corr_matrix(list_models, fw_win, preds, out_dir):
 
     # save heatmap as PNG file
     heatmap.figure.savefig(out_dir + f"correlation_matrix_k={fw_win}.pdf", bbox_inches='tight')
-    plt.show()
+    # plt.show()
     plt.close()
 
 
@@ -414,7 +413,7 @@ def plot_agreement_matrix(list_models, fw_win, preds, out_dir):
     heatmap.set(title=f'Agreement matrix for K={fw_win}')
     heatmap.figure.set_size_inches(20, 20)
     heatmap.figure.savefig(out_dir + f"agreement_matrix_K={fw_win}.pdf", bbox_inches='tight')
-    plt.show()
+    # plt.show()
     plt.close()
 
 
@@ -531,7 +530,7 @@ if __name__ == '__main__':
     LIST_HORIZONS = list(zip(backwards, forwards))  # cst.FI_Horizons
 
     LIST_MODELS = cst.MODELS_15
-    LIST_MODELS = [m for m in cst.MODELS_15 if m not in [cst.Models.AXIALLOB, cst.Models.ATNBoF]]
+    # LIST_MODELS = [m for m in cst.MODELS_15 if m not in [cst.Models.AXIALLOB, cst.Models.ATNBoF]]
     LIST_YEARS  = [cst.MODELS_YEAR_DICT[m] for m in cst.MODELS_YEAR_DICT if m in LIST_MODELS]
 
     os.makedirs(OUT, exist_ok=True)

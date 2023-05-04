@@ -14,6 +14,7 @@ from src.config import Configuration
 
 LOSS_WEIGHTS_DICT = {m: 1e6 for m in cst.Models}
 # LOSS_WEIGHTS_DICT[cst.Models.ATNBoF] = 1e3
+from src.utils.utilities import write_data
 
 
 class LOBDataset(data.Dataset):
@@ -85,16 +86,39 @@ class LOBDataset(data.Dataset):
         # print('vol_price_mu:', self.vol_price_mu)
         # print('vol_price_sig:', self.vol_price_sig)
 
+        def to_ohlc(df):
+            mid = (df.loc[:, 'psell1'] + df.loc[:, 'pbuy1']) / 2
+            mid = pd.DataFrame(mid, columns=["mid"])
+            mid["dummy"] = np.arange(len(mid))
+            mid["dummy"] = pd.to_datetime(mid["dummy"], unit="s")
+            mid = mid.set_index("dummy")
+
+            df_10s = mid.resample('10S')  # eventi
+            OHLC = df_10s.agg({'mid': ['min', 'max', 'first', 'last']})
+            OHLC.columns = ['low', 'high', 'open', 'close']
+            OHLC = OHLC.reset_index(drop=True)
+            # print(OHLC.shape)
+            # print(OHLC.describe())
+            return OHLC
+
         Xs, Ys, Ss, ignore_indices_len = list(), list(), list(), [0]
         for stock in stocks_list:
             # print("Handling", stock, "for dataset", dataset_type)
             databuilder = map_stock_databuilder[stock]
 
             data_x, data_y = databuilder.get_X_nx40(), databuilder.get_Y_n()
+            # data_x_umb = databuilder.get_Xung_nx40()
+
             Xs.append(data_x)
             Ys.append(data_y)
             Ss.extend([stock]*len(data_y))
             ignore_indices_len.append(len(data_y))
+
+            # print(dataset_type, stock, data_x_umb.shape, data_x.shape)
+            # OHLC = to_ohlc(data_x_umb)
+            # OHLC = OHLC.iloc[:data_x.shape[0], :]
+            # print("saving", OHLC.shape)
+            # write_data(OHLC, "data/", "OHLC_{}.data".format(stock))
 
         # removes the indices that are the first sample_size
         ignore_indices = []
@@ -124,7 +148,6 @@ class LOBDataset(data.Dataset):
             self.loss_weights = torch.Tensor(LOSS_WEIGHTS_DICT[config.CHOSEN_MODEL] / occs)
 
         self.y = torch.from_numpy(y).type(torch.LongTensor)
-
         self.stock_sym_name = Ss
 
         # self.indexes_chosen = self.__under_sampling(self.y, ignore_indices)
@@ -143,7 +166,6 @@ class LOBDataset(data.Dataset):
         return x, y, s
         # id_sample = self.indexes_chosen[index]
         # x, y, s = self.x[id_sample-self.sample_size:id_sample], self.y[id_sample], self.stock_sym_name[id_sample]
-
 
     def __under_sampling(self, y, ignore_indices):
         """ Discard instances of the majority class. """

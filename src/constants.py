@@ -5,6 +5,8 @@ import numpy as np
 
 
 '''
+JULY 2021
+
 Backward: 1      Forward: 1      Alfa: 1e-06
 train:   0.18    0.63    0.19
 val:     0.19    0.62    0.19
@@ -29,6 +31,36 @@ Backward: 1      Forward: 10     Alfa: 1e-06
 train:   0.37    0.25    0.38
 val:     0.37    0.25    0.38
 test:    0.38    0.23    0.38
+
+'''
+
+'''
+FEBRAURY 2022
+
+Backward: 1      Forward: 1      Alfa: 1e-06
+train:   0.2     0.61    0.2
+val:     0.18    0.63    0.18
+test:    0.19    0.62    0.19
+
+Backward: 1      Forward: 2      Alfa: 1e-06
+train:   0.26    0.48    0.26
+val:     0.25    0.5     0.25
+test:    0.26    0.49    0.26
+
+Backward: 1      Forward: 3      Alfa: 1e-06
+train:   0.29    0.41    0.3
+val:     0.29    0.42    0.29
+test:    0.3     0.41    0.29
+
+Backward: 1      Forward: 5      Alfa: 1e-06
+train:   0.34    0.32    0.34
+val:     0.34    0.32    0.34
+test:    0.35    0.31    0.34
+
+Backward: 1      Forward: 10     Alfa: 1e-06
+train:   0.4     0.2     0.4
+val:     0.42    0.17    0.41
+test:    0.41    0.17    0.41
 
 '''
 
@@ -198,11 +230,12 @@ class Stocks(list, Enum):
 
 
 class Periods(dict, Enum):
-    MARCH2020 = {
-        'first_day': '2020-03-02', 'last_day': '2020-04-03',
-        'train': ('2020-03-02', '2020-03-20'),
-        'val': ('2020-03-23', '2020-03-27'),
-        'test': ('2020-03-30', '2020-04-03'),
+
+    FEBRUARY2022 = {
+        'first_day': '2022-02-01', 'last_day': '2022-02-28',
+        'train': ('2022-02-01', '2022-02-07'),
+        'val': ('2022-02-08', '2022-02-11'),
+        'test': ('2022-02-14', '2022-02-16'),
     }
 
     JULY2021 = {
@@ -272,8 +305,6 @@ PROJECT_NAME = "LOB-CLASSIFIERS-({})"
 DIR_EXPERIMENTS = "data/experiments/" + PROJECT_NAME
 DIR_SAVED_MODEL = "data/saved_models/" + PROJECT_NAME
 DIR_FI_FINAL_JSONS = "data/experiments/all_models_28_03_23/"
-DIR_LOBSTER_FINAL_JSONS = "data/LOBSTER/Predictions/"
-DIR_OHLC = "data/LOBSTER/ohlc_stocks/"
 
 DATA_SOURCE = "data/"
 DATASET_LOBSTER = "LOBSTER_6/unzipped/"
@@ -496,3 +527,4 @@ def model_dataset(model, bias="FI"):
     if model in [Models.MAJORITY, Models.METALOB]:
         return "Meta"
     return bias
+

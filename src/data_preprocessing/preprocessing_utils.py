@@ -127,7 +127,7 @@ def plot_dataframe_stats(data, label_threshold_pos, label_threshold_neg, dataset
     #data[[DataCols.PREDICTION.value]].plot()
     data[[DataCols.PREDICTION.value]].hist()
     plt.title(dataset_type)
-    plt.show()
+    # plt.show()
 
 
 def get_mid_price(data):
