@@ -69,7 +69,7 @@ class LOBSTERDataBuilder:
             self.dataset_type.value,
             self.data_granularity
         )
-
+        self.__data_un_gathered = None
         self.__data, self.__samples_x, self.__samples_y = None, None, None   # NX40, MX100X40, MX1
         self.__prepare_dataset()  # KEY CALL
 
@@ -113,6 +113,16 @@ class LOBSTERDataBuilder:
             print()
             print(self.dataset_type, '\t', self.STOCK_NAME, '\tdays:', sorted(days))
 
+            # out_df_ung = lbu.from_folder_to_unique_df(
+            #     cst.DATA_SOURCE + self.lobster_dataset_name,
+            #     level=self.n_lob_levels,
+            #     granularity=cst.Granularity.Events1,
+            #     first_date=self.start_end_trading_day[0],
+            #     last_date=self.start_end_trading_day[1],
+            #     boundaries_purge=self.crop_trading_day_by
+            # )
+            #
+            # self.__data_un_gathered = out_df_ung
             self.__data = out_df
 
         if self.is_data_preload and not exists:
@@ -196,7 +206,10 @@ class LOBSTERDataBuilder:
         # self.plot_dataset()
 
     def get_X_nx40(self):
-        return self.__data.iloc[:, :-5]
+        return self.__data.iloc[:, :-5]  # in the last 5 columns there are predictions and shifts
+
+    def get_Xung_nx40(self):
+        return self.__data_un_gathered.iloc[:, :]
 
     def get_Y_n(self):
         if self.config.CHOSEN_MODEL == cst.Models.DEEPLOBATT:

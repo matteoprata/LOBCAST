@@ -24,7 +24,7 @@ def experiment_lobster(model, forward_window, seed, now=None):
         cf.CHOSEN_DATASET = cst.DatasetFamily.LOBSTER
         cf.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN] = cst.Stocks.ALL
         cf.CHOSEN_STOCKS[cst.STK_OPEN.TEST] = cst.Stocks.ALL
-        cf.CHOSEN_PERIOD = cst.Periods.JULY2021
+        cf.CHOSEN_PERIOD = cst.Periods.FEBRUARY2022
 
         cf.HYPER_PARAMETERS[cst.LearningHyperParameter.BACKWARD_WINDOW] = cst.WinSize.EVENTS1.value
         cf.HYPER_PARAMETERS[cst.LearningHyperParameter.FORWARD_WINDOW] = forward_window.value
@@ -44,7 +44,7 @@ def experiment_lobster(model, forward_window, seed, now=None):
         sys.exit()
 
 
-now = 'LOBSTER-DEFINITIVE-EVENTS-2023-04-20'
+now = 'LOBSTER-DEFINITIVE-EVENTS-2023-05-05-FEBRUARY2022'
 wandb.login(key="54775690baa838985ad1ce959fd2d5dcc8b23b8b")
 experiment_lobster(
     model=cst.Models[sys.argv[1]],
