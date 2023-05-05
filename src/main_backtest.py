@@ -52,18 +52,15 @@ def load_OHLC(stock, period):
 
     return df
 
-
-class DLstrategy(Strategy):
-
+class DLstrategy1(Strategy):
     def init(self):
         print("starting")
 
     def next(self):
-
         # Proceed only with out-of-sample data. Prepare some variables
         high, low, close = self.data.High[-1], self.data.Low[-1], self.data.Close[-1]
         pred = self.data.Preds[-1]
-        #print(self.position)
+        # print(self.position)
 
         # we predict the price will go up
         if int(pred) == 2:
@@ -90,6 +87,34 @@ class DLstrategy(Strategy):
                 self.sell(size=1)
 
 
+class DLstrategy2(Strategy):
+
+    def init(self):
+        print("starting")
+
+    def next(self):
+
+        # Proceed only with out-of-sample data. Prepare some variables
+        high, low, close = self.data.High[-1], self.data.Low[-1], self.data.Close[-1]
+        pred = self.data.Preds[-1]
+        #print(self.position)
+
+        # we predict the price will go up
+        if int(pred) == 2:
+
+            #if we are not already long we go long
+            if self.position.is_long == False and self.position.is_short == False:
+                self.buy(size=1)
+
+        # we predict the price will go down
+        elif int(pred) == 0:
+
+            # if we are long and the price is going down, we sell
+            if self.position.is_long:
+                self.position.close()
+
+
+
 def run_backtest(cf):
 
     horizons = [horizon.value for horizon in cst.FI_Horizons]
@@ -102,8 +127,6 @@ def run_backtest(cf):
             for j, stock in enumerate(Stocks):
 
                 print(f"Backtest ready for stock {stock} and model {model}")
-                print(stock)
-                print(model)
 
                 # load OHLC and predictions
                 OHLC = load_OHLC(stock, cst.Periods.JULY2021)
@@ -138,14 +161,14 @@ def run_backtest(cf):
                 OHLC = OHLC[['Open', 'High', 'Low', 'Close', 'Preds']]
 
                 # we run the backtest and print the results
-                bt = Backtest(OHLC, DLstrategy, cash=10000, commission=.0002, margin=1, trade_on_close=False)
+                bt = Backtest(OHLC, DLstrategy2, cash=10000, commission=0, margin=1, trade_on_close=False)
                 stats = bt.run()
                 #print(stats)
                 #bt.plot()
                 Returns[i, j] = stats[6]
 
         table_plot(Returns, horizon)
-        box_plot(Returns, horizon)
+        #box_plot(Returns, horizon)
         #np.save("Returns_{}".format(horizon), Returns)
 
 def table_plot(Returns, horizon):
@@ -155,7 +178,7 @@ def table_plot(Returns, horizon):
     models = [model.name for model in cst.Models if model.name != "METALOB" and model.name != "MAJORITY"]
     stocks = [stock.name for stock in cst.Stocks if stock.name != "ALL" and stock.name != "FI"]
     fig, ax = plt.subplots(figsize=(30, 12))
-    ax.matshow(Returns)
+    ax.matshow(Returns, cmap=plt.cm.Greens)
 
     # set the ticks to be at the middle of each cell
     ax.set_xticks(np.arange(len(stocks)), minor=False)
@@ -168,7 +191,10 @@ def table_plot(Returns, horizon):
         for j in range(len(stocks)):
             ax.text(j, i, round(Returns[i, j], 1), ha="center", va="center")
 
+    plt.title("Returns for horizon = {}".format(horizon))
+    #plt.savefig("Returns for horizon = {}.pdf".format(horizon))
     plt.show()
+
 
 def box_plot(Returns, horizon):
 
