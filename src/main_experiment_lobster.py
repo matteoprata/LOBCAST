@@ -83,5 +83,5 @@ execution_plan = {
 }
 
 # now = 'LOBSTER-DEFINITIVE-EVENTS-2023-05-05-FEBRUARY2022'
-now = "LOBSTER-META"
+now = "LOBSTER-META-MAY-23"
 experiment_lobster(execution_plan, dataset=cst.DatasetFamily.LOBSTER, now=now, servers=servers, is_debug=False)

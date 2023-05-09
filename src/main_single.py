@@ -114,9 +114,8 @@ def _wandb_exe(config: Configuration):
         if config.CHOSEN_DATASET in [cst.DatasetFamily.FI, cst.DatasetFamily.META]:
             wandb_instance.log({"fi-k":  config.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON]})
 
-        elif config.CHOSEN_DATASET in [cst.DatasetFamily.LOBSTER, cst.DatasetFamily.META]:
-            wandb_instance.log({"back-win":  config.HYPER_PARAMETERS[cst.LearningHyperParameter.BACKWARD_WINDOW]})
-            wandb_instance.log({"fwrd-win":  config.HYPER_PARAMETERS[cst.LearningHyperParameter.FORWARD_WINDOW]})
+        wandb_instance.log({"back-win":  config.HYPER_PARAMETERS[cst.LearningHyperParameter.BACKWARD_WINDOW]})
+        wandb_instance.log({"fwrd-win":  config.HYPER_PARAMETERS[cst.LearningHyperParameter.FORWARD_WINDOW]})
 
         config.WANDB_RUN_NAME = wandb_instance.name
         config.WANDB_INSTANCE = wandb_instance
