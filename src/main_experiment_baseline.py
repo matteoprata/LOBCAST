@@ -109,7 +109,7 @@ def launch_test_LOBSTER(seeds, kset, period):
                 if param.value in model_params:
                     cf.HYPER_PARAMETERS[param] = model_params[param.value]
 
-            N_INSTANCES = 347215
+            N_INSTANCES = cst.n_test_instances(cf.CHOSEN_DATASET, cf.CHOSEN_PERIOD)
             # def load_predictions_from_jsons(in_dir, models, seed, horizon, trst="FI", test="FI", peri="FI", bw=None, fw=None, is_raw=False, n_instances=139487):
             logits, _ = MetaDataBuilder.load_predictions_from_jsons(jsons_dir,
                                                                     cf.CHOSEN_DATASET.value,

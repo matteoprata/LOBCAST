@@ -27,7 +27,20 @@ class MetaDataBuilder:
         self.generic_file_name = config.cf_name_format(ext='.json')
 
         # KEY call, generates the dataset
-        self.logits, self.preds = self.load_predictions_from_jsons(cst.MODELS_15, self.seed, self.fiw)
+        # self.logits, self.preds = self.load_predictions_from_jsons(cst.MODELS_15, self.seed, self.fiw)
+        TARGET_DATASET = cst.DatasetFamily.LOBSTER
+        self.logits, self.preds = MetaDataBuilder.load_predictions_from_jsons(cst.DIR_FI_FINAL_JSONS,
+                                                                TARGET_DATASET,
+                                                                cst.MODELS_15,
+                                                                config.SEED,
+                                                                config.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON],
+                                                                trst=config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name,
+                                                                test=config.CHOSEN_STOCKS[cst.STK_OPEN.TEST].name,
+                                                                peri=config.CHOSEN_PERIOD.name,
+                                                                bw=config.HYPER_PARAMETERS[cst.LearningHyperParameter.BACKWARD_WINDOW],
+                                                                fw=config.HYPER_PARAMETERS[cst.LearningHyperParameter.FORWARD_WINDOW],
+                                                                is_raw=True,
+                                                                n_instances=cst.n_test_instances(TARGET_DATASET, config.CHOSEN_PERIOD))
         # logits.shape = [n_samples, n_classes*n_models]
         # preds.shape = [n_samples, n_models]
 
@@ -40,13 +53,13 @@ class MetaDataBuilder:
         for model in models:
 
             file_name = "model={}-seed={}-trst={}-test={}-data={}-peri={}-bw={}-fw={}-fiw={}.json".format(model.name,
-                                                                                                              seed,
-                                                                                                              trst,
-                                                                                                              test,
-                                                                                                              cst.model_dataset(model, dataset),
-                                                                                                              peri,
-                                                                                                              bw, fw,
-                                                                                                              horizon)
+                                                                                                          seed,
+                                                                                                          trst,
+                                                                                                          test,
+                                                                                                          cst.model_dataset(model, dataset),
+                                                                                                          peri,
+                                                                                                          bw, fw,
+                                                                                                          horizon)
 
             if os.path.exists(in_dir + file_name):
                 with open(in_dir + file_name, "r") as f:
@@ -60,7 +73,7 @@ class MetaDataBuilder:
                     # cut = logits_.shape[0] - n_instances
                     logits_ = logits_[-n_instances:]
 
-                    if (model == cst.Models.DEEPLOBATT):
+                    if model == cst.Models.DEEPLOBATT:
                         horizons = [horizon.value for horizon in cst.FI_Horizons]
                         h = horizons.index(horizon)
                         logits_ = logits_[:, :, h]

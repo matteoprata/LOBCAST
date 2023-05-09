@@ -153,7 +153,7 @@ class NNEngine(pl.LightningModule):
         self.config.METRICS_JSON.update_cfm(self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, cm)
 
         # PER STOCK PREDICTIONS
-        if self.config.CHOSEN_STOCKS[cst.STK_OPEN.TEST] == cst.Stocks.ALL:
+        if self.config.CHOSEN_STOCKS[cst.STK_OPEN.TEST] == cst.Stocks.ALL and self.config.CHOSEN_MODEL not in [cst.Models.METALOB, cst.Models.MAJORITY]:
             # computing metrics per stock
 
             for si in self.config.CHOSEN_STOCKS[cst.STK_OPEN.TEST].value:

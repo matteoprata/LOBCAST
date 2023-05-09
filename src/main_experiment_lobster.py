@@ -18,6 +18,7 @@ DEFAULT_FORWARD_WINDOWS = [
     cst.WinSize.EVENTS10
 ]
 
+
 def experiment_lobster(execution_plan, dataset, now=None, servers=None, is_debug=False):
 
     now, server_name, server_id, n_servers = experiment_preamble(now, servers)
@@ -51,7 +52,7 @@ def experiment_lobster(execution_plan, dataset, now=None, servers=None, is_debug
 
                             cf.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN] = cst.Stocks.ALL
                             cf.CHOSEN_STOCKS[cst.STK_OPEN.TEST] = cst.Stocks.ALL
-                            cf.CHOSEN_PERIOD = cst.Periods.FEBRUARY2022
+                            cf.CHOSEN_PERIOD = cst.Periods.JULY2021
 
                             cf.HYPER_PARAMETERS[cst.LearningHyperParameter.BACKWARD_WINDOW] = cst.WinSize.EVENTS1.value
                             cf.HYPER_PARAMETERS[cst.LearningHyperParameter.FORWARD_WINDOW] = window_forward.value
@@ -72,30 +73,15 @@ servers = [cst.Servers.ALIEN1, cst.Servers.ALIEN2, cst.Servers.FISSO1]
 
 execution_plan = {
 
-    cst.Servers.FISSO1: [
-        {
-            'seeds': [500],
-            'forward_windows': [cst.WinSize.EVENTS10],
-            'models': [cst.Models.TRANSLOB],
-        },
-    ],
-
-    cst.Servers.ALIEN1: [
-        {
-            'seeds': [500],
-            'forward_windows': [cst.WinSize.EVENTS10],
-            'models': [cst.Models.AXIALLOB],
-        },
-    ],
-
     cst.Servers.ALIEN2: [
         {
-            'seeds': [500],
-            'forward_windows': [cst.WinSize.EVENTS10],
-            'models': [cst.Models.ATNBoF],
+            'seeds': [500, 501, 502, 503, 504],
+            'forward_windows': 'all',
+            'models': [cst.Models.METALOB],
         },
     ],
 }
 
-now = 'LOBSTER-DEFINITIVE-EVENTS-2023-05-05-FEBRUARY2022'
+# now = 'LOBSTER-DEFINITIVE-EVENTS-2023-05-05-FEBRUARY2022'
+now = "LOBSTER-META"
 experiment_lobster(execution_plan, dataset=cst.DatasetFamily.LOBSTER, now=now, servers=servers, is_debug=False)

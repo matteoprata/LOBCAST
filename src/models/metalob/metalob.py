@@ -3,6 +3,7 @@ from torch import nn
 import src.constants as cst
 import torch
 
+
 class MetaLOB(pl.LightningModule):
     def __init__(self, mlp_hidden, chosen_models):
         super().__init__()

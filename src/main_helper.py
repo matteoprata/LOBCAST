@@ -173,12 +173,28 @@ def prepare_data_META(config: Configuration):
             window=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_SNAPSHOTS],
             chosen_model=config.CHOSEN_MODEL
         )
+        truth_y = databuilder_test.samples_y[99:-1]
     else:
-        # TODO: instantiate LOBSTER test dataset
-        raise NotImplementedError
+        train_set = LOBDataset(
+            config=config,
+            dataset_type=cst.DatasetType.TRAIN,
+            stocks_list=config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].value,
+            start_end_trading_day=config.CHOSEN_PERIOD.value['train']
+        )
+
+        vol_price_mu, vol_price_sig = train_set.vol_price_mu, train_set.vol_price_sig
+
+        test_set = LOBDataset(
+            config=config,
+            dataset_type=cst.DatasetType.TEST,
+            stocks_list=config.CHOSEN_STOCKS[cst.STK_OPEN.TEST].value,
+            start_end_trading_day=config.CHOSEN_PERIOD.value['test'],
+            vol_price_mu=vol_price_mu, vol_price_sig=vol_price_sig
+        )
+        truth_y = test_set.y.numpy()
 
     meta_databuilder = MetaDataBuilder(
-        truth_y=databuilder_test.samples_y[99:-1],
+        truth_y=truth_y,
         config=config
     )
 

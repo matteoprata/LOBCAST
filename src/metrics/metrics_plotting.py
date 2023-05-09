@@ -467,12 +467,12 @@ def lobster_plots():
     LIST_HORIZONS = list(zip(backwards, forwards))  # cst.FI_Horizons
 
     MAT_REP = reproduced_metrics(PATH, metrics, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS, dataset_type=cst.DatasetFamily.LOBSTER,
-                                 train_src=train_src, test_src=test_src, time_period=time_period, jolly_seed=500)
+                                 train_src=train_src, test_src=test_src, time_period=time_period, jolly_seed=None)
 
     print("Models performance:")
     print(np.average(MAT_REP[:, :, :, 0], axis=0) * 100)
 
-    CMS = confusion_metrix(PATH, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS, jolly_seed=500, dataset_type=cst.DatasetFamily.LOBSTER, train_src=train_src, test_src=test_src, time_period=time_period)
+    CMS = confusion_metrix(PATH, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS, jolly_seed=None, dataset_type=cst.DatasetFamily.LOBSTER, train_src=train_src, test_src=test_src, time_period=time_period)
     INFER = inference_data(PATH, LIST_MODELS, dataset_type=cst.DatasetFamily.LOBSTER, train_src=train_src, test_src=test_src, time_period=time_period)
     # r_imp = relative_improvement_table(MAT_REP, MAT_ORI, LIST_MODELS)
 

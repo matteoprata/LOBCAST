@@ -271,7 +271,7 @@ NUM_GPUS = None if DEVICE_TYPE == 'cpu' else torch.cuda.device_count()
 PROJECT_NAME = "LOB-CLASSIFIERS-({})"
 DIR_EXPERIMENTS = "data/experiments/" + PROJECT_NAME
 DIR_SAVED_MODEL = "data/saved_models/" + PROJECT_NAME
-DIR_FI_FINAL_JSONS = "data/experiments/all_models_28_03_23/"
+DIR_FI_FINAL_JSONS = "all_models_25_04_23/jsons/"
 
 DATA_SOURCE = "data/"
 DATASET_LOBSTER = "LOBSTER_6/unzipped/"
@@ -512,3 +512,12 @@ def model_dataset(model, bias="FI"):
     # if model in [Models.MAJORITY, Models.METALOB]:
     #     return "Meta"
     return bias
+
+
+def n_test_instances(dataset, period):
+
+    if dataset == DatasetFamily.FI:
+        return 139487
+    elif dataset == DatasetFamily.LOBSTER:
+        if period == Periods.JULY2021:
+            return 347215
