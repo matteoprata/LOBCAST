@@ -152,6 +152,7 @@ def prepare_data_LOBSTER(config: Configuration):
     print("Samples in the splits:")
     print(len(train_set), len(val_set), len(test_set))
     print()
+    exit()
 
     lob_dm = DataModule(
         train_set, val_set, test_set,
@@ -212,6 +213,7 @@ def prepare_data_META(config: Configuration):
 
 
 def pick_dataset(config: Configuration):
+
     if config.CHOSEN_DATASET == cst.DatasetFamily.LOBSTER:
         return prepare_data_LOBSTER(config)
 

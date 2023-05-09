@@ -34,15 +34,22 @@ class MetaDataBuilder:
         self.n_models = self.preds.shape[1]
 
     @staticmethod
-    def load_predictions_from_jsons(models, seed, horizon, is_raw=False, n_instances=139487):
+    def load_predictions_from_jsons(in_dir, dataset, models, seed, horizon, trst="FI", test="FI", peri="FI", bw=None, fw=None, is_raw=False, n_instances=139487):
         logits = list()
 
         for model in models:
 
-            file_name = "model={}-seed={}-trst=FI-test=FI-data={}-peri=FI-bw=None-fw=None-fiw={}.json".format(model.name, seed, cst.model_dataset(model), horizon)
+            file_name = "model={}-seed={}-trst={}-test={}-data={}-peri={}-bw={}-fw={}-fiw={}.json".format(model.name,
+                                                                                                              seed,
+                                                                                                              trst,
+                                                                                                              test,
+                                                                                                              cst.model_dataset(model, dataset),
+                                                                                                              peri,
+                                                                                                              bw, fw,
+                                                                                                              horizon)
 
-            if os.path.exists(cst.DIR_FI_FINAL_JSONS + file_name):
-                with open(cst.DIR_FI_FINAL_JSONS + file_name, "r") as f:
+            if os.path.exists(in_dir + file_name):
+                with open(in_dir + file_name, "r") as f:
                     d = json.loads(f.read())
 
                     logits_str = d['LOGITS']
@@ -60,7 +67,7 @@ class MetaDataBuilder:
 
                     logits.append(logits_)
             else:
-                print("problem with file", cst.DIR_FI_FINAL_JSONS + file_name)
+                print("problem with file", in_dir + file_name)
                 exit()
 
         logits = np.dstack(logits)

@@ -150,7 +150,6 @@ class LOBSTERDataBuilder:
     #     self.__data = ppu.add_midprices_columns(self.__data, self.window_size_forward, self.window_size_backward)
 
     def __label_dataset(self):
-        print(self.STOCK_NAME)
         if self.config.CHOSEN_MODEL == cst.Models.DEEPLOBATT:
             for winsize in cst.FI_Horizons:
                 self.__data = ppu.add_lob_labels_march_2023(self.__data, winsize.value, self.window_size_backward, cst.ALFA)

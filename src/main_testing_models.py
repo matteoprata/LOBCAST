@@ -128,10 +128,10 @@ if __name__ == "__main__":
 
     model_todo = cst.MODELS_15
     models_to_avoid = []  # [cst.Models.DAIN, cst.Models.DEEPLOB, cst.Models.AXIALLOB, cst.Models.ATNBoF]  # [cst.Models.METALOB]  # [cst.Models.ATNBoF]
-    seeds = [504]
+    seeds = [500]
 
     # LOBSTER
-    backwards = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS1]
-    forwards  = [cst.WinSize.EVENTS5, cst.WinSize.EVENTS10]
+    backwards = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1]
+    forwards  = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS2, cst.WinSize.EVENTS3, cst.WinSize.EVENTS5, cst.WinSize.EVENTS10]
 
     launch_lobster_test(seeds, model_todo, models_to_avoid, dataset_type, backwards, forwards, src_data, out_data)

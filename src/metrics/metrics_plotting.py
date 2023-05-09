@@ -30,18 +30,19 @@ def reproduced_metrics(path, metrics, list_models, list_horizons, list_seeds, da
     for imod, mod in enumerate(list_models):
         for ik, k in enumerate(list_horizons):
             for iss, s in enumerate(list_seeds):
+                # print(mod, k, s)
 
-                bw, fw = None, None
+                bw, fw, fik = None, None, None
                 if dataset_type == cst.DatasetFamily.LOBSTER:
                     bw, fw = k
                     bw, fw = bw.value, fw.value
-                    k = cst.FI_Horizons.K10
+                    fik = cst.FI_Horizons.K10
 
                 fname = "model={}-seed={}-trst={}-test={}-data={}-peri={}-bw={}-fw={}-fiw={}.json".format(
-                    mod.name, s, train_src, test_src, cst.model_dataset(mod, bias=dataset_type), time_period, bw, fw, k.value
+                    mod.name, s, train_src, test_src, cst.model_dataset(mod, bias=dataset_type), time_period, bw, fw, fik.value
                 )
 
-                if mod == cst.Models.MAJORITY:  # only 1 seed for the baseline
+                if mod == cst.Models.MAJORITY and jolly_seed is not None:  # only 1 seed for the baseline
                     if s == jolly_seed:
                         jsn = util.read_json(path + fname)
                         vec = np.zeros(shape=(len(metrics)))
@@ -98,18 +99,18 @@ def confusion_metrix(path, list_models, list_horizons, list_seeds, dataset_type,
         for ik, k in enumerate(list_horizons):
             for iss, s in enumerate(list_seeds):
 
-                bw, fw = None, None
+                bw, fw, fik = None, None, None
                 if dataset_type == cst.DatasetFamily.LOBSTER:
                     bw, fw = k
                     bw, fw = bw.value, fw.value
-                    k = cst.FI_Horizons.K10
+                    fik = cst.FI_Horizons.K10
 
                 fname = "model={}-seed={}-trst={}-test={}-data={}-peri={}-bw={}-fw={}-fiw={}.json".format(
                     mod.name, s, train_src, test_src, cst.model_dataset(mod, bias=dataset_type), time_period, bw, fw,
-                    k.value
+                    fik.value
                 )
 
-                if mod == cst.Models.MAJORITY:  # only seed for the baseline
+                if mod == cst.Models.MAJORITY and jolly_seed is not None:  # only seed for the baseline
                     if s == jolly_seed:
                         jsn = util.read_json(path + fname)
                         repeat = np.repeat(np.expand_dims(np.array(jsn["cm"]), axis=0), len(list_seeds), axis=0)
@@ -466,12 +467,12 @@ def lobster_plots():
     LIST_HORIZONS = list(zip(backwards, forwards))  # cst.FI_Horizons
 
     MAT_REP = reproduced_metrics(PATH, metrics, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS, dataset_type=cst.DatasetFamily.LOBSTER,
-                                 train_src=train_src, test_src=test_src, time_period=time_period, jolly_seed=502)
+                                 train_src=train_src, test_src=test_src, time_period=time_period, jolly_seed=500)
 
     print("Models performance:")
     print(np.average(MAT_REP[:, :, :, 0], axis=0) * 100)
 
-    CMS = confusion_metrix(PATH, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS, jolly_seed=502, dataset_type=cst.DatasetFamily.LOBSTER, train_src=train_src, test_src=test_src, time_period=time_period)
+    CMS = confusion_metrix(PATH, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS, jolly_seed=500, dataset_type=cst.DatasetFamily.LOBSTER, train_src=train_src, test_src=test_src, time_period=time_period)
     INFER = inference_data(PATH, LIST_MODELS, dataset_type=cst.DatasetFamily.LOBSTER, train_src=train_src, test_src=test_src, time_period=time_period)
     # r_imp = relative_improvement_table(MAT_REP, MAT_ORI, LIST_MODELS)
 
@@ -520,7 +521,7 @@ if __name__ == '__main__':
     test_src = "ALL" if DATASET == cst.DatasetFamily.LOBSTER else "FI"
     time_period = cst.Periods.JULY2021.name
 
-    LIST_SEEDS = [500]
+    LIST_SEEDS = [500, 501, 502, 503, 504]
 
     # backwards = [cst.WinSize.SEC100, cst.WinSize.SEC100, cst.WinSize.SEC100, cst.WinSize.SEC50, cst.WinSize.SEC50, cst.WinSize.SEC10]
     # forwards  = [cst.WinSize.SEC100, cst.WinSize.SEC50, cst.WinSize.SEC10, cst.WinSize.SEC50, cst.WinSize.SEC10, cst.WinSize.SEC10]
@@ -529,7 +530,7 @@ if __name__ == '__main__':
     forwards  = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS2, cst.WinSize.EVENTS3, cst.WinSize.EVENTS5, cst.WinSize.EVENTS10]
     LIST_HORIZONS = list(zip(backwards, forwards))  # cst.FI_Horizons
 
-    LIST_MODELS = cst.MODELS_15
+    LIST_MODELS = cst.MODELS_15 + [cst.Models.MAJORITY]
     # LIST_MODELS = [m for m in cst.MODELS_15 if m not in [cst.Models.AXIALLOB, cst.Models.ATNBoF]]
     LIST_YEARS  = [cst.MODELS_YEAR_DICT[m] for m in cst.MODELS_YEAR_DICT if m in LIST_MODELS]
 
