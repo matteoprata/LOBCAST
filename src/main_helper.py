@@ -29,7 +29,7 @@ from src.models.dla.dla import DLA
 from src.models.atnbof.atnbof import ATNBoF
 from src.models.tlonbof.tlonbof import TLONBoF
 from src.models.axial.axiallob import AxialLOB
-from src.models.metalob.metalob import MetaLOB
+from src.models.metalob.metalob import MetaLOB, MetaLOB2
 from collections import Counter
 import torch
 
@@ -356,10 +356,11 @@ def pick_model(config: Configuration, data_module):
         )
 
     elif config.CHOSEN_MODEL == cst.Models.METALOB:
-        net_architecture = MetaLOB(
-            mlp_hidden=config.HYPER_PARAMETERS[cst.LearningHyperParameter.MLP_HIDDEN],
-            chosen_models=cst.MODELS_15,
-        )
+        # net_architecture = MetaLOB(
+        #     mlp_hidden=config.HYPER_PARAMETERS[cst.LearningHyperParameter.MLP_HIDDEN],
+        #     chosen_models=cst.MODELS_15,
+        # )
+        net_architecture = MetaLOB2(meta_hidden=config.HYPER_PARAMETERS[cst.LearningHyperParameter.MLP_HIDDEN])
 
     # torch v2.0
     # net_architecture = torch.compile(net_architecture, backend="inductor", mode="reduce-overhead")

@@ -31,17 +31,17 @@ class MetaLOB(pl.LightningModule):
 
         return o
 
+
 class MetaLOB2(pl.LightningModule):
     def __init__(self, meta_hidden):
         super().__init__()
-        input_dim = (len(cst.Models)-1) * cst.NUM_CLASSES
-        self.n_models = len(cst.Models)-1
+        # input_dim = len(cst.MODELS_15) * cst.NUM_CLASSES
+        self.n_models = len(cst.MODELS_15)
 
         weight = torch.Tensor(cst.NUM_CLASSES, self.n_models)
         self.W = nn.Parameter(weight)
         nn.init.xavier_uniform(self.W)
-
-        #self.relu = nn.ReLU()
+        # self.relu = nn.ReLU()
 
     def forward(self, x):
 
