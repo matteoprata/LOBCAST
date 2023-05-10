@@ -33,10 +33,10 @@ class MetaLOB(pl.LightningModule):
 
 
 class MetaLOB2(pl.LightningModule):
-    def __init__(self, meta_hidden):
+    def __init__(self):
         super().__init__()
         # input_dim = len(cst.MODELS_15) * cst.NUM_CLASSES
-        self.n_models = len(cst.MODELS_15)
+        self.n_models = len(cst.MODELS_15)-1
 
         weight = torch.Tensor(cst.NUM_CLASSES, self.n_models)
         self.W = nn.Parameter(weight)

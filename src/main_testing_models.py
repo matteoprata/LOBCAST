@@ -12,8 +12,8 @@ from src.main_helper import pick_dataset, pick_model
 from src.utils.utilities import make_dir
 
 
-def core_test(seed, model, dataset, src_data, out_data, horizon=None, win_back=None, win_forward=None):
-    cf = set_configuration()
+def core_test(seed, model, dataset, src_data, out_data, horizon=None, win_back=None, win_forward=None, target_dataset_meta=cst.DatasetFamily.LOBSTER):
+    cf: Configuration = set_configuration()
     cf.SEED = seed
 
     set_seeds(cf)
@@ -23,6 +23,8 @@ def core_test(seed, model, dataset, src_data, out_data, horizon=None, win_back=N
     cf.CHOSEN_DATASET = dataset
     if model == cst.Models.METALOB:
         cf.CHOSEN_DATASET = cst.DatasetFamily.META
+        cf.TARGET_DATASET_META_MODEL = target_dataset_meta
+        cf.JSON_DIRECTORY = out_data
 
     if win_back is not None:
         cf.HYPER_PARAMETERS[cst.LearningHyperParameter.BACKWARD_WINDOW] = win_back.value
@@ -62,19 +64,19 @@ def core_test(seed, model, dataset, src_data, out_data, horizon=None, win_back=N
         files)
 
     print("OK")
-    print(seed, model, horizon)
+    print(seed, model, horizon, dir_name)
+    # return
 
     file_name = files[0]
 
     # Setting configuration parameters
-    if model == cst.Models.METALOB:
-        model_params = HP_DICT_MODEL[cf.CHOSEN_MODEL].fixed
-    else:
-        model_params = HP_DICT_MODEL[cf.CHOSEN_MODEL].fixed_fi
+    model_params = HP_DICT_MODEL[cf.CHOSEN_MODEL].sweep
 
     for param in cst.LearningHyperParameter:
         if param.value in model_params:
-            cf.HYPER_PARAMETERS[param] = model_params[param.value]
+            values = model_params[param.value]['values']
+            assert len(values) == 1
+            cf.HYPER_PARAMETERS[param] = values[0]
 
     datamodule = pick_dataset(cf)
     model = pick_model(cf, datamodule)
@@ -99,8 +101,7 @@ def core_test(seed, model, dataset, src_data, out_data, horizon=None, win_back=N
     cf.METRICS_JSON.close(out_data)
 
 
-def launch_lobster_test(seeds, model_todo, models_to_avoid, dataset_type, backwards, forwards, src_data, out_data):
-
+def launch_lobster_test(seeds, model_todo, models_to_avoid, dataset_type, backwards, forwards, src_data, out_data, target_dataset_meta=None):
     for s in seeds:
         for model in model_todo:
             for i in range(len(backwards)):
@@ -108,7 +109,7 @@ def launch_lobster_test(seeds, model_todo, models_to_avoid, dataset_type, backwa
                 km, kp = backwards[i], forwards[i]
 
                 if model in set(model_todo) - set(models_to_avoid):
-                    core_test(s, model, dataset_type, src_data, out_data, win_back=km, win_forward=kp)
+                    core_test(s, model, dataset_type, src_data, out_data, win_back=km, win_forward=kp, target_dataset_meta=cst.DatasetFamily.LOBSTER)
 
 
 def launch_FI_test(seeds, model_todo, models_to_avoid, dataset_type, kset, src_data, out_data):
@@ -116,7 +117,7 @@ def launch_FI_test(seeds, model_todo, models_to_avoid, dataset_type, kset, src_d
         for k in kset:
             for model in model_todo:
                 if model in set(model_todo) - set(models_to_avoid):
-                    core_test(s, model, dataset_type, src_data, out_data, horizon=k)
+                    core_test(s, model, dataset_type, src_data, out_data, target_dataset_meta=cst.DatasetFamily.FI)
 
 
 if __name__ == "__main__":
@@ -126,12 +127,14 @@ if __name__ == "__main__":
     src_data = "all_models_25_04_23/"  # "all_models_28_03_23/"
     out_data = "all_models_25_04_23/jsons/"  # "data/experiments/all_models_28_03_23/"
 
-    model_todo = cst.MODELS_15
+    target_dataset_meta = cst.DatasetFamily.LOBSTER
+
+    model_todo = [cst.Models.METALOB]
     models_to_avoid = []  # [cst.Models.DAIN, cst.Models.DEEPLOB, cst.Models.AXIALLOB, cst.Models.ATNBoF]  # [cst.Models.METALOB]  # [cst.Models.ATNBoF]
-    seeds = [500]
+    seeds = [500, 501, 502, 503, 504]
 
     # LOBSTER
     backwards = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1]
     forwards  = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS2, cst.WinSize.EVENTS3, cst.WinSize.EVENTS5, cst.WinSize.EVENTS10]
 
-    launch_lobster_test(seeds, model_todo, models_to_avoid, dataset_type, backwards, forwards, src_data, out_data)
+    launch_lobster_test(seeds, model_todo, models_to_avoid, dataset_type, backwards, forwards, src_data, out_data, target_dataset_meta)

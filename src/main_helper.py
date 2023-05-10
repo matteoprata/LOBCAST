@@ -173,7 +173,7 @@ def prepare_data_META(config: Configuration):
             window=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_SNAPSHOTS],
             chosen_model=config.CHOSEN_MODEL
         )
-        truth_y = databuilder_test.samples_y[99:-1]
+        truth_y = databuilder_test.samples_y[100:]
     else:
         train_set = LOBDataset(
             config=config,
@@ -192,6 +192,7 @@ def prepare_data_META(config: Configuration):
             vol_price_mu=vol_price_mu, vol_price_sig=vol_price_sig
         )
         truth_y = test_set.y.numpy()
+        truth_y = truth_y[100:]
 
     meta_databuilder = MetaDataBuilder(
         truth_y=truth_y,
@@ -356,11 +357,11 @@ def pick_model(config: Configuration, data_module):
         )
 
     elif config.CHOSEN_MODEL == cst.Models.METALOB:
-        # net_architecture = MetaLOB(
-        #     mlp_hidden=config.HYPER_PARAMETERS[cst.LearningHyperParameter.MLP_HIDDEN],
-        #     chosen_models=cst.MODELS_15,
-        # )
-        net_architecture = MetaLOB2(meta_hidden=config.HYPER_PARAMETERS[cst.LearningHyperParameter.MLP_HIDDEN])
+        net_architecture = MetaLOB(
+            mlp_hidden=config.HYPER_PARAMETERS[cst.LearningHyperParameter.MLP_HIDDEN],
+            chosen_models=[m for m in cst.MODELS_15 if m != cst.Models.DEEPLOBATT],
+        )
+        # net_architecture = MetaLOB2()
 
     # torch v2.0
     # net_architecture = torch.compile(net_architecture, backend="inductor", mode="reduce-overhead")

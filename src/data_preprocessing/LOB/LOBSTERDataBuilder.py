@@ -5,9 +5,6 @@ import src.data_preprocessing.preprocessing_utils as ppu
 import src.utils.utilities as util
 import src.utils.lob_util as lbu
 
-
-import tqdm
-import collections
 import numpy as np
 from src.config import Configuration
 import src.constants as cst
@@ -69,6 +66,7 @@ class LOBSTERDataBuilder:
             self.dataset_type.value,
             self.data_granularity
         )
+
         self.__data_un_gathered = None
         self.__data, self.__samples_x, self.__samples_y = None, None, None   # NX40, MX100X40, MX1
         self.__prepare_dataset()  # KEY CALL
@@ -95,11 +93,6 @@ class LOBSTERDataBuilder:
                     (np.where((out_df.index > '2021-08-03') & (out_df.index < '2021-08-05')))[0]
                 ]
             )
-            # print(out_df)
-            # print()
-            # print(out_df.columns)
-            # print(out_df.index)
-            # print(out_df.shape)
 
             days = list()
             for date in out_df.index:
@@ -123,6 +116,7 @@ class LOBSTERDataBuilder:
             # )
             #
             # self.__data_un_gathered = out_df_ung
+
             self.__data = out_df
 
         if self.is_data_preload and not exists:

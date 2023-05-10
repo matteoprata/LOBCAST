@@ -15,72 +15,84 @@ from src.models.model_executor import NNEngine
 
 kset, mset = cst.FI_Horizons, cst.Models
 
-out_data = "all_models_25_04_23/jsons/"
-jsons_dir = "all_models_25_04_23/jsons/"
+out_data = "final_data/FI-2010-TESTS/jsons/"
+jsons_dir = "final_data/FI-2010-TESTS/jsons/"
 
 from src.data_preprocessing.LOB.LOBDataset import LOBDataset
 
 
-def launch_test_FI():
+def launch_test_FI(seeds_set):
 
-    for k in kset:
-        cf = set_configuration()
-        cf.SEED = 502
+    for s in seeds_set:
+        for k in kset:
+            cf = set_configuration()
+            cf.SEED = s
 
-        set_seeds(cf)
+            set_seeds(cf)
 
-        cf.IS_TEST_ONLY = True
-        cf.CHOSEN_DATASET = cst.DatasetFamily.IF
+            cf.IS_TEST_ONLY = True
+            cf.CHOSEN_DATASET = cst.DatasetFamily.FI
 
-        cf.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN] = cst.Stocks.FI
-        cf.CHOSEN_STOCKS[cst.STK_OPEN.TEST] = cst.Stocks.FI
-        cf.CHOSEN_PERIOD = cst.Periods.FI
-        cf.IS_WANDB = 0
-        cf.IS_TUNE_H_PARAMS = False
+            cf.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN] = cst.Stocks.FI
+            cf.CHOSEN_STOCKS[cst.STK_OPEN.TEST] = cst.Stocks.FI
+            cf.CHOSEN_PERIOD = cst.Periods.FI
+            cf.IS_WANDB = 0
+            cf.IS_TUNE_H_PARAMS = False
 
-        cf.CHOSEN_MODEL = cst.Models.MAJORITY
-        cf.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON] = k.value
+            cf.CHOSEN_MODEL = cst.Models.MAJORITY
+            cf.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON] = k.value
 
-        # Setting configuration parameters
-        model_params = HP_DICT_MODEL[cf.CHOSEN_MODEL].fixed
-        for param in cst.LearningHyperParameter:
-            if param.value in model_params:
-                cf.HYPER_PARAMETERS[param] = model_params[param.value]
+            # Setting configuration parameters
+            model_params = HP_DICT_MODEL[cf.CHOSEN_MODEL].fixed
+            for param in cst.LearningHyperParameter:
+                if param.value in model_params:
+                    cf.HYPER_PARAMETERS[param] = model_params[param.value]
 
-        # def load_predictions_from_jsons(in_dir, models, seed, horizon, trst="FI", test="FI", peri="FI", bw=None, fw=None, is_raw=False, n_instances=139487):
-        logits, _ = MetaDataBuilder.load_predictions_from_jsons(jsons_dir, cf.CHOSEN_DATASET.value, cst.MODELS_15, cf.SEED, cf.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON], is_raw=True)
+            # def load_predictions_from_jsons(in_dir, models, seed, horizon, trst="FI", test="FI", peri="FI", bw=None, fw=None, is_raw=False, n_instances=139487):
+            logits, _ = MetaDataBuilder.load_predictions_from_jsons(jsons_dir,
+                                                                    cst.DatasetFamily.FI,
+                                                                    cst.MODELS_15,
+                                                                    cf.SEED,
+                                                                    cf.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON],
+                                                                    trst=cf.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name,
+                                                                    test=cf.CHOSEN_STOCKS[cst.STK_OPEN.TEST].name,
+                                                                    peri=cf.CHOSEN_PERIOD.name,
+                                                                    bw=None,
+                                                                    fw=None,
+                                                                    is_raw=True,
+                                                                    is_ignore_deeplobatt=False)
 
-        horizons = [horizon.value for horizon in cst.FI_Horizons]
-        h = horizons.index(k.value)
+            horizons = [horizon.value for horizon in cst.FI_Horizons]
+            h = horizons.index(k.value)
 
-        logits_weighted = logits * cst.FI_2010_PERF[:, h]
-        sum_softmax = np.sum(logits_weighted, axis=2)
-        preds = np.argmax(sum_softmax, axis=1)
+            # N x 3 x 15
+            logits_weighted = logits * cst.FI_2010_PERF[:, h]
+            sum_softmax = np.sum(logits_weighted, axis=2)
+            preds = np.argmax(sum_softmax, axis=1)
 
-        # now truth
+            # now truth
 
-        databuilder_test = FIDataBuilder(
-            cst.DATA_SOURCE + cst.DATASET_FI,
-            dataset_type=cst.DatasetType.TEST,
-            horizon=cf.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON],
-            window=cf.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_SNAPSHOTS],
-            chosen_model=cf.CHOSEN_MODEL
-        )
+            databuilder_test = FIDataBuilder(
+                cst.DATA_SOURCE + cst.DATASET_FI,
+                dataset_type=cst.DatasetType.TEST,
+                horizon=cf.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON],
+                window=cf.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_SNAPSHOTS],
+                chosen_model=cf.CHOSEN_MODEL
+            )
 
-        truths = databuilder_test.samples_y[99:-1]
+            truths = databuilder_test.samples_y[100:]
 
-        val_dict = compute_metrics(truths, preds, cst.ModelSteps.TESTING, [], cf.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name)  # dict to log
-        print(val_dict)
-        exit()
-        cf.METRICS_JSON.update_metrics(cf.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, val_dict)
+            val_dict = compute_metrics(truths, preds, cst.ModelSteps.TESTING, [], cf.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name)  # dict to log
+            cf.METRICS_JSON.update_metrics(cf.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, val_dict)
 
-        cm = compute_sk_cm(truths, preds)
-        cf.METRICS_JSON.update_cfm(cf.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, cm)
+            print(val_dict)
+            cm = compute_sk_cm(truths, preds)
+            cf.METRICS_JSON.update_cfm(cf.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, cm)
 
-        cf.METRICS_JSON.close(out_data)
+            cf.METRICS_JSON.close(out_data)
 
 
-def launch_test_LOBSTER(seeds, kset, period):
+def launch_test_LOBSTER(seeds, kset, period, json_dir):
 
     for s in seeds:
         for iw, (wb, wf) in enumerate(kset):
@@ -102,6 +114,8 @@ def launch_test_LOBSTER(seeds, kset, period):
             cf.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON] = 10
             cf.HYPER_PARAMETERS[cst.LearningHyperParameter.FORWARD_WINDOW] = wf.value
             cf.HYPER_PARAMETERS[cst.LearningHyperParameter.BACKWARD_WINDOW] = wb.value
+            cf.TARGET_DATASET_META_MODEL = cst.DatasetFamily.LOBSTER
+            cf.JSON_DIRECTORY = json_dir
 
             # Setting configuration parameters
             model_params = HP_DICT_MODEL[cf.CHOSEN_MODEL].fixed
@@ -109,7 +123,6 @@ def launch_test_LOBSTER(seeds, kset, period):
                 if param.value in model_params:
                     cf.HYPER_PARAMETERS[param] = model_params[param.value]
 
-            N_INSTANCES = cst.n_test_instances(cf.CHOSEN_DATASET, cf.CHOSEN_PERIOD)
             # def load_predictions_from_jsons(in_dir, models, seed, horizon, trst="FI", test="FI", peri="FI", bw=None, fw=None, is_raw=False, n_instances=139487):
             logits, _ = MetaDataBuilder.load_predictions_from_jsons(jsons_dir,
                                                                     cf.CHOSEN_DATASET.value,
@@ -122,7 +135,7 @@ def launch_test_LOBSTER(seeds, kset, period):
                                                                     bw=wb.value,
                                                                     fw=wf.value,
                                                                     is_raw=True,
-                                                                    n_instances=N_INSTANCES)
+                                                                    is_ignore_deeplobatt=False)
 
             # horizons = [horizon.value for horizon in cst.WinSize]
             # h = horizons.index(k.value)
@@ -151,7 +164,8 @@ def launch_test_LOBSTER(seeds, kset, period):
                 vol_price_mu=vol_price_mu, vol_price_sig=vol_price_sig
             )
 
-            truths = test_set.y[-N_INSTANCES:]
+            truths = test_set.y[100:]   # TODO CHECK
+            print(truths.shape, logits.shape)
 
             val_dict = compute_metrics(truths, preds, cst.ModelSteps.TESTING, [], cf.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name)  # dict to log
 
@@ -159,18 +173,19 @@ def launch_test_LOBSTER(seeds, kset, period):
 
             cm = compute_sk_cm(truths, preds)
             cf.METRICS_JSON.update_cfm(cf.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, cm)
-
             cf.METRICS_JSON.close(out_data)
-            print("done 1")
-        print("done 2")
-    print("done 3")
 
 
 if __name__ == "__main__":
-    seeds = [500, 501, 502, 503, 504]
-    backwards = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1]
-    forwards = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS2, cst.WinSize.EVENTS3, cst.WinSize.EVENTS5, cst.WinSize.EVENTS10]
+    # seeds = [500, 501, 502, 503, 504]
+    # backwards = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1]
+    # forwards = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS2, cst.WinSize.EVENTS3, cst.WinSize.EVENTS5, cst.WinSize.EVENTS10]
+    #
+    # kset = list(zip(backwards, forwards))
+    # period = cst.Periods.JULY2021
+    #
+    # launch_test_LOBSTER(seeds, kset, period=period, json_dir=jsons_dir)
 
-    kset = list(zip(backwards, forwards))
-    period = cst.Periods.JULY2021
-    launch_test_LOBSTER(seeds, kset, period=period)
+    seeds = [500, 501, 502, 503, 504]
+    kset = cst.FI_Horizons
+    launch_test_FI(seeds)

@@ -19,7 +19,7 @@ DEFAULT_FORWARD_WINDOWS = [
 ]
 
 
-def experiment_lobster(execution_plan, dataset, now=None, servers=None, is_debug=False):
+def experiment_lobster(execution_plan, dataset, now=None, servers=None, is_debug=False, json_dir=None, target_dataset_meta=None):
 
     now, server_name, server_id, n_servers = experiment_preamble(now, servers)
     lunches_server = execution_plan[server_name]
@@ -49,6 +49,8 @@ def experiment_lobster(execution_plan, dataset, now=None, servers=None, is_debug
                             cf.CHOSEN_DATASET = dataset
                             if mod == cst.Models.METALOB:
                                 cf.CHOSEN_DATASET = cst.DatasetFamily.META
+                                cf.TARGET_DATASET_META_MODEL = target_dataset_meta
+                                cf.JSON_DIRECTORY = json_dir
 
                             cf.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN] = cst.Stocks.ALL
                             cf.CHOSEN_STOCKS[cst.STK_OPEN.TEST] = cst.Stocks.ALL
@@ -72,16 +74,23 @@ def experiment_lobster(execution_plan, dataset, now=None, servers=None, is_debug
 servers = [cst.Servers.ALIEN1, cst.Servers.ALIEN2, cst.Servers.FISSO1]
 
 execution_plan = {
-
     cst.Servers.ALIEN2: [
         {
             'seeds': [500, 501, 502, 503, 504],
-            'forward_windows': 'all',
+            'forward_windows': [cst.WinSize.EVENTS2, cst.WinSize.EVENTS3, cst.WinSize.EVENTS1, cst.WinSize.EVENTS10],
             'models': [cst.Models.METALOB],
         },
     ],
 }
 
-# now = 'LOBSTER-DEFINITIVE-EVENTS-2023-05-05-FEBRUARY2022'
-now = "LOBSTER-META-MAY-23-V2"
-experiment_lobster(execution_plan, dataset=cst.DatasetFamily.LOBSTER, now=now, servers=servers, is_debug=False)
+now = "LOBSTER-META-OK-MAY-10-23-OFFICIAL"
+jsons_dir = "all_models_25_04_23/jsons/"
+target_dataset_meta = cst.DatasetFamily.LOBSTER
+
+experiment_lobster(execution_plan,
+                   dataset=cst.DatasetFamily.LOBSTER,
+                   now=now,
+                   servers=servers,
+                   is_debug=False,
+                   json_dir=jsons_dir,
+                   target_dataset_meta=target_dataset_meta)

@@ -54,6 +54,9 @@ class Configuration:
             'name': None
         }
 
+        self.TARGET_DATASET_META_MODEL = cst.DatasetFamily.LOBSTER
+        self.JSON_DIRECTORY = ""
+
         self.EARLY_STOPPING_METRIC = None
 
         self.METRICS_JSON = Metrics(self)

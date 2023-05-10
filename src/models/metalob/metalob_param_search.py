@@ -2,9 +2,9 @@ import src.constants as cst
 
 HP_META = {
     cst.LearningHyperParameter.OPTIMIZER.value: {'values': [cst.Optimizers.SGD.value]},
-    cst.LearningHyperParameter.BATCH_SIZE.value: {'values': [32]},
-    cst.LearningHyperParameter.LEARNING_RATE.value: {'values': [.001, .0001]},
-    cst.LearningHyperParameter.MLP_HIDDEN.value: {'values': [32, 64]},
+    cst.LearningHyperParameter.BATCH_SIZE.value: {'values': [64]},
+    cst.LearningHyperParameter.LEARNING_RATE.value: {'values': [0.0001]},
+    cst.LearningHyperParameter.MLP_HIDDEN.value: {'values': [32]},
 }
 
 
