@@ -54,7 +54,7 @@ def experiment_lobster(execution_plan, dataset, now=None, servers=None, is_debug
 
                             cf.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN] = cst.Stocks.ALL
                             cf.CHOSEN_STOCKS[cst.STK_OPEN.TEST] = cst.Stocks.ALL
-                            cf.CHOSEN_PERIOD = cst.Periods.JULY2021
+                            cf.CHOSEN_PERIOD = cst.Periods.FEBRUARY2022
 
                             cf.HYPER_PARAMETERS[cst.LearningHyperParameter.BACKWARD_WINDOW] = cst.WinSize.EVENTS1.value
                             cf.HYPER_PARAMETERS[cst.LearningHyperParameter.FORWARD_WINDOW] = window_forward.value
@@ -74,26 +74,42 @@ def experiment_lobster(execution_plan, dataset, now=None, servers=None, is_debug
 servers = [cst.Servers.ALIEN1, cst.Servers.ALIEN2, cst.Servers.FISSO1]
 
 execution_plan = {
+    cst.Servers.FISSO1: [
+        {
+            'seeds': [500],
+            'forward_windows': [cst.WinSize.EVENTS1, cst.WinSize.EVENTS2],
+            'models': [cst.Models.TRANSLOB],
+        },
+    ],
+    cst.Servers.ALIEN1: [
+        {
+            'seeds': [500],
+            'forward_windows': [cst.WinSize.EVENTS1, cst.WinSize.EVENTS2],
+            'models': [cst.Models.ATNBoF],
+        },
+    ],
     cst.Servers.ALIEN2: [
         {
             'seeds': [500],
-            'forward_windows': 'all',
-            'models': [cst.Models.METALOB],
+            'forward_windows': [cst.WinSize.EVENTS1, cst.WinSize.EVENTS2],
+            'models': [cst.Models.AXIALLOB],
         },
     ],
 }
 
-now = "LOBSTER-META-OK-MAY-10-23-OFFICIAL"
+now = 'LOBSTER-DEFINITIVE-EVENTS-2023-05-05-FEBRUARY2022'
 jsons_dir = "all_models_25_04_23/jsons/"
 target_dataset_meta = cst.DatasetFamily.LOBSTER
 
-experiment_lobster(execution_plan,
-                   dataset=cst.DatasetFamily.LOBSTER,
-                   now=now,
-                   servers=servers,
-                   is_debug=False,
-                   json_dir=jsons_dir,
-                   target_dataset_meta=target_dataset_meta)
+experiment_lobster(
+    execution_plan,
+    dataset=cst.DatasetFamily.LOBSTER,
+    now=now,
+    servers=servers,
+    is_debug=False,
+    json_dir=jsons_dir,
+    target_dataset_meta=target_dataset_meta
+)
 
 
 

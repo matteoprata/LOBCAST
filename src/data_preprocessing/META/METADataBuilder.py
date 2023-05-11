@@ -29,17 +29,19 @@ class MetaDataBuilder:
         self.truth_y = truth_y
         # N x 3 x 15  logits
         # N x 1  truths, preds
-        self.logits, self.preds = MetaDataBuilder.load_predictions_from_jsons(config.JSON_DIRECTORY,
-                                                                              config.TARGET_DATASET_META_MODEL,
-                                                                              cst.MODELS_15,
-                                                                              config.SEED,
-                                                                              config.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON],
-                                                                              trst=config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name,
-                                                                              test=config.CHOSEN_STOCKS[cst.STK_OPEN.TEST].name,
-                                                                              peri=config.CHOSEN_PERIOD.name,
-                                                                              bw=config.HYPER_PARAMETERS[cst.LearningHyperParameter.BACKWARD_WINDOW],
-                                                                              fw=config.HYPER_PARAMETERS[cst.LearningHyperParameter.FORWARD_WINDOW],
-                                                                              is_raw=True)
+        self.logits, self.preds = MetaDataBuilder.load_predictions_from_jsons(
+            config.JSON_DIRECTORY,
+            config.TARGET_DATASET_META_MODEL,
+            cst.MODELS_15,
+            config.SEED,
+            config.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON],
+            trst=config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name,
+            test=config.CHOSEN_STOCKS[cst.STK_OPEN.TEST].name,
+            peri=config.CHOSEN_PERIOD.name,
+            bw=config.HYPER_PARAMETERS[cst.LearningHyperParameter.BACKWARD_WINDOW],
+            fw=config.HYPER_PARAMETERS[cst.LearningHyperParameter.FORWARD_WINDOW],
+            is_raw=True
+        )
 
         # shuffle
         print(self.truth_y.shape, self.logits.shape, self.preds.shape)
@@ -68,15 +70,17 @@ class MetaDataBuilder:
             if model == cst.Models.DEEPLOBATT and is_ignore_deeplobatt:  # shape did not match
                 continue
 
-            file_name = "model={}-seed={}-trst={}-test={}-data={}-peri={}-bw={}-fw={}-fiw={}.json".format(model.name,
-                                                                                                          seed,
-                                                                                                          trst,
-                                                                                                          test,
-                                                                                                          cst.model_dataset(model, dataset),
-                                                                                                          peri,
-                                                                                                          bw,
-                                                                                                          fw,
-                                                                                                          horizon)
+            file_name = "model={}-seed={}-trst={}-test={}-data={}-peri={}-bw={}-fw={}-fiw={}.json".format(
+                model.name,
+                seed,
+                trst,
+                test,
+                cst.model_dataset(model, dataset),
+                peri,
+                bw,
+                fw,
+                horizon
+            )
             print("opening", in_dir, file_name)
             if os.path.exists(in_dir + file_name):
                 with open(in_dir + file_name, "r") as f:

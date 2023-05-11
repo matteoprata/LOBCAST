@@ -152,7 +152,6 @@ def prepare_data_LOBSTER(config: Configuration):
     print("Samples in the splits:")
     print(len(train_set), len(val_set), len(test_set))
     print()
-    exit()
 
     lob_dm = DataModule(
         train_set, val_set, test_set,
