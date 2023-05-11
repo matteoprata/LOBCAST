@@ -56,6 +56,7 @@ def load_OHLC(stock, period):
 
     return df
 
+
 class DLstrategy1(Strategy):
     def init(self):
         print("starting")

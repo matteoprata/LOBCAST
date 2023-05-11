@@ -28,9 +28,9 @@ def compute_metrics(ys, predictions, model_step, loss_vals, si):
     precision = cr['macro avg']['precision']  # MACRO-PRECISION
     recall = cr['macro avg']['recall']  # MACRO-RECALL
 
-    f1score_w = cr['weighted avg']['f1-score']  # MACRO-F1
-    precision_w = cr['weighted avg']['precision']  # MACRO-PRECISION
-    recall_w = cr['weighted avg']['recall']  # MACRO-RECALL
+    f1score_w = cr['weighted avg']['f1-score']  # WEIGHTED-F1
+    precision_w = cr['weighted avg']['precision']  # WEIGHTED-PRECISION
+    recall_w = cr['weighted avg']['recall']  # WEIGHTED-RECALL
 
     mcc = matthews_corrcoef(ys, predictions)
     cok = cohen_kappa_score(ys, predictions)
@@ -51,5 +51,4 @@ def compute_metrics(ys, predictions, model_step, loss_vals, si):
         # single
         model_step.value + f"_" + cst.Metrics.LOSS.value: float(np.sum(loss_vals)),
     }
-
     return val_dict

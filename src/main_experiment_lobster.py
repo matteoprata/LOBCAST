@@ -76,8 +76,8 @@ servers = [cst.Servers.ALIEN1, cst.Servers.ALIEN2, cst.Servers.FISSO1]
 execution_plan = {
     cst.Servers.ALIEN2: [
         {
-            'seeds': [500, 501, 502, 503, 504],
-            'forward_windows': [cst.WinSize.EVENTS2, cst.WinSize.EVENTS3, cst.WinSize.EVENTS1, cst.WinSize.EVENTS10],
+            'seeds': [500],
+            'forward_windows': 'all',
             'models': [cst.Models.METALOB],
         },
     ],
@@ -94,3 +94,15 @@ experiment_lobster(execution_plan,
                    is_debug=False,
                    json_dir=jsons_dir,
                    target_dataset_meta=target_dataset_meta)
+
+
+
+# execution_plan = {
+#     cst.Servers.ALIEN2: [
+#         {
+#             'seeds': [500],
+#             'forward_windows': 'all',
+#             'models': [cst.Models.METALOB],
+#         },
+#     ],
+# }

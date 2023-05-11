@@ -77,7 +77,7 @@ class MetaDataBuilder:
                                                                                                           bw,
                                                                                                           fw,
                                                                                                           horizon)
-
+            print("opening", in_dir, file_name)
             if os.path.exists(in_dir + file_name):
                 with open(in_dir + file_name, "r") as f:
                     d = json.loads(f.read())
@@ -104,8 +104,9 @@ class MetaDataBuilder:
                     h = horizons.index(horizon)
 
                 elif dataset == cst.DatasetFamily.LOBSTER:
-                    horizons = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS2, cst.WinSize.EVENTS3, cst.WinSize.EVENTS5, cst.WinSize.EVENTS10]
-                    h = horizons.index(horizon)
+                    horizons = [cst.WinSize.EVENTS1.value, cst.WinSize.EVENTS2.value, cst.WinSize.EVENTS3.value,
+                                cst.WinSize.EVENTS5.value, cst.WinSize.EVENTS10.value]
+                    h = horizons.index(fw)
                 logits_ = logits_[:, :, h]
 
             # print(model, logits_.shape)

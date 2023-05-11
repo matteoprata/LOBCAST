@@ -225,6 +225,13 @@ class Periods(dict, Enum):
         'test': ('2021-07-13', '2021-07-15'),  # 'test': ('2021-07-30', '2021-08-06'),
     }
 
+    FEBRUARY2022 = {
+        'first_day': '2022-02-01', 'last_day': '2022-02-28',
+        'train': ('2022-02-01', '2022-02-07'),
+        'val': ('2022-02-08', '2022-02-11'),
+        'test': ('2022-02-14', '2022-02-16'),
+    }
+
     FI = {}
 
 
@@ -308,7 +315,6 @@ hostname2server = {
 server2hostname = {v: k for k, v in hostname2server.items()}
 
 
-metrics_name = ['F1 Score (%)', 'Precision (%)', 'Recall (%)', 'Accuracy (%)', 'MCC']
 
 DECLARED_PERF = {
     # F1 PRECISION RECALL ACCURACY MCC

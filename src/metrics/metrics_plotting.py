@@ -1,3 +1,4 @@
+import time
 
 from src.data_preprocessing.META.METADataBuilder import MetaDataBuilder
 
@@ -19,7 +20,7 @@ def setup_plotting_env():
     plt.rcParams["figure.dpi"] = 300
     plt.rcParams["font.size"] = 20
     plt.rcParams["axes.labelsize"] = 20
-    plt.rcParams["axes.titlesize"] = 24
+    plt.rcParams["axes.titlesize"] = 20
     plt.rcParams["xtick.labelsize"] = 16
     plt.rcParams["ytick.labelsize"] = 16
     plt.rcParams["font.family"] = "serif"
@@ -81,21 +82,22 @@ def inference_data(path, list_models, dataset_type, seed=500, horizon=10, bw=1, 
 
 
 def original_metrics(metrics, list_models, list_horizons):
-    METRICS_ORI = np.zeros(shape=(len(list_models), len(cst.FI_Horizons), len(metrics)))
+    METRICS_ORI = np.zeros(shape=(len(list_models), len(list_horizons), len(metrics)))
 
     for imod, mod in enumerate(list_models):
         for ik, k in enumerate(list_horizons):
-            for imet, met in enumerate(cst.metrics_name):
-                if mod in cst.DECLARED_PERF:
+            for imet, met in enumerate(metrics):
+                mid = map_id_metric_declared(metrics, met)
+                if mod in cst.DECLARED_PERF and mid is not None:
                     wid = cst.map_id_win(k)
-                    METRICS_ORI[imod, ik, imet] = cst.DECLARED_PERF[cst.Models[mod.name]][wid][imet]
+                    METRICS_ORI[imod, ik, imet] = cst.DECLARED_PERF[cst.Models[mod.name]][wid][mid]
                 else:
                     METRICS_ORI[imod, ik, imet] = None
     return METRICS_ORI
 
 
 def confusion_metrix(path, list_models, list_horizons, list_seeds, dataset_type, train_src="ALL", test_src="ALL", time_period=cst.Periods.JULY2021.name, jolly_seed=None):
-    CMS = np.zeros(shape=(len(list_seeds), len(list_models), len(list_horizons), 3, 3))
+    CMS = np.zeros(shape=(len(list_seeds), len(list_models), len(list_horizons), 3, 3))  # 5 x 15 x 5 x 3 x 3
 
     for imod, mod in enumerate(list_models):
         for ik, k in enumerate(list_horizons):
@@ -137,13 +139,13 @@ def confusion_metrix(path, list_models, list_horizons, list_seeds, dataset_type,
 #     return improvement
 
 
-def metrics_vs_models_k(met_name, horizons, met_vec, out_dir, list_models, dataset_type, chosen_horizons_mask, met_vec_original=None):
+def metrics_vs_models_k(met_name, horizons, met_vec, out_dir, list_models, dataset_type, met_vec_original=None):
 
     horizons = np.array(horizons)
     if dataset_type == cst.DatasetFamily.FI:
-        labels = ["K={}".format(k.value) for k in horizons[chosen_horizons_mask]]
+        labels = ["K={}".format(k.value) for k in horizons]
     else:
-        labels = ["K={}".format(fw.value) for bw, fw in horizons[chosen_horizons_mask]]
+        labels = ["K={}".format(fw.value) for bw, fw in horizons]
 
     fmt = "%.2f"
     miny, maxy = -1, 1.1
@@ -165,23 +167,28 @@ def metrics_vs_models_k(met_name, horizons, met_vec, out_dir, list_models, datas
     zero = [0] if len(list_models) % 2 == 1 else []
     ranges = list(reversed(indsxs * -1)) + zero + list(indsxs)
 
+    LABEL_FONT_SIZE = 17
+
     R = []  # the bars
     for iri, ri in enumerate(list_models):
         if dataset_type == cst.DatasetFamily.FI:
-            r_bar_i = ax.bar(x + width * ranges[iri], avg_met[iri, chosen_horizons_mask], width, yerr=std_met[iri, chosen_horizons_mask], label=ri.name,
+            r_bar_i = ax.bar(x + width * ranges[iri], avg_met[iri, :], width, yerr=std_met[iri, :], label=ri.name,
                              color=util.sample_color(iri, "tab20"), align='center')  # hatch=util.sample_pattern(iri))
 
             R += [r_bar_i]
+            if met_vec_original is None:
+                bar_value = ["{}%".format(Decimal(str(round(it, 1))).normalize()) for it in avg_met[iri, :]]
+                ax.bar_label(r_bar_i, labels=bar_value, padding=3, fmt=fmt, rotation=90, fontsize=LABEL_FONT_SIZE)
 
         elif dataset_type == cst.DatasetFamily.LOBSTER:
-            r_bar_i = ax.bar(x + width * ranges[iri], avg_met[iri, chosen_horizons_mask], width, yerr=std_met[iri, chosen_horizons_mask],
+            r_bar_i = ax.bar(x + width * ranges[iri], avg_met[iri, :], width, yerr=std_met[iri, :],
                              label=ri.name, color=util.sample_color(iri, "tab20"), align='center', edgecolor='black')  # hatch=util.sample_pattern(iri))
 
-            bar_value = ["{}%".format(round(it, 2)) for it in avg_met[iri, chosen_horizons_mask]]
-            ax.bar_label(r_bar_i, labels=bar_value, padding=3, fmt=fmt, rotation=90, fontsize=10)
+            bar_value = ["{}%".format(Decimal(str(round(it, 1))).normalize()) for it in avg_met[iri, :]]
+            ax.bar_label(r_bar_i, labels=bar_value, padding=3, fmt=fmt, rotation=90, fontsize=LABEL_FONT_SIZE)
 
     if met_vec_original is not None:
-        diffp = ((avg_met - met_vec_original) / met_vec_original * 100)  # text of the diff TODO check seems a wrong diff
+        diffp = avg_met - met_vec_original
         for iri, ri in enumerate(R):  # models
 
             diffp_show = []
@@ -198,14 +205,15 @@ def metrics_vs_models_k(met_name, horizons, met_vec, out_dir, list_models, datas
                     diffp_show += ["{}% (".format(our) + "{}%)".format(val)]
                 else:
                     diffp_show += ["{}% ($\cdot$)".format(our)]
+
                 if "MCC" in met_name:
                     diffp_show = [s.replace('%', '') for s in diffp_show]
 
-            ax.bar_label(ri, labels=diffp_show, padding=3, fmt=fmt, rotation=90, fontsize=15)
+            ax.bar_label(ri, labels=diffp_show, padding=3, fmt=fmt, rotation=90, fontsize=LABEL_FONT_SIZE)
 
         for iri, ri in enumerate(list_models):
             label = 'original' if iri == 0 else ''  # black bars in FI
-            ax.bar(x + width * ranges[iri], met_vec_original[iri, chosen_horizons_mask], width, alpha=1, bottom=0, fill=False,
+            ax.bar(x + width * ranges[iri], met_vec_original[iri, :], width, alpha=1, bottom=0, fill=False,
                    edgecolor='black', label=label, align='center')
 
     # Add some text for labels, title and custom x-axis tick labels, etc.
@@ -226,19 +234,19 @@ def metrics_vs_models_k(met_name, horizons, met_vec, out_dir, list_models, datas
 
     # plt.ylim(miny, maxy)
     fig.tight_layout()
-
-    plt.savefig(out_dir + "ka" + met_name + ".pdf")
+    met_name_new = met_name.replace("(%)", "perc")
+    plt.savefig(out_dir + "bar-" + met_name_new + ".pdf")
     # plt.show()
     plt.close(fig)
 
 
-def metrics_vs_models_k_line(met_name, horizons, met_vec, out_dir, list_models, dataset_type, chosen_horizons_mask, type=None):
+def metrics_vs_models_k_line(met_name, horizons, met_vec, out_dir, list_models, dataset_type, type=None):
 
     horizons = np.array(horizons)
     if dataset_type == cst.DatasetFamily.FI:
-        labels = ["K={}".format(k.value) for k in horizons[chosen_horizons_mask]]
+        labels = ["K={}".format(k.value) for k in horizons]
     else:
-        labels = ["K={}".format(fw.value) for bw, fw in horizons[chosen_horizons_mask]]
+        labels = ["K={}".format(fw.value) for bw, fw in horizons]
 
     if "MCC" not in met_name:
         met_vec = met_vec * 100
@@ -248,12 +256,11 @@ def metrics_vs_models_k_line(met_name, horizons, met_vec, out_dir, list_models, 
 
     x = np.arange(len(labels))
 
-    # fig, ax = plt.subplots(figsize=(17, 15))
     fig, ax = plt.subplots(figsize=(9, 7))
 
     for iri, ri in enumerate(list_models):
-        ax.fill_between(x, std_met[iri, chosen_horizons_mask], -std_met[iri, chosen_horizons_mask], alpha=.3, linewidth=0, color=util.sample_color(iri, "tab20"))
-        ax.plot(x, avg_met[iri, chosen_horizons_mask], label=ri.name, color=util.sample_color(iri, "tab20"), marker=util.sample_marker(iri))
+        ax.fill_between(x, std_met[iri, :], -std_met[iri, :], alpha=.3, linewidth=0, color=util.sample_color(iri, "tab20"))
+        ax.plot(x, avg_met[iri, :], label=ri.name, color=util.sample_color(iri, "tab20"), marker=util.sample_marker(iri))
 
     ax.relim()
     # Add some text for labels, title and custom x-axis tick labels, etc.
@@ -264,6 +271,7 @@ def metrics_vs_models_k_line(met_name, horizons, met_vec, out_dir, list_models, 
     ax.legend(fontsize=12, ncol=4, handleheight=2, labelspacing=0.05)
 
     fig.tight_layout()
+    met_name_new = met_name.replace("(%)", "perc")
     plt.savefig(out_dir + type + "-line" + met_name + ".pdf")
     # plt.show()
     plt.close(fig)
@@ -271,7 +279,7 @@ def metrics_vs_models_k_line(met_name, horizons, met_vec, out_dir, list_models, 
 
 def plot_inference_time(met_vec, met_vec_err, list_models, out_dir):
 
-    labels = ["K=10"]
+    labels = ["K=5"]
 
     x = np.arange(len(labels)) * 9  # the label locations
     width = 0.5  # the width of the bars
@@ -291,7 +299,7 @@ def plot_inference_time(met_vec, met_vec_err, list_models, out_dir):
     ax.set_title("Models Inference Time")
     ax.set_xticks(x, labels)  # , rotation=0, ha="right", rotation_mode="anchor")
 
-    ax.legend(fontsize=10, ncol=2, handleheight=6, labelspacing=0.05)
+    ax.legend(fontsize=10, ncol=3, handleheight=6, labelspacing=0.05)
 
     # plt.ylim(miny, maxy)
     fig.tight_layout()
@@ -301,7 +309,7 @@ def plot_inference_time(met_vec, met_vec_err, list_models, out_dir):
     plt.close(fig)
 
 
-def confusion_matrices(cms, list_models, out_dir, chosen_horizons, dataset):
+def confusion_matrix_grid(cms, list_models, out_dir, chosen_horizons, dataset):
     fig = plt.figure(figsize=(30, 30 * 2.5))
     gs = gridspec.GridSpec(len(list_models), len(chosen_horizons) + 1,
                            width_ratios=[6 for _ in range(len(chosen_horizons))] + [1], figure=fig)
@@ -349,11 +357,50 @@ def confusion_matrices(cms, list_models, out_dir, chosen_horizons, dataset):
     plt.close(fig)
 
 
+def confusion_matrix_single(cms, list_models, out_dir, chosen_horizons, dataset):
+
+    for imod, mod in enumerate(list_models):
+        for ik, k in enumerate(chosen_horizons):
+
+            fig, _ = plt.subplots(figsize=(10, 9))
+
+            annot_kws = {
+                'fontsize': 16,
+                'fontweight': 'bold',
+                'fontfamily': 'serif'
+            }
+
+            csm_norm = cms[imod, ik] / np.sum(cms[imod, ik], axis=1)[:, None]*100
+            # print(mod, k)
+            # print(csm_norm)
+            ax = sb.heatmap(csm_norm, annot=True, cbar=True, fmt=".2f", cmap="Blues", annot_kws=annot_kws,
+                       vmin=0, vmax=100,
+                       xticklabels=[p.name for p in cst.Predictions],
+                       yticklabels=[p.name for p in cst.Predictions])
+
+            for t in ax.texts: t.set_text(t.get_text() + "%")
+
+            dataset_name = "FI-2010" if cst.DatasetFamily.FI == dataset else dataset.name
+            wind_value = k[1].value if cst.DatasetFamily.LOBSTER == dataset else k.value
+            fig.suptitle('{} K={} ({})'.format(mod, wind_value, dataset_name), fontsize=30, fontweight="bold")
+
+            fig.supylabel('Real', fontsize=25)
+            fig.supxlabel('Predicted', fontsize=25)
+
+            fig.tight_layout()
+
+            wind_id = k[1].name if cst.DatasetFamily.LOBSTER == dataset else k.name
+            fig.savefig(out_dir + "cm-{}-{}.pdf".format(mod, wind_id))
+            # plt.show()
+            plt.clf()
+            plt.close(fig)
+
+
 def scatter_plot_year(met_name, met_data, list_models, list_models_years, out_dir, dataset_type):
     X = list_models_years
     met_data = np.average(met_data, axis=0)  # seeds
 
-    fig = plt.figure(figsize=(16, 9))
+    fig, ax = plt.subplots(figsize=(10, 9))
     df = pd.DataFrame(dict(id=list_models_years, data=met_data))
     maxes = df.groupby('id')['data'].max()
 
@@ -369,11 +416,16 @@ def scatter_plot_year(met_name, met_data, list_models, list_models_years, out_di
             bbox = dict(boxstyle = 'round, pad=0.5', fc = 'red', alpha = 0.3),
             arrowprops = dict(arrowstyle = 'wedge', connectionstyle = 'arc3, rad=0'))
 
+    coef = np.polyfit(df["id"], df["data"], 1)
+    poly1d_fn = np.poly1d(coef)
+    plt.plot(list_models_years, poly1d_fn(list_models_years), '--', color="blue")
+    SLOPE = '%.2E' % Decimal(coef[0])
+
     plt.xlabel('Year')
     plt.ylabel(met_name)
     plt.xticks([int(i) for i in maxes.index])
     plt.legend(fontsize=20, loc="upper left")
-    plt.title("{} {} in the Years".format(dataset_type, met_name))
+    plt.title("{} {} (slope={})".format(dataset_type, met_name, SLOPE))
     plt.tight_layout()
     plt.savefig(out_dir + "year-" + met_name + ".pdf")
     # plt.show()
@@ -381,37 +433,10 @@ def scatter_plot_year(met_name, met_data, list_models, list_models_years, out_di
 
 # ADJUST
 
-def plot_corr_matrix(list_models, fw_win, preds, out_dir):
-
-    # collect data
-    # models = sorted([model.name for model in cst.Models if (model not in [cst.Models.METALOB, cst.Models.ATNBoF])])
-    #
-    # # we swap the order of DeepLOBATT and DeepLOB, because in the json there is DEEPLOBATT first
-    # models[8], models[9] = models[9], models[8]
-
-    data = {}
-    for imod, mod in enumerate(list_models):
-        data[mod] = preds[:, imod]
-
-    # form dataframe
-    dataframe = pd.DataFrame(data, columns=list(data.keys()))
-
-    # form correlation matrix
-    corr_matrix = dataframe.corr()
-
-    ticks = [m.name for m in list_models]
-    heatmap = sb.heatmap(corr_matrix, annot=True, fmt=".2f", yticklabels=ticks, xticklabels=ticks)
-    heatmap.set(title=f"Correlation matrix for K={fw_win}")
-
-    heatmap.figure.set_size_inches(20, 20)
-
-    # save heatmap as PNG file
-    heatmap.figure.savefig(out_dir + f"correlation_matrix_k={fw_win}.pdf", bbox_inches='tight')
-    # plt.show()
-    plt.close()
-
 
 def plot_agreement_matrix(list_models, fw_win, preds, out_dir):
+    fig, ax = plt.subplots(figsize=(30, 30))
+
     data = {}
     for imod, mod in enumerate(list_models):
         data[mod] = preds[:, imod]
@@ -426,10 +451,11 @@ def plot_agreement_matrix(list_models, fw_win, preds, out_dir):
                     agr += 1
             agreement_matrix[i, j] = agr / preds.shape[0]
 
-    heatmap = sb.heatmap(agreement_matrix, annot=True, fmt=".2f", yticklabels=list_names, xticklabels=list_names)
+    heatmap = sb.heatmap(agreement_matrix * 100, annot=True, fmt=".1f", yticklabels=list_names, xticklabels=list_names, vmin=0, vmax=100,)
+    for t in heatmap.texts: t.set_text(t.get_text() + "%")
 
     heatmap.set(title=f'Agreement matrix for K={fw_win}')
-    heatmap.figure.set_size_inches(20, 20)
+    # heatmap.figure.set_size_inches(20, 20)
     heatmap.figure.savefig(out_dir + f"agreement_matrix_K={fw_win}.pdf", bbox_inches='tight')
     # plt.show()
     plt.close()
@@ -439,7 +465,7 @@ def FI_plots():
     """ Make FI-2010 plots. """
 
     PATH = "final_data/FI-2010-TESTS/jsons/"
-    OUT = "final_data/FI-2010-TESTS/pdfs/"
+    OUT = "final_data/FI-2010-TESTS/all-pdfs/"
 
     DATASET = cst.DatasetFamily.FI
 
@@ -453,19 +479,28 @@ def FI_plots():
     LIST_YEARS = [cst.MODELS_YEAR_DICT[m] for m in cst.MODELS_YEAR_DICT if m in LIST_MODELS]
 
     os.makedirs(OUT, exist_ok=True)
-
-    metrics = ['testing_{}_f1_w'.format(test_src),
-               'testing_{}_precision_w'.format(test_src),
-               'testing_{}_recall_w'.format(test_src),
-               'testing_{}_accuracy'.format(test_src),
-               'testing_{}_mcc'.format(test_src),
-               ]
-
     setup_plotting_env()
 
-    # LIST_HORIZONS = cst.FI_Horizons
-    LIST_HORIZONS = [cst.FI_Horizons.K1, cst.FI_Horizons.K5, cst.FI_Horizons.K10]  # cst.FI_Horizons
+    metrics = metrics_to_plot(test_src)
 
+    LIST_HORIZONS = [cst.FI_Horizons.K1, cst.FI_Horizons.K5, cst.FI_Horizons.K10]
+    MAT_REP = reproduced_metrics(PATH, metrics, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS,
+                                 dataset_type=cst.DatasetFamily.FI,
+                                 train_src=train_src, test_src=test_src, time_period=time_period, jolly_seed=None)
+
+    MAT_ORI = original_metrics(metrics, LIST_MODELS, LIST_HORIZONS)
+
+    #n: PLOT 1
+    for imet, met in enumerate(metrics):
+        print("plot done perf", met)
+        met_name = metrics[met]
+        mid = map_id_metric_declared(metrics, met)
+        ori = MAT_ORI[:, :, mid] if mid is not None else None
+
+        metrics_vs_models_k(met_name, LIST_HORIZONS, MAT_REP[:, :, :, imet], OUT, LIST_MODELS, dataset_type=DATASET,
+                            met_vec_original=ori)  # each mat has shape MODELS x K x METRICA
+
+    LIST_HORIZONS = cst.FI_Horizons
     MAT_REP = reproduced_metrics(PATH, metrics, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS,
                                  dataset_type=cst.DatasetFamily.FI,
                                  train_src=train_src, test_src=test_src, time_period=time_period, jolly_seed=None)
@@ -473,7 +508,10 @@ def FI_plots():
     print("Models performance:")
     print(np.average(MAT_REP[:, :, :, 0], axis=0) * 100)
 
-    MAT_ORI = original_metrics(metrics, LIST_MODELS, LIST_HORIZONS)
+    for imet, met in enumerate(metrics):
+        print("plot done perf", met)
+        met_name = metrics[met]
+        metrics_vs_models_k_line(met_name, LIST_HORIZONS, MAT_REP[:, :, :, imet], OUT, LIST_MODELS, DATASET, type="var-for")
 
     CMS = confusion_metrix(PATH, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS, jolly_seed=None, dataset_type=cst.DatasetFamily.FI,
                            train_src=train_src, test_src=test_src, time_period=time_period)
@@ -481,122 +519,166 @@ def FI_plots():
     INFER = inference_data(PATH, LIST_MODELS, dataset_type=cst.DatasetFamily.FI, train_src=train_src,
                            test_src=test_src, time_period=time_period)
 
-    # r_imp = relative_improvement_table(MAT_REP, MAT_ORI, LIST_MODELS)
-
-    # n: PLOT 1
-    for imet, met in enumerate(cst.metrics_name):
-        print("plot done perf", met)
-        chosen_horizons_mask = np.arange(len(LIST_HORIZONS))
-        metrics_vs_models_k(met, LIST_HORIZONS, MAT_REP[:, :, :, imet], OUT, LIST_MODELS, dataset_type=DATASET,
-                            chosen_horizons_mask=chosen_horizons_mask, met_vec_original=MAT_ORI[:, chosen_horizons_mask, imet])  # each mat has shape MODELS x K x METRICA
-
-        chosen_horizons_mask = np.arange(len(LIST_HORIZONS))
-        metrics_vs_models_k_line(met, LIST_HORIZONS, MAT_REP[:, :, :, imet], OUT, LIST_MODELS, DATASET, chosen_horizons_mask, type="var-for")
-
     # # 1: PLOT 2
-    # chosen_horizons_mask = [0, 1, 2, 3, 4]
-    # chosen_horizons = np.array(LIST_HORIZONS)[chosen_horizons_mask]
-    # confusion_matrices(CMS[0, :], LIST_MODELS, OUT, chosen_horizons, DATASET)
-    # print("plot done cm")
-    #
-    # # n: PLOT 3
-    # for imet, met in enumerate(cst.metrics_name):
-    #     met_data = np.mean(MAT_REP[:, :, :, imet], axis=2)  # MODELS x K x METRICA
-    #     scatter_plot_year(met, met_data, LIST_MODELS, LIST_YEARS, OUT, DATASET)
-    #     print("plot done year", met)
-    #
+    # 1: PLOT 2
+    # passing CM 15 x 5 x 3 x 3
+    confusion_matrix_single(CMS[0, :], LIST_MODELS, OUT, LIST_HORIZONS, DATASET)
+
     plot_inference_time(INFER[0], INFER[1], cst.MODELS_15, OUT)
 
-    # 20923 is the number of instances because test set is a portion of the original
-    # logits, pred = MetaDataBuilder.load_predictions_from_jsons(cst.TRAINABLE_16, 502, cst.FI_Horizons.K10.value, n_instances=20923)
+    # n: PLOT 3
+    for imet, met in enumerate(metrics):
+        met_name = metrics[met]
+        met_data = np.mean(MAT_REP[:, :, :, imet], axis=2)  # MODELS x K x METRICA
+        scatter_plot_year(met_name, met_data, LIST_MODELS, LIST_YEARS, OUT, DATASET)
+        print("plot done year", met)
 
-    # plot_corr_matrix(cst.TRAINABLE_16, 10, pred, OUT)
-    # plot_agreement_matrix(cst.TRAINABLE_16, 10, pred, OUT)
+    logits, pred = MetaDataBuilder.load_predictions_from_jsons(PATH,
+                                                               cst.DatasetFamily.FI,
+                                                               cst.TRAINABLE_16,
+                                                               500,
+                                                               cst.FI_Horizons.K5.value,
+                                                               trst=train_src,
+                                                               test=test_src,
+                                                               peri=time_period,
+                                                               bw=None,
+                                                               fw=None,
+                                                               is_raw=True,
+                                                               is_ignore_deeplobatt=False)
+    plot_agreement_matrix(cst.TRAINABLE_16, 5, pred, OUT)
 
 
 def lobster_plots():
     """ Make FI-2010 plots. """
 
     PATH = "final_data/LOBSTER-TESTS/jsons/"
-    OUT = "final_data/LOBSTER-TESTS/pdfs/"
+    ALL_STOCK_NAMES = ["LSTR"]  # "ALL","SOFI","NFLX","CSCO", "WING", "SHLS"
+    CMS = []
 
-    DATASET = cst.DatasetFamily.LOBSTER
+    for sto in ALL_STOCK_NAMES:
+        plt.close('all')
+        del CMS
 
-    train_src = "ALL"
-    test_src = "ALL" if DATASET == cst.DatasetFamily.LOBSTER else "FI"
-    time_period = cst.Periods.JULY2021.name
+        OUT = "final_data/LOBSTER-TESTS/all-pdfs-{}/".format(sto)
+        DATASET = cst.DatasetFamily.LOBSTER
 
-    LIST_SEEDS = [500, 501, 502, 503, 504]
+        train_src = "ALL"
+        test_src = sto
+        time_period = cst.Periods.JULY2021.name
 
-    # backwards = [cst.WinSize.SEC100, cst.WinSize.SEC100, cst.WinSize.SEC100, cst.WinSize.SEC50, cst.WinSize.SEC50, cst.WinSize.SEC10]
-    # forwards  = [cst.WinSize.SEC100, cst.WinSize.SEC50, cst.WinSize.SEC10, cst.WinSize.SEC50, cst.WinSize.SEC10, cst.WinSize.SEC10]
+        LIST_SEEDS = [500, 501, 502, 503, 504]
 
-    backwards = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1]
-    forwards = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS2, cst.WinSize.EVENTS3, cst.WinSize.EVENTS5, cst.WinSize.EVENTS10]
-    LIST_HORIZONS = list(zip(backwards, forwards))  # cst.FI_Horizons
+        LIST_MODELS = [m for m in cst.MODELS_17 if (sto == 'ALL' or m not in [cst.Models.MAJORITY, cst.Models.METALOB])]
 
-    LIST_MODELS = cst.MODELS_17
-    # LIST_MODELS = [m for m in cst.MODELS_15 if m not in [cst.Models.AXIALLOB, cst.Models.ATNBoF]]
-    LIST_YEARS = [cst.MODELS_YEAR_DICT[m] for m in cst.MODELS_YEAR_DICT if m in LIST_MODELS]
+        # LIST_MODELS = [m for m in cst.MODELS_15 if m not in [cst.Models.AXIALLOB, cst.Models.ATNBoF]]
+        LIST_YEARS = [cst.MODELS_YEAR_DICT[m] for m in cst.MODELS_YEAR_DICT if m in LIST_MODELS]
 
-    os.makedirs(OUT, exist_ok=True)
+        os.makedirs(OUT, exist_ok=True)
 
-    metrics = ['testing_{}_f1_w'.format(test_src),
-               'testing_{}_precision_w'.format(test_src),
-               'testing_{}_recall_w'.format(test_src),
-               'testing_{}_accuracy'.format(test_src),
-               'testing_{}_mcc'.format(test_src),
-               ]
+        metrics = metrics_to_plot(test_src)
 
-    setup_plotting_env()
+        setup_plotting_env()
 
-    # LOBSTER
-    backwards = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1]
-    forwards  = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS5, cst.WinSize.EVENTS10]
-    LIST_HORIZONS = list(zip(backwards, forwards))  # cst.FI_Horizons
+        backwards = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1]
+        forwards = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS5, cst.WinSize.EVENTS10]
+        LIST_HORIZONS = list(zip(backwards, forwards))  # cst.FI_Horizons
 
-    MAT_REP = reproduced_metrics(PATH, metrics, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS, dataset_type=cst.DatasetFamily.LOBSTER,
-                                 train_src=train_src, test_src=test_src, time_period=time_period, jolly_seed=None)
+        # LOBSTER
+        MAT_REP = reproduced_metrics(PATH, metrics, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS, dataset_type=cst.DatasetFamily.LOBSTER,
+                                     train_src=train_src, test_src=test_src, time_period=time_period, jolly_seed=None)
 
-    print("Models performance:")
-    print(np.average(MAT_REP[:, :, :, 0], axis=0) * 100)
+        # n1: PLOT with 3 bars
+        for imet, met in enumerate(metrics):
+            met_name = metrics[met]
+            metrics_vs_models_k(met_name, LIST_HORIZONS, MAT_REP[:, :, :, imet], OUT, LIST_MODELS, dataset_type=DATASET)  # each mat has shape MODELS x K x METRICA
+            print("plot done perf", met)
 
-    CMS = confusion_metrix(PATH, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS, jolly_seed=None, dataset_type=cst.DatasetFamily.LOBSTER, train_src=train_src, test_src=test_src, time_period=time_period)
-    INFER = inference_data(PATH, LIST_MODELS, dataset_type=cst.DatasetFamily.LOBSTER, train_src=train_src, test_src=test_src, time_period=time_period)
-    # r_imp = relative_improvement_table(MAT_REP, MAT_ORI, LIST_MODELS)
+        backwards = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1]
+        forwards  = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS2, cst.WinSize.EVENTS3, cst.WinSize.EVENTS5, cst.WinSize.EVENTS10]
+        LIST_HORIZONS = list(zip(backwards, forwards))  # cst.FI_Horizons
 
-    # n: PLOT 1
-    for imet, met in enumerate(cst.metrics_name):
-        chosen_horizons_mask = np.arange(len(LIST_HORIZONS))
-        metrics_vs_models_k(met, LIST_HORIZONS, MAT_REP[:, :, :, imet], OUT, LIST_MODELS, dataset_type=DATASET, chosen_horizons_mask=chosen_horizons_mask)  # each mat has shape MODELS x K x METRICA
+        # LOBSTER
+        MAT_REP = reproduced_metrics(PATH, metrics, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS,
+                                     dataset_type=cst.DatasetFamily.LOBSTER,
+                                     train_src=train_src, test_src=test_src, time_period=time_period, jolly_seed=None)
 
-        chosen_horizons_mask = np.arange(len(LIST_HORIZONS))
-        metrics_vs_models_k_line(met, LIST_HORIZONS, MAT_REP[:, :, :, imet], OUT, LIST_MODELS, DATASET, chosen_horizons_mask, type="var-for")
+        # n2: PLOT with 5 lines
+        for imet, met in enumerate(metrics):
+            met_name = metrics[met]
+            metrics_vs_models_k_line(met_name, LIST_HORIZONS, MAT_REP[:, :, :, imet], OUT, LIST_MODELS, DATASET, type="var-for")
 
-        # chosen_horizons_mask = [0, 1, 2, 3, 4]
-        # metrics_vs_models_k_line(met, LIST_HORIZONS, MAT_REP[:, :, :, imet], OUT, LIST_MODELS, DATASET, chosen_horizons_mask, type="var-ba")
+        print("Models performance:")
+        print(np.average(MAT_REP[:, :, :, 0], axis=0) * 100)
 
-        print("plot done perf", met)
+        # 5 x 15 x 5 x 3 x 3
+        CMS = confusion_metrix(PATH, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS, jolly_seed=None,
+                               dataset_type=cst.DatasetFamily.LOBSTER, train_src=train_src, test_src=test_src,
+                               time_period=time_period)
 
-    # 1: PLOT 2
-    # chosen_horizons_mask = np.arange(len(LIST_HORIZONS))
-    # chosen_horizons = np.array(LIST_HORIZONS)[chosen_horizons_mask]
-    confusion_matrices(CMS[0, :], LIST_MODELS, OUT, LIST_HORIZONS, DATASET)
-    print("plot done cm")
 
-    # n: PLOT 3
-    for imet, met in enumerate(cst.metrics_name):
-        met_data = np.mean(MAT_REP[:, :, :, imet], axis=2)  # MODELS x K x METRICA
-        scatter_plot_year(met, met_data, LIST_MODELS, LIST_YEARS, OUT, DATASET)
-        print("plot done year", met)
+        # 1: PLOT 2
+        # passing CM 15 x 5 x 3 x 3
+        confusion_matrix_single(CMS[0, :], LIST_MODELS, OUT, LIST_HORIZONS, DATASET)
 
-    plot_inference_time(INFER[0], INFER[1], LIST_MODELS, OUT)
+        if sto == 'ALL':
+            INFER = inference_data(PATH, LIST_MODELS, dataset_type=cst.DatasetFamily.LOBSTER, train_src=train_src,
+                                   test_src=test_src, time_period=time_period)
+            plot_inference_time(INFER[0], INFER[1], cst.MODELS_15, OUT)
 
-    # # 20923 is the number of instances because test set is a portion of the original
-    # logits, pred = MetaDataBuilder.load_predictions_from_jsons(cst.TRAINABLE_16, 502, cst.FI_Horizons.K10.value, n_instances=20923)
-    #
-    # plot_corr_matrix(cst.TRAINABLE_16, 10, pred, OUT)
-    # plot_agreement_matrix(cst.TRAINABLE_16, 10, pred, OUT)
+        # n: PLOT 3
+        for imet, met in enumerate(metrics):
+            met_name = metrics[met]
+            met_data = np.mean(MAT_REP[:, :, :, imet], axis=2)  # MODELS x K x METRICA
+            scatter_plot_year(met_name, met_data, LIST_MODELS, LIST_YEARS, OUT, DATASET)
+            print("plot done year", met)
+
+        agreement_stocks = cst.TRAINABLE_16 if sto == 'ALL' else cst.MODELS_15
+
+        logits, pred = MetaDataBuilder.load_predictions_from_jsons(PATH,
+                                                                   cst.DatasetFamily.LOBSTER,
+                                                                   agreement_stocks,
+                                                                   500,
+                                                                   cst.FI_Horizons.K10.value,
+                                                                   trst=train_src,
+                                                                   test=test_src,
+                                                                   peri=time_period,
+                                                                   bw=cst.WinSize.EVENTS1.value,
+                                                                   fw=cst.WinSize.EVENTS5.value,
+                                                                   is_raw=True,
+                                                                   is_ignore_deeplobatt=False)
+        plot_agreement_matrix(agreement_stocks, 5, pred, OUT)
+
+def metrics_to_plot(test_src):
+    metrics = {'testing_{}_f1'.format(test_src)         :'F1 Score (%)',
+               'testing_{}_f1_w'.format(test_src)       :'Weighted F1 Score (%)',
+               'testing_{}_precision'.format(test_src)  :'Precision (%)',
+               'testing_{}_precision_w'.format(test_src):'Weighted Precision (%)',
+               'testing_{}_recall'.format(test_src)     :'Recall (%)',
+               'testing_{}_recall_w'.format(test_src)   :'Weighted Recall (%)',
+               'testing_{}_accuracy'.format(test_src)   :'Accuracy (%)',
+               'testing_{}_mcc'.format(test_src)        :'MCC',
+               }
+    return metrics
+
+
+def map_id_metric_declared(metrics_dict, metric):
+    # in cst.DECLARED_PERF
+    list_values = list(metrics_dict.values())
+    metrics_name = ['F1 Score (%)', 'Precision (%)', 'Recall (%)', 'Accuracy (%)', 'MCC']
+    assert set(metrics_name).intersection(set(list_values)) == set(metrics_name)
+
+    if metrics_dict[metric] == 'F1 Score (%)':
+        return 0
+    elif metrics_dict[metric] == 'Precision (%)':
+        return 1
+    elif metrics_dict[metric] == 'Recall (%)':
+        return 2
+    elif metrics_dict[metric] == 'Accuracy (%)':
+        return 3
+    elif metrics_dict[metric] == 'MCC':
+        return 4
+
+    return None
 
 
 if __name__ == '__main__':
