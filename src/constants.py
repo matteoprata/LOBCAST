@@ -1,4 +1,3 @@
-
 from enum import Enum
 import torch
 import numpy as np
@@ -32,6 +31,28 @@ test:    0.38    0.23    0.38
 
 '''
 
+
+'''
+################### NFLX ###################
+Backward: 1      Forward: 5      Alfa: 2.5e-05
+train:   0.33    0.33    0.34
+val:     0.31    0.37    0.32
+test:    0.37    0.26    0.37
+'''
+
+'''
+################### SOFI ###################
+Backward: 1      Forward: 5      Alfa: 0.00011
+train:   0.35    0.32    0.34
+val:     0.35    0.31    0.34
+test:    0.36    0.3     0.35
+'''
+
+ALFA_NFLX = 25e-6
+ALFA_SOFI = 11e-5
+
+# ALFA = ALFA_NFLX
+# ALFA = ALFA_SOFI
 ALFA = 1e-6
 
 
