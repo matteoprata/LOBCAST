@@ -59,6 +59,38 @@ def reproduced_metrics(path, metrics, list_models, list_horizons, list_seeds, da
     return METRICS
 
 
+def reproduced_metrics_stocks(path, list_models, list_stocks, list_seeds, dataset_type, train_src="ALL", time_period=cst.Periods.JULY2021.name, jolly_seed=None, target_horizon=cst.WinSize.EVENTS5):
+    n_metrics = 8
+    METRICS = np.zeros(shape=(len(list_seeds), len(list_models), len(list_stocks), n_metrics))
+
+    for imod, mod in enumerate(list_models):
+        for ik, sto in enumerate(list_stocks):
+            metrics = metrics_to_plot(sto)
+            for iss, s in enumerate(list_seeds):
+
+                bw, fw = cst.WinSize.EVENTS1, target_horizon
+                bw, fw = bw.value, fw.value
+                fik = cst.FI_Horizons.K10
+
+                fname = "model={}-seed={}-trst={}-test={}-data={}-peri={}-bw={}-fw={}-fiw={}.json".format(
+                    mod.name, s, train_src, sto, cst.model_dataset(mod, bias=dataset_type), time_period, bw, fw, fik.value
+                )
+
+                if mod == cst.Models.MAJORITY and jolly_seed is not None:  # only 1 seed for the baseline
+                    if s == jolly_seed:
+                        jsn = util.read_json(path + fname)
+                        vec = np.zeros(shape=(len(metrics)))
+                        for imet, met in enumerate(metrics):
+                            vec[imet] = jsn[met]
+                        repeat = np.repeat(np.expand_dims(vec, axis=0), len(list_seeds), axis=0)
+                        METRICS[:, imod, ik, :] = repeat
+                else:
+                    jsn = util.read_json(path + fname)
+                    for imet, met in enumerate(metrics):
+                        METRICS[iss, imod, ik, imet] = jsn[met]
+    return METRICS
+
+
 def inference_data(path, list_models, dataset_type, seed=500, horizon=10, bw=1, fw=5, train_src="ALL", test_src="ALL", time_period=cst.Periods.JULY2021.name):
     INFERENCE = np.zeros(shape=(2, len(list_models)))
     for imod, mod in enumerate(list_models):
@@ -139,13 +171,15 @@ def confusion_metrix(path, list_models, list_horizons, list_seeds, dataset_type,
 #     return improvement
 
 
-def metrics_vs_models_k(met_name, horizons, met_vec, out_dir, list_models, dataset_type, met_vec_original=None):
+def metrics_vs_models_bars(met_name, horizons, met_vec, out_dir, list_models, dataset_type, met_vec_original=None, is_stocks=False):
 
     horizons = np.array(horizons)
     if dataset_type == cst.DatasetFamily.FI:
         labels = ["K={}".format(k.value) for k in horizons]
-    else:
+    elif dataset_type == cst.DatasetFamily.LOBSTER and not is_stocks:
         labels = ["K={}".format(fw.value) for bw, fw in horizons]
+    elif is_stocks:
+        labels = ["S={}".format(bw) for bw in horizons]
 
     fmt = "%.2f"
     miny, maxy = -1, 1.1
@@ -161,7 +195,7 @@ def metrics_vs_models_k(met_name, horizons, met_vec, out_dir, list_models, datas
     x = np.arange(len(labels)) * 9  # the label locations
     width = 0.44  # the width of the bars
 
-    fig, ax = plt.subplots(figsize=(17, 15))
+    fig, ax = plt.subplots(figsize=(21, 10))
 
     indsxs = np.array(range(1, int(len(list_models) / 2) + 1))
     zero = [0] if len(list_models) % 2 == 1 else []
@@ -226,16 +260,16 @@ def metrics_vs_models_k(met_name, horizons, met_vec, out_dir, list_models, datas
     ax.set_xticks(x, labels)  # , rotation=0, ha="right", rotation_mode="anchor")
 
     if dataset_type == cst.DatasetFamily.FI:
-        ax.set_ylim((0, 100))
+        ax.set_ylim((25, 100))
     elif dataset_type == cst.DatasetFamily.LOBSTER:
-        ax.set_ylim((0, 70))
+        ax.set_ylim((25, 100))
 
-    ax.legend(fontsize=15, ncol=6, handleheight=2, labelspacing=0.05, loc="lower left", framealpha=1)
+    ax.legend(fontsize=15, ncol=6, handleheight=2, labelspacing=0.05, loc="upper right", framealpha=1)
 
     # plt.ylim(miny, maxy)
     fig.tight_layout()
     met_name_new = met_name.replace("(%)", "perc")
-    plt.savefig(out_dir + "bar-" + met_name_new + ".pdf")
+    plt.savefig(out_dir + "bar-stocks-" + met_name_new + ".pdf")
     # plt.show()
     plt.close(fig)
 
@@ -284,7 +318,7 @@ def plot_inference_time(met_vec, met_vec_err, list_models, out_dir):
     x = np.arange(len(labels)) * 9  # the label locations
     width = 0.5  # the width of the bars
 
-    fig, ax = plt.subplots(figsize=(10, 9))
+    fig, ax = plt.subplots(figsize=(9, 7))
 
     indsxs = np.array(range(1, int(len(list_models) / 2) + 1))
     zero = [0] if len(list_models) % 2 == 1 else []
@@ -299,7 +333,7 @@ def plot_inference_time(met_vec, met_vec_err, list_models, out_dir):
     ax.set_title("Models Inference Time")
     ax.set_xticks(x, labels)  # , rotation=0, ha="right", rotation_mode="anchor")
 
-    ax.legend(fontsize=10, ncol=3, handleheight=6, labelspacing=0.05)
+    ax.legend(fontsize=12, ncol=3, handleheight=2, labelspacing=0.05)
 
     # plt.ylim(miny, maxy)
     fig.tight_layout()
@@ -365,7 +399,7 @@ def confusion_matrix_single(cms, list_models, out_dir, chosen_horizons, dataset)
             fig, _ = plt.subplots(figsize=(10, 9))
 
             annot_kws = {
-                'fontsize': 16,
+                'fontsize': 30,
                 'fontweight': 'bold',
                 'fontfamily': 'serif'
             }
@@ -400,7 +434,7 @@ def scatter_plot_year(met_name, met_data, list_models, list_models_years, out_di
     X = list_models_years
     met_data = np.average(met_data, axis=0)  # seeds
 
-    fig, ax = plt.subplots(figsize=(10, 9))
+    fig, ax = plt.subplots(figsize=(9, 7))
     df = pd.DataFrame(dict(id=list_models_years, data=met_data))
     maxes = df.groupby('id')['data'].max()
 
@@ -408,17 +442,34 @@ def scatter_plot_year(met_name, met_data, list_models, list_models_years, out_di
     plt.scatter(list_models_years, met_data, color="red")
 
     for label, x, y in zip(list_models, X, met_data):
+        xytext = (+10, -10)
+        print(label)
+        if label.name == "TLONBoF":
+            xytext = (-30, -20)
+        if label.name == "DLA":
+            xytext = (+15, +20)
+        elif label.name == "ATNBoF":
+            xytext = (+15, +15)
+        elif label.name == "AXIALLOB":
+            xytext = (-30, -20)
+        elif label.name == "CNN":
+            xytext = (+15, +20)
+        elif label.name == "MAJORITY":
+            xytext = (-50, -20)
+        elif label.name == "METALOB":
+            xytext = (-60, +20)
+
         plt.annotate(
             label.name,
-            fontsize=20,
-            xy = (x, y), xytext = (+80, -40),
-            textcoords = 'offset points', ha = 'right', va = 'bottom',
-            bbox = dict(boxstyle = 'round, pad=0.5', fc = 'red', alpha = 0.3),
+            fontsize=15,
+            xy = (x, y), xytext = xytext,
+            textcoords = 'offset points', ha = 'left', va = 'top',
+            bbox = dict(boxstyle = 'round, pad=.2', fc = 'red', alpha = 0.3),
             arrowprops = dict(arrowstyle = 'wedge', connectionstyle = 'arc3, rad=0'))
 
     coef = np.polyfit(df["id"], df["data"], 1)
     poly1d_fn = np.poly1d(coef)
-    plt.plot(list_models_years, poly1d_fn(list_models_years), '--', color="blue")
+    plt.plot(list_models_years, poly1d_fn(list_models_years), '--', color="blue", label="linear fit")
     SLOPE = '%.2E' % Decimal(coef[0])
 
     plt.xlabel('Year')
@@ -491,14 +542,14 @@ def FI_plots():
     MAT_ORI = original_metrics(metrics, LIST_MODELS, LIST_HORIZONS)
 
     #n: PLOT 1
-    for imet, met in enumerate(metrics):
-        print("plot done perf", met)
-        met_name = metrics[met]
-        mid = map_id_metric_declared(metrics, met)
-        ori = MAT_ORI[:, :, mid] if mid is not None else None
-
-        metrics_vs_models_k(met_name, LIST_HORIZONS, MAT_REP[:, :, :, imet], OUT, LIST_MODELS, dataset_type=DATASET,
-                            met_vec_original=ori)  # each mat has shape MODELS x K x METRICA
+    # for imet, met in enumerate(metrics):
+    #     print("plot done perf", met)
+    #     met_name = metrics[met]
+    #     mid = map_id_metric_declared(metrics, met)
+    #     ori = MAT_ORI[:, :, mid] if mid is not None else None
+    #
+    #     metrics_vs_models_bars(met_name, LIST_HORIZONS, MAT_REP[:, :, :, imet], OUT, LIST_MODELS, dataset_type=DATASET,
+    #                            met_vec_original=ori)  # each mat has shape MODELS x K x METRICA
 
     LIST_HORIZONS = cst.FI_Horizons
     MAT_REP = reproduced_metrics(PATH, metrics, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS,
@@ -508,10 +559,10 @@ def FI_plots():
     print("Models performance:")
     print(np.average(MAT_REP[:, :, :, 0], axis=0) * 100)
 
-    for imet, met in enumerate(metrics):
-        print("plot done perf", met)
-        met_name = metrics[met]
-        metrics_vs_models_k_line(met_name, LIST_HORIZONS, MAT_REP[:, :, :, imet], OUT, LIST_MODELS, DATASET, type="var-for")
+    # for imet, met in enumerate(metrics):
+    #     print("plot done perf", met)
+    #     met_name = metrics[met]
+    #     metrics_vs_models_k_line(met_name, LIST_HORIZONS, MAT_REP[:, :, :, imet], OUT, LIST_MODELS, DATASET, type="var-for")
 
     CMS = confusion_metrix(PATH, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS, jolly_seed=None, dataset_type=cst.DatasetFamily.FI,
                            train_src=train_src, test_src=test_src, time_period=time_period)
@@ -519,47 +570,48 @@ def FI_plots():
     INFER = inference_data(PATH, LIST_MODELS, dataset_type=cst.DatasetFamily.FI, train_src=train_src,
                            test_src=test_src, time_period=time_period)
 
-    # # 1: PLOT 2
+    # 1: PLOT 2
     # 1: PLOT 2
     # passing CM 15 x 5 x 3 x 3
     confusion_matrix_single(CMS[0, :], LIST_MODELS, OUT, LIST_HORIZONS, DATASET)
 
-    plot_inference_time(INFER[0], INFER[1], cst.MODELS_15, OUT)
+    # plot_inference_time(INFER[0], INFER[1], cst.MODELS_15, OUT)
 
     # n: PLOT 3
-    for imet, met in enumerate(metrics):
-        met_name = metrics[met]
-        met_data = np.mean(MAT_REP[:, :, :, imet], axis=2)  # MODELS x K x METRICA
-        scatter_plot_year(met_name, met_data, LIST_MODELS, LIST_YEARS, OUT, DATASET)
-        print("plot done year", met)
-
-    logits, pred = MetaDataBuilder.load_predictions_from_jsons(PATH,
-                                                               cst.DatasetFamily.FI,
-                                                               cst.TRAINABLE_16,
-                                                               500,
-                                                               cst.FI_Horizons.K5.value,
-                                                               trst=train_src,
-                                                               test=test_src,
-                                                               peri=time_period,
-                                                               bw=None,
-                                                               fw=None,
-                                                               is_raw=True,
-                                                               is_ignore_deeplobatt=False)
-    plot_agreement_matrix(cst.TRAINABLE_16, 5, pred, OUT)
+    # for imet, met in enumerate(metrics):
+    #     met_name = metrics[met]
+    #     met_data = np.mean(MAT_REP[:, :, :, imet], axis=2)  # MODELS x K x METRICA
+    #     scatter_plot_year(met_name, met_data, LIST_MODELS, LIST_YEARS, OUT, DATASET)
+    #     print("plot done year", met)
+    #
+    # logits, pred = MetaDataBuilder.load_predictions_from_jsons(PATH,
+    #                                                            cst.DatasetFamily.FI,
+    #                                                            cst.TRAINABLE_16,
+    #                                                            500,
+    #                                                            cst.FI_Horizons.K5.value,
+    #                                                            trst=train_src,
+    #                                                            test=test_src,
+    #                                                            peri=time_period,
+    #                                                            bw=None,
+    #                                                            fw=None,
+    #                                                            is_raw=True,
+    #                                                            is_ignore_deeplobatt=False)
+    #
+    # plot_agreement_matrix(cst.TRAINABLE_16, 5, pred, OUT)
 
 
 def lobster_plots():
     """ Make FI-2010 plots. """
 
-    PATH = "final_data/LOBSTER-TESTS/jsons/"
-    ALL_STOCK_NAMES = ["LSTR"]  # "ALL","SOFI","NFLX","CSCO", "WING", "SHLS"
+    PATH = "final_data/LOBSTER-JUL-TESTS/jsons/"
+    ALL_STOCK_NAMES = ["ALL"]  # "ALL","SOFI","NFLX","CSCO", "WING", "SHLS"
     CMS = []
 
     for sto in ALL_STOCK_NAMES:
         plt.close('all')
         del CMS
 
-        OUT = "final_data/LOBSTER-TESTS/all-pdfs-{}/".format(sto)
+        OUT = "final_data/LOBSTER-JUL-TESTS/all-pdfs-{}/".format(sto)
         DATASET = cst.DatasetFamily.LOBSTER
 
         train_src = "ALL"
@@ -579,74 +631,89 @@ def lobster_plots():
 
         setup_plotting_env()
 
-        backwards = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1]
-        forwards = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS5, cst.WinSize.EVENTS10]
-        LIST_HORIZONS = list(zip(backwards, forwards))  # cst.FI_Horizons
+        # backwards = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1]
+        # forwards = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS5, cst.WinSize.EVENTS10]
+        # LIST_HORIZONS = list(zip(backwards, forwards))  # cst.FI_Horizons
+        #
+        # # LOBSTER
+        # MAT_REP = reproduced_metrics(PATH, metrics, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS, dataset_type=cst.DatasetFamily.LOBSTER,
+        #                              train_src=train_src, test_src=test_src, time_period=time_period, jolly_seed=None)
+        #
+        # # n1: PLOT with 3 bars
+        # for imet, met in enumerate(metrics):
+        #     met_name = metrics[met]
+        #     metrics_vs_models_bars(met_name, LIST_HORIZONS, MAT_REP[:, :, :, imet], OUT, LIST_MODELS, dataset_type=DATASET)  # each mat has shape MODELS x K x METRICA
+        #     print("plot done perf", met)
 
-        # LOBSTER
-        MAT_REP = reproduced_metrics(PATH, metrics, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS, dataset_type=cst.DatasetFamily.LOBSTER,
-                                     train_src=train_src, test_src=test_src, time_period=time_period, jolly_seed=None)
-
-        # n1: PLOT with 3 bars
-        for imet, met in enumerate(metrics):
-            met_name = metrics[met]
-            metrics_vs_models_k(met_name, LIST_HORIZONS, MAT_REP[:, :, :, imet], OUT, LIST_MODELS, dataset_type=DATASET)  # each mat has shape MODELS x K x METRICA
-            print("plot done perf", met)
-
-        backwards = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1]
-        forwards  = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS2, cst.WinSize.EVENTS3, cst.WinSize.EVENTS5, cst.WinSize.EVENTS10]
-        LIST_HORIZONS = list(zip(backwards, forwards))  # cst.FI_Horizons
-
-        # LOBSTER
-        MAT_REP = reproduced_metrics(PATH, metrics, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS,
-                                     dataset_type=cst.DatasetFamily.LOBSTER,
-                                     train_src=train_src, test_src=test_src, time_period=time_period, jolly_seed=None)
+        # backwards = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1]
+        # forwards  = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS2, cst.WinSize.EVENTS3, cst.WinSize.EVENTS5, cst.WinSize.EVENTS10]
+        # LIST_HORIZONS = list(zip(backwards, forwards))  # cst.FI_Horizons
+        #
+        # # LOBSTER
+        # MAT_REP = reproduced_metrics(PATH, metrics, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS,
+        #                              dataset_type=cst.DatasetFamily.LOBSTER,
+        #                              train_src=train_src, test_src=test_src, time_period=time_period, jolly_seed=None)
 
         # n2: PLOT with 5 lines
+        # for imet, met in enumerate(metrics):
+        #     met_name = metrics[met]
+        #     metrics_vs_models_k_line(met_name, LIST_HORIZONS, MAT_REP[:, :, :, imet], OUT, LIST_MODELS, DATASET, type="var-for")
+        #
+        # print("Models performance:")
+        # print(np.average(MAT_REP[:, :, :, 0], axis=0) * 100)
+        #
+        # # 5 x 15 x 5 x 3 x 3
+        # CMS = confusion_metrix(PATH, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS, jolly_seed=None,
+        #                        dataset_type=cst.DatasetFamily.LOBSTER, train_src=train_src, test_src=test_src,
+        #                        time_period=time_period)
+        #
+        #
+        # # 1: PLOT 2
+        # # passing CM 15 x 5 x 3 x 3
+        # confusion_matrix_single(CMS[0, :], LIST_MODELS, OUT, LIST_HORIZONS, DATASET)
+
+        # if sto == 'ALL':
+        #     INFER = inference_data(PATH, LIST_MODELS, dataset_type=cst.DatasetFamily.LOBSTER, train_src=train_src,
+        #                            test_src=test_src, time_period=time_period)
+        #     plot_inference_time(INFER[0], INFER[1], cst.MODELS_15, OUT)
+        #
+        # # n: PLOT 3
+        # for imet, met in enumerate(metrics):
+        #     met_name = metrics[met]
+        #     met_data = np.mean(MAT_REP[:, :, :, imet], axis=2)  # MODELS x K x METRICA
+        #     scatter_plot_year(met_name, met_data, LIST_MODELS, LIST_YEARS, OUT, DATASET)
+        #     print("plot done year", met)
+        #
+        # agreement_stocks = cst.TRAINABLE_16 if sto == 'ALL' else cst.MODELS_15
+        #
+        # logits, pred = MetaDataBuilder.load_predictions_from_jsons(PATH,
+        #                                                            cst.DatasetFamily.LOBSTER,
+        #                                                            agreement_stocks,
+        #                                                            500,
+        #                                                            cst.FI_Horizons.K10.value,
+        #                                                            trst=train_src,
+        #                                                            test=test_src,
+        #                                                            peri=time_period,
+        #                                                            bw=cst.WinSize.EVENTS1.value,
+        #                                                            fw=cst.WinSize.EVENTS5.value,
+        #                                                            is_raw=True,
+        #                                                            is_ignore_deeplobatt=False)
+        # plot_agreement_matrix(agreement_stocks, 5, pred, OUT)
+
+        LIST_MODELS = cst.MODELS_15
+        LIST_STOCKS = ["ALL", "SOFI","NFLX","CSCO", "WING", "SHLS", "LSTR"]  # "ALL","SOFI","NFLX","CSCO", "WING", "SHLS"
+        # LOBSTER
+        MAT_REP = reproduced_metrics_stocks(PATH, LIST_MODELS, LIST_STOCKS, LIST_SEEDS,
+                                     dataset_type=cst.DatasetFamily.LOBSTER,
+                                     train_src=train_src, time_period=time_period, jolly_seed=None)
+
+        print(MAT_REP.shape)
+
         for imet, met in enumerate(metrics):
             met_name = metrics[met]
-            metrics_vs_models_k_line(met_name, LIST_HORIZONS, MAT_REP[:, :, :, imet], OUT, LIST_MODELS, DATASET, type="var-for")
+            metrics_vs_models_bars(met_name, LIST_STOCKS, MAT_REP[:, :, :, imet], OUT, LIST_MODELS, dataset_type=DATASET, is_stocks=True)  # each mat has shape MODELS x K x METRICA
+            print("plot done perf", met)
 
-        print("Models performance:")
-        print(np.average(MAT_REP[:, :, :, 0], axis=0) * 100)
-
-        # 5 x 15 x 5 x 3 x 3
-        CMS = confusion_metrix(PATH, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS, jolly_seed=None,
-                               dataset_type=cst.DatasetFamily.LOBSTER, train_src=train_src, test_src=test_src,
-                               time_period=time_period)
-
-
-        # 1: PLOT 2
-        # passing CM 15 x 5 x 3 x 3
-        confusion_matrix_single(CMS[0, :], LIST_MODELS, OUT, LIST_HORIZONS, DATASET)
-
-        if sto == 'ALL':
-            INFER = inference_data(PATH, LIST_MODELS, dataset_type=cst.DatasetFamily.LOBSTER, train_src=train_src,
-                                   test_src=test_src, time_period=time_period)
-            plot_inference_time(INFER[0], INFER[1], cst.MODELS_15, OUT)
-
-        # n: PLOT 3
-        for imet, met in enumerate(metrics):
-            met_name = metrics[met]
-            met_data = np.mean(MAT_REP[:, :, :, imet], axis=2)  # MODELS x K x METRICA
-            scatter_plot_year(met_name, met_data, LIST_MODELS, LIST_YEARS, OUT, DATASET)
-            print("plot done year", met)
-
-        agreement_stocks = cst.TRAINABLE_16 if sto == 'ALL' else cst.MODELS_15
-
-        logits, pred = MetaDataBuilder.load_predictions_from_jsons(PATH,
-                                                                   cst.DatasetFamily.LOBSTER,
-                                                                   agreement_stocks,
-                                                                   500,
-                                                                   cst.FI_Horizons.K10.value,
-                                                                   trst=train_src,
-                                                                   test=test_src,
-                                                                   peri=time_period,
-                                                                   bw=cst.WinSize.EVENTS1.value,
-                                                                   fw=cst.WinSize.EVENTS5.value,
-                                                                   is_raw=True,
-                                                                   is_ignore_deeplobatt=False)
-        plot_agreement_matrix(agreement_stocks, 5, pred, OUT)
 
 def metrics_to_plot(test_src):
     metrics = {'testing_{}_f1'.format(test_src)         :'F1 Score (%)',
@@ -683,5 +750,5 @@ def map_id_metric_declared(metrics_dict, metric):
 
 if __name__ == '__main__':
 
-    # lobster_plots()
-    FI_plots()
+    lobster_plots()
+    # FI_plots()

@@ -20,8 +20,8 @@ def early_stopping(config):
     monitor_var = config.EARLY_STOPPING_METRIC
     return pl.callbacks.EarlyStopping(
         monitor=monitor_var,
-        min_delta=0.00,
-        patience=4,
+        min_delta=0.01,
+        patience=8,
         verbose=True,
         mode='max',
         # |v stops when if after epoch 1, the

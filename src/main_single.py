@@ -110,6 +110,10 @@ def _wandb_exe(config: Configuration):
         wandb_instance.log_code("src/")
         wandb_instance.log({"model": config.CHOSEN_MODEL.name})
         wandb_instance.log({"seed": config.SEED})
+        wandb_instance.log({"stock_train": config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name})
+        wandb_instance.log({"stock_test": config.CHOSEN_STOCKS[cst.STK_OPEN.TEST].name})
+        wandb_instance.log({"period": config.CHOSEN_PERIOD.name})
+        wandb_instance.log({"alpha": cst.ALFA})
 
         if config.CHOSEN_DATASET in [cst.DatasetFamily.FI, cst.DatasetFamily.META]:
             wandb_instance.log({"fi-k":  config.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON]})
