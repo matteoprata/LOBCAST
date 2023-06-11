@@ -73,7 +73,7 @@ def launch_test_FI(seeds_set):
             sum_softmax = np.sum(logits_weighted, axis=2)
             preds = np.argmax(sum_softmax, axis=1)
 
-            # now truth
+            # run_name_prefix truth
             databuilder_test = FIDataBuilder(
                 cst.DATA_SOURCE + cst.DATASET_FI,
                 dataset_type=cst.DatasetType.TEST,
@@ -148,7 +148,7 @@ def launch_test_LOBSTER(seeds, kset, period, json_dir):
             sum_softmax = np.sum(logits_weighted, axis=2)
             preds = np.argmax(sum_softmax, axis=1)
 
-            # now truth
+            # run_name_prefix truth
 
             train_set = LOBDataset(
                 config=cf,

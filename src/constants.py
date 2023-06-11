@@ -323,19 +323,20 @@ WANDB_SWEEP_MAX_RUNS = 20
 
 
 class Servers(Enum):
+    ANY = 0
     ALIEN1 = 1
     ALIEN2 = 2
     FISSO1 = 3
 
 
 hostname2server = {
+    'any': Servers.ANY,
     'novella-Alienware-h2': Servers.ALIEN1,
     'novella-Alienware-x15-R1': Servers.ALIEN2,
     'novella-pc': Servers.FISSO1
 }
+
 server2hostname = {v: k for k, v in hostname2server.items()}
-
-
 
 DECLARED_PERF = {
     # F1 PRECISION RECALL ACCURACY MCC
@@ -526,6 +527,7 @@ FI_2010_PERF = [[65.74377179, 56.14452946, 53.15137661, 50.31746373, 51.47770519
 #                      [51.23755834, 58.60629038, 61.2933899 , 60.3004019 , 57.05265239],
 #                      [49.75273464, 53.07585724, 54.63441582, 57.16119287, 50.87468015],
 #                      [54.04858666, 60.72775997, 62.5974736 , 62.35708977, 57.76763044]]
+
 # WEIGHTED
 LOBSTER_JULY_PERF = [[60.11047428, 60.75883992, 60.49401491, 59.17928698, 53.78360401],
                      [61.02505454, 62.4022689 , 62.45860611, 60.55873397, 54.54530985],

@@ -269,18 +269,24 @@ def set_configuration():
     return cf
 
 
-def experiment_preamble(now, servers):
-    if now is None:
+def experiment_preamble(run_name_prefix, servers):
+    """
+    Returns the run_name_prefix, server name, server id and number of servers.
+    This function is used to run the same code on different machines identified by their hostname.
+    Each machine will execute the model defined in the execution plan.
+    """
+
+    if run_name_prefix is None:
         parser = argparse.ArgumentParser(description='Stock Price Experiment FI:')
-        parser.add_argument('-now', '--now', default=None)
+        parser.add_argument('-run_name_prefix', '--run_name_prefix', default=None)
         args = vars(parser.parse_args())
-        now = args["now"]
+        run_name_prefix = args["run_name_prefix"]
 
     hostname = socket.gethostname()
 
     n_servers = len(cst.server2hostname) if servers is None else len(servers)
     servers = cst.server2hostname if servers is None else servers  # list of server
-    servers_hostname = [cst.server2hostname[s] for s in servers]  # list of hostnames
+    servers_hostname = [cst.server2hostname[s] for s in servers]   # list of hostnames
 
     if hostname in servers_hostname:
         server_name = cst.hostname2server[hostname]
@@ -288,7 +294,7 @@ def experiment_preamble(now, servers):
         print("Running on server", server_name.name)
     else:
         raise "This SERVER is not handled for the experiment."
-    return now, server_name, server_id, n_servers
+    return run_name_prefix, server_name, server_id, n_servers
 
 
 if __name__ == "__main__":
