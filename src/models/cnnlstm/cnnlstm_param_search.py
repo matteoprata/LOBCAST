@@ -9,7 +9,6 @@ HP_CNNLSTM = {
     cst.LearningHyperParameter.RNN_N_HIDDEN.value: {'values': [1]},
     cst.LearningHyperParameter.MLP_HIDDEN.value: {'values': [32]},
     cst.LearningHyperParameter.P_DROPOUT.value: {'values': [0.1]},
-
     cst.LearningHyperParameter.BATCH_SIZE.value: {'values': [128]},
     cst.LearningHyperParameter.LEARNING_RATE.value: {'values': [0.001]}
 }

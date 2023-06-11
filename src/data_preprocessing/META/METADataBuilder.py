@@ -113,6 +113,8 @@ class MetaDataBuilder:
                     h = horizons.index(fw)
                 logits_ = logits_[:, :, h]
 
+            print(logits_.shape)
+
             # print(model, logits_.shape)
             logits.append(logits_)
 

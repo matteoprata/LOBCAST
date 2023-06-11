@@ -10,6 +10,7 @@ from src.main_single import *
 
 DEFAULT_SEEDS = set(range(500, 505))
 DEFAULT_MODELS = cst.MODELS_15
+
 DEFAULT_FORWARD_WINDOWS = [
     cst.WinSize.EVENTS1,
     cst.WinSize.EVENTS2,
@@ -19,7 +20,7 @@ DEFAULT_FORWARD_WINDOWS = [
 ]
 
 
-def experiment_lobster(execution_plan, dataset, now=None, servers=None, is_debug=False, json_dir=None, target_dataset_meta=None):
+def experiment_lobster(execution_plan, dataset, now=None, servers=None, is_debug=False, json_dir=None, target_dataset_meta=None, peri=None):
 
     now, server_name, server_id, n_servers = experiment_preamble(now, servers)
     lunches_server = execution_plan[server_name]
@@ -52,9 +53,9 @@ def experiment_lobster(execution_plan, dataset, now=None, servers=None, is_debug
                                 cf.TARGET_DATASET_META_MODEL = target_dataset_meta
                                 cf.JSON_DIRECTORY = json_dir
 
-                            cf.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN] = cst.Stocks.NFLX
-                            cf.CHOSEN_STOCKS[cst.STK_OPEN.TEST] = cst.Stocks.NFLX
-                            cf.CHOSEN_PERIOD = cst.Periods.JULY2021
+                            cf.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN] = cst.Stocks.ALL
+                            cf.CHOSEN_STOCKS[cst.STK_OPEN.TEST] = cst.Stocks.ALL
+                            cf.CHOSEN_PERIOD = peri
 
                             cf.HYPER_PARAMETERS[cst.LearningHyperParameter.BACKWARD_WINDOW] = cst.WinSize.EVENTS1.value
                             cf.HYPER_PARAMETERS[cst.LearningHyperParameter.FORWARD_WINDOW] = window_forward.value
@@ -74,31 +75,31 @@ def experiment_lobster(execution_plan, dataset, now=None, servers=None, is_debug
 servers = [cst.Servers.ALIEN1, cst.Servers.ALIEN2, cst.Servers.FISSO1]
 
 execution_plan = {
-    cst.Servers.FISSO1: [
-        {
-            'seeds': [500],
-            'forward_windows': [cst.WinSize.EVENTS5],
-            'models': [cst.Models.MLP, cst.Models.CNN1, cst.Models.CNNLSTM, cst.Models.DAIN],
-        },
-    ],
-    cst.Servers.ALIEN1: [
-        {
-            'seeds': [500],
-            'forward_windows': [cst.WinSize.EVENTS5],
-            'models': [cst.Models.DLA, cst.Models.TLONBoF, cst.Models.CTABL, cst.Models.DEEPLOBATT],
-        },
-    ],
     cst.Servers.ALIEN2: [
         {
             'seeds': [500],
-            'forward_windows': [cst.WinSize.EVENTS5],
-            'models': [cst.Models.BINCTABL, cst.Models.LSTM, cst.Models.CNN2, cst.Models.DEEPLOB],
+            'forward_windows': 'all',
+            'models': cst.MODELS_15,
         },
     ],
+    # cst.Servers.ALIEN1: [
+    #     {
+    #         'seeds': [500],
+    #         'forward_windows': [cst.WinSize.EVENTS5],
+    #         'models': [cst.Models.DLA, cst.Models.TLONBoF, cst.Models.CTABL, cst.Models.DEEPLOBATT],
+    #     },
+    # ],
+    # cst.Servers.ALIEN2: [
+    #     {
+    #         'seeds': [500],
+    #         'forward_windows': [cst.WinSize.EVENTS5],
+    #         'models': [cst.Models.BINCTABL, cst.Models.LSTM, cst.Models.CNN2, cst.Models.DEEPLOB],
+    #     },
+    # ],
 }
 
-now = 'LOBSTER-ALFA_TEST-2023-05-12'
-jsons_dir = "all_models_alfa_test_2023-05-13/jsons/"
+now = 'FEB-META'
+jsons_dir = "final_data/LOBSTER-FEB-TESTS/jsons/"
 target_dataset_meta = cst.DatasetFamily.LOBSTER
 
 experiment_lobster(
@@ -108,5 +109,6 @@ experiment_lobster(
     servers=servers,
     is_debug=False,
     json_dir=jsons_dir,
-    target_dataset_meta=target_dataset_meta
+    target_dataset_meta=target_dataset_meta,
+    peri=cst.Periods.FEBRUARY2022
 )

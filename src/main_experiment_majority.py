@@ -12,11 +12,12 @@ import src.constants as cst
 from src.main_single import *
 from src.main_helper import pick_dataset, pick_model
 from src.models.model_executor import NNEngine
+from sklearn.ensemble import BaggingClassifier
 
 kset, mset = cst.FI_Horizons, cst.Models
 
-out_data = "final_data/FI-2010-TESTS/jsons/"
-jsons_dir = "final_data/FI-2010-TESTS/jsons/"
+out_data = "final_data/FI-2010-TESTS/jsons/" #"final_data/FI-2010-TESTS/jsons/" #"final_data/LOBSTER-FEB-TESTS/jsons/"
+jsons_dir = out_data
 
 from src.data_preprocessing.LOB.LOBDataset import LOBDataset
 
@@ -62,6 +63,8 @@ def launch_test_FI(seeds_set):
                                                                     is_raw=True,
                                                                     is_ignore_deeplobatt=False)
 
+            logits = logits[int(len(logits)*.15):, :, :]
+
             horizons = [horizon.value for horizon in cst.FI_Horizons]
             h = horizons.index(k.value)
 
@@ -71,7 +74,6 @@ def launch_test_FI(seeds_set):
             preds = np.argmax(sum_softmax, axis=1)
 
             # now truth
-
             databuilder_test = FIDataBuilder(
                 cst.DATA_SOURCE + cst.DATASET_FI,
                 dataset_type=cst.DatasetType.TEST,
@@ -79,13 +81,13 @@ def launch_test_FI(seeds_set):
                 window=cf.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_SNAPSHOTS],
                 chosen_model=cf.CHOSEN_MODEL
             )
-
             truths = databuilder_test.samples_y[100:]
+            truths = truths[int(len(truths)*.15):]
 
             val_dict = compute_metrics(truths, preds, cst.ModelSteps.TESTING, [], cf.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name)  # dict to log
-            cf.METRICS_JSON.update_metrics(cf.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, val_dict)
-
             print(val_dict)
+
+            cf.METRICS_JSON.update_metrics(cf.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, val_dict)
             cm = compute_sk_cm(truths, preds)
             cf.METRICS_JSON.update_cfm(cf.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, cm)
 
@@ -141,7 +143,8 @@ def launch_test_LOBSTER(seeds, kset, period, json_dir):
             # h = horizons.index(k.value)
             # exit()
 
-            logits_weighted = logits * cst.LOBSTER_JULY_PERF[:, iw]
+            # LOBSTER_FEB_PERF
+            logits_weighted = logits * cst.LOBSTER_FEB_PERF[:len(cst.MODELS_15), iw]
             sum_softmax = np.sum(logits_weighted, axis=2)
             preds = np.argmax(sum_softmax, axis=1)
 
@@ -165,7 +168,31 @@ def launch_test_LOBSTER(seeds, kset, period, json_dir):
             )
 
             truths = test_set.y[100:]   # TODO CHECK
-            print(truths.shape, logits.shape)
+            cut = min(truths.shape[0], preds.shape[0])
+            print(truths.shape, preds.shape, logits.shape)
+            # TODO check cut the end
+            truths = truths[:cut]
+            preds = preds[:cut]
+
+            # # NEW CODE
+            # print(logits.shape, type(logits))
+            # print(truths.shape, type(truths))
+            #
+            # splitter = int(len(logits) * .85)
+            # logits = np.reshape(logits, newshape=(-1, 15 * 3))
+            # logits_train, logits_test = logits[:splitter, :], logits[splitter:, :]
+            # truths_train, truths_test = truths[:splitter], truths[splitter:]
+            #
+            # print(logits_train.shape, logits_test.shape)
+            # clf = BaggingClassifier(n_estimators=100, verbose=True, n_jobs=11).fit(logits_train, truths_train)
+            # print("NOW PREDICT")
+            # preds_test = clf.predict(logits_test)
+            # print("NOW METRICS")
+            # print(preds_test.shape)
+            # val_dict = compute_metrics(truths_test, preds_test, cst.ModelSteps.TESTING, [],
+            #                            cf.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name)  # dict to log
+            # print(val_dict)
+            # # NEW CODE
 
             val_dict = compute_metrics(truths, preds, cst.ModelSteps.TESTING, [], cf.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name)  # dict to log
 
@@ -177,9 +204,9 @@ def launch_test_LOBSTER(seeds, kset, period, json_dir):
 
 
 if __name__ == "__main__":
-    # seeds = [500, 501, 502, 503, 504]
-    # backwards = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1]
-    # forwards = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS2, cst.WinSize.EVENTS3, cst.WinSize.EVENTS5, cst.WinSize.EVENTS10]
+    # seeds = [500]
+    # backwards = [cst.WinSize.EVENTS1]
+    # forwards = [cst.WinSize.EVENTS5]
     #
     # kset = list(zip(backwards, forwards))
     # period = cst.Periods.JULY2021

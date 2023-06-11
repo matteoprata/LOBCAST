@@ -193,7 +193,7 @@ def metrics_vs_models_bars(met_name, horizons, met_vec, out_dir, list_models, da
     std_met = np.std(met_vec, axis=0)
 
     x = np.arange(len(labels)) * 9  # the label locations
-    width = 0.44  # the width of the bars
+    width = 0.48  # the width of the bars
 
     fig, ax = plt.subplots(figsize=(21, 10))
 
@@ -201,7 +201,7 @@ def metrics_vs_models_bars(met_name, horizons, met_vec, out_dir, list_models, da
     zero = [0] if len(list_models) % 2 == 1 else []
     ranges = list(reversed(indsxs * -1)) + zero + list(indsxs)
 
-    LABEL_FONT_SIZE = 17
+    LABEL_FONT_SIZE = 12
 
     R = []  # the bars
     for iri, ri in enumerate(list_models):
@@ -260,16 +260,22 @@ def metrics_vs_models_bars(met_name, horizons, met_vec, out_dir, list_models, da
     ax.set_xticks(x, labels)  # , rotation=0, ha="right", rotation_mode="anchor")
 
     if dataset_type == cst.DatasetFamily.FI:
-        ax.set_ylim((25, 100))
+        ax.set_ylim((20, 100))
+
     elif dataset_type == cst.DatasetFamily.LOBSTER:
-        ax.set_ylim((25, 100))
+        ax.set_ylim((25, 70))
+        if is_stocks:
+            ax.set_ylim((0, 75))
 
     ax.legend(fontsize=15, ncol=6, handleheight=2, labelspacing=0.05, loc="lower right", framealpha=1)
 
     # plt.ylim(miny, maxy)
     fig.tight_layout()
     met_name_new = met_name.replace("(%)", "perc")
-    plt.savefig(out_dir + f"bar-{'stocks' if is_stocks else 'horizons'}-" + met_name_new + ".pdf")
+    met_name_new = met_name_new.replace(" ", "_")
+    pdf_path = out_dir + f"ultimate_bar-{'stocks' if is_stocks else 'horizons'}-nbars{len(horizons)}-" + met_name_new + ".pdf"
+    print(pdf_path)
+    plt.savefig(pdf_path)
     # plt.show()
     plt.close(fig)
 
@@ -316,6 +322,8 @@ def plot_inference_time(met_vec, met_vec_err, list_models, out_dir):
     labels = ["K=5"]
 
     x = np.arange(len(labels)) * 9  # the label locations
+    print(x)
+    exit()
     width = 0.5  # the width of the bars
 
     fig, ax = plt.subplots(figsize=(9, 7))
@@ -409,8 +417,12 @@ def confusion_matrix_single(cms, list_models, out_dir, chosen_horizons, dataset)
             # print(csm_norm)
             ax = sb.heatmap(csm_norm, annot=True, cbar=True, fmt=".2f", cmap="Blues", annot_kws=annot_kws,
                        vmin=0, vmax=100,
-                       xticklabels=[p.name for p in cst.Predictions],
-                       yticklabels=[p.name for p in cst.Predictions])
+                       # xticklabels=["D", "S", "U"],
+                       # yticklabels=["D", "S", "U"],
+                       )
+
+            ax.set_yticklabels(["D", "S", "U"], size=30)
+            ax.set_xticklabels(["D", "S", "U"], size=30)
 
             for t in ax.texts: t.set_text(t.get_text() + "%")
 
@@ -418,12 +430,13 @@ def confusion_matrix_single(cms, list_models, out_dir, chosen_horizons, dataset)
             wind_value = k[1].value if cst.DatasetFamily.LOBSTER == dataset else k.value
             fig.suptitle('{} K={} ({})'.format(mod, wind_value, dataset_name), fontsize=30, fontweight="bold")
 
-            fig.supylabel('Real', fontsize=25)
-            fig.supxlabel('Predicted', fontsize=25)
+            fig.supylabel('Real', fontsize=30)
+            fig.supxlabel('Predicted', fontsize=30)
 
             fig.tight_layout()
 
             wind_id = k[1].name if cst.DatasetFamily.LOBSTER == dataset else k.name
+            print("OUT", out_dir + "cm-{}-{}.pdf")
             fig.savefig(out_dir + "cm-{}-{}.pdf".format(mod, wind_id))
             # plt.show()
             plt.clf()
@@ -534,31 +547,67 @@ def FI_plots():
 
     metrics = metrics_to_plot(test_src)
 
-    LIST_HORIZONS = [cst.FI_Horizons.K1, cst.FI_Horizons.K5, cst.FI_Horizons.K10]
+    LIST_HORIZONS = cst.FI_Horizons
     MAT_REP = reproduced_metrics(PATH, metrics, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS,
                                  dataset_type=cst.DatasetFamily.FI,
                                  train_src=train_src, test_src=test_src, time_period=time_period, jolly_seed=None)
 
     MAT_ORI = original_metrics(metrics, LIST_MODELS, LIST_HORIZONS)
 
-    #n: PLOT 1
-    # for imet, met in enumerate(metrics):
-    #     print("plot done perf", met)
-    #     met_name = metrics[met]
-    #     mid = map_id_metric_declared(metrics, met)
-    #     ori = MAT_ORI[:, :, mid] if mid is not None else None
-    #
-    #     metrics_vs_models_bars(met_name, LIST_HORIZONS, MAT_REP[:, :, :, imet], OUT, LIST_MODELS, dataset_type=DATASET,
-    #                            met_vec_original=ori)  # each mat has shape MODELS x K x METRICA
+    # n: PLOT 1
+    for imet, met in enumerate(metrics):
+        print("plot done perf", met)
+        met_name = metrics[met]
+        mid = map_id_metric_declared(metrics, met)
+        ori = MAT_ORI[:, :, mid] if mid is not None else None
+
+        metrics_vs_models_bars(met_name, LIST_HORIZONS, MAT_REP[:, :, :, imet], OUT, LIST_MODELS, dataset_type=DATASET,
+                               met_vec_original=ori)  # each mat has shape MODELS x K x METRICA
 
     LIST_HORIZONS = cst.FI_Horizons
     MAT_REP = reproduced_metrics(PATH, metrics, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS,
                                  dataset_type=cst.DatasetFamily.FI,
                                  train_src=train_src, test_src=test_src, time_period=time_period, jolly_seed=None)
-
+    print("QUIIII")
     print("Models performance:")
-    print(np.average(MAT_REP[:, :, :, 0], axis=0) * 100)
+    MOD = LIST_MODELS
+    AVG = np.average(MAT_REP[:, :, :, 0], axis=0) * 100
+    STD = np.max(np.std(MAT_REP[:, :, :, 0], axis=0) * 100, axis=1)
+    CLAIM = np.nanmean(MAT_ORI[:, :, 0], axis=1)
+    # print(AVG)
+    # print(STD)
+    # print(LIST_MODELS)
+    print("DOVREI 2")
+    INFER = inference_data(PATH, LIST_MODELS, dataset_type=cst.DatasetFamily.FI, train_src=train_src,
+                           test_src=test_src, time_period=time_period)
+    print(INFER[0])
+    for im, m in enumerate(LIST_MODELS):
+        print("MODEL {} VALUE {:e}".format(m, INFER[0][im]))
+    print("QUIIII")
 
+    # 1: PLOT 2
+    # 1: PLOT 2
+    # passing CM 15 x 5 x 3 x 3
+
+    # ved = list(reversed(sorted(AVG)))
+    #
+    # for im, m in enumerate(MOD):
+    #     formato = "{}\t&${} \pm {}$\t&{}\t&{}\t&{}\t&${}\pm {}$\t&{}\t&{} \\\\ \n \hline".format(m.name,
+    #                                                                              round(AVG[im], 1),
+    #                                                                              round(STD[im], 1),
+    #                                                                              ved.index(AVG[im])+1,
+    #                                                                              round(CLAIM[im], 1),
+    #                                                                              Decimal(str(round(AVG[im]-CLAIM[im],1))).normalize(),
+    #                                                                              None,
+    #                                                                              None,
+    #                                                                              1,
+    #                                                                              None
+    #                                                                              )
+    #
+    #     print(formato)
+    #
+    #
+    # print("QUI1")
     # for imet, met in enumerate(metrics):
     #     print("plot done perf", met)
     #     met_name = metrics[met]
@@ -573,6 +622,7 @@ def FI_plots():
     # 1: PLOT 2
     # 1: PLOT 2
     # passing CM 15 x 5 x 3 x 3
+    print("QUI2")
     confusion_matrix_single(CMS[0, :], LIST_MODELS, OUT, LIST_HORIZONS, DATASET)
 
     # plot_inference_time(INFER[0], INFER[1], cst.MODELS_15, OUT)
@@ -599,15 +649,44 @@ def FI_plots():
     #
     # plot_agreement_matrix(cst.TRAINABLE_16, 5, pred, OUT)
 
+def lobster_stocks_plots():
+    """ Make FI-2010 plots. """
+
+    time_period = cst.Periods.JULY2021.name
+    month = 'JUL' if time_period == cst.Periods.JULY2021.name else 'FEB'
+
+    PATH = f"final_data/LOBSTER-{month}-TESTS/jsons/"
+
+    # HERE FOR PER STOCK
+    LIST_SEEDS = [500]
+    LIST_MODELS = cst.MODELS_15
+    LIST_STOCKS = ["ALL", "SOFI", "NFLX", "CSCO", "WING", "SHLS", "LSTR"]  # "ALL","SOFI","NFLX","CSCO", "WING", "SHLS"
+    # LOBSTER
+    MAT_REP = reproduced_metrics_stocks(PATH, LIST_MODELS, LIST_STOCKS, LIST_SEEDS,
+                                 dataset_type=cst.DatasetFamily.LOBSTER,
+                                 train_src="ALL", time_period=time_period, jolly_seed=None, target_horizon=cst.WinSize.EVENTS5)
+
+    print(MAT_REP.shape)
+    src_stock = "ALL"
+    metrics = metrics_to_plot(src_stock)
+
+    OUT = f"final_data/LOBSTER-{month}-TESTS/pdfs/all-pdfs-{src_stock}/"
+    DATASET = cst.DatasetFamily.LOBSTER
+
+    for imet, met in enumerate(metrics):
+        met_name = metrics[met]
+        metrics_vs_models_bars(met_name, LIST_STOCKS, MAT_REP[:, :, :, imet], OUT, LIST_MODELS, dataset_type=DATASET, is_stocks=True)  # each mat has shape MODELS x K x METRICA
+        print("plot done perf", met)
+
 
 def lobster_plots():
     """ Make FI-2010 plots. """
 
-    time_period = cst.Periods.FEBRUARY2022.name
+    time_period = cst.Periods.JULY2021.name
     month = 'JUL' if time_period == cst.Periods.JULY2021.name else 'FEB'
 
     PATH = f"final_data/LOBSTER-{month}-TESTS/jsons/"
-    ALL_STOCK_NAMES = ["ALL", "SOFI", "NFLX", "CSCO", "WING", "SHLS"]
+    ALL_STOCK_NAMES = ["ALL"] #, "SOFI", "NFLX", "CSCO", "WING", "SHLS"]
     CMS = []
 
     for sto in ALL_STOCK_NAMES:
@@ -624,7 +703,7 @@ def lobster_plots():
 
         # LIST_MODELS = [m for m in cst.MODELS_17 if (sto == 'ALL' or m not in [cst.Models.MAJORITY, cst.Models.METALOB])]
         # LIST_MODELS = [m for m in cst.MODELS_15 if m not in [cst.Models.AXIALLOB, cst.Models.ATNBoF]]
-        LIST_MODELS = cst.MODELS_15
+        LIST_MODELS = cst.MODELS_17
 
         LIST_YEARS = [cst.MODELS_YEAR_DICT[m] for m in cst.MODELS_YEAR_DICT if m in LIST_MODELS]
 
@@ -661,6 +740,8 @@ def lobster_plots():
         for imet, met in enumerate(metrics):
             met_name = metrics[met]
             metrics_vs_models_k_line(met_name, LIST_HORIZONS, MAT_REP[:, :, :, imet], OUT, LIST_MODELS, DATASET, type="var-for")
+            metrics_vs_models_bars(met_name, LIST_HORIZONS, MAT_REP[:, :, :, imet], OUT, LIST_MODELS, dataset_type=DATASET)  # each mat has shape MODELS x K x METRICA
+            print("plot done perf", met)
 
         print("Models performance:")
         print(np.average(MAT_REP[:, :, :, 0], axis=0) * 100)
@@ -670,22 +751,22 @@ def lobster_plots():
                                dataset_type=cst.DatasetFamily.LOBSTER, train_src=train_src, test_src=test_src,
                                time_period=time_period)
 
-
-        # 1: PLOT 2
-        # passing CM 15 x 5 x 3 x 3
+        #
+        # # 1: PLOT 2
+        # # passing CM 15 x 5 x 3 x 3
         confusion_matrix_single(CMS[0, :], LIST_MODELS, OUT, LIST_HORIZONS, DATASET)
-
-        if sto == 'ALL':
-            INFER = inference_data(PATH, LIST_MODELS, dataset_type=cst.DatasetFamily.LOBSTER, train_src=train_src,
-                                   test_src=test_src, time_period=time_period)
-            plot_inference_time(INFER[0], INFER[1], cst.MODELS_15, OUT)
-
-        # n: PLOT 3
-        for imet, met in enumerate(metrics):
-            met_name = metrics[met]
-            met_data = np.mean(MAT_REP[:, :, :, imet], axis=2)  # MODELS x K x METRICA
-            scatter_plot_year(met_name, met_data, LIST_MODELS, LIST_YEARS, OUT, DATASET)
-            print("plot done year", met)
+        #
+        # if sto == 'ALL':
+        #     INFER = inference_data(PATH, LIST_MODELS, dataset_type=cst.DatasetFamily.LOBSTER, train_src=train_src,
+        #                            test_src=test_src, time_period=time_period)
+        #     plot_inference_time(INFER[0], INFER[1], cst.MODELS_15, OUT)
+        #
+        # # n: PLOT 3
+        # for imet, met in enumerate(metrics):
+        #     met_name = metrics[met]
+        #     met_data = np.mean(MAT_REP[:, :, :, imet], axis=2)  # MODELS x K x METRICA
+        #     scatter_plot_year(met_name, met_data, LIST_MODELS, LIST_YEARS, OUT, DATASET)
+        #     print("plot done year", met)
 
         # agreement_stocks = cst.TRAINABLE_16 if sto == 'ALL' else cst.MODELS_15
 
@@ -705,19 +786,6 @@ def lobster_plots():
         # )
         # plot_agreement_matrix(agreement_stocks, 5, pred, OUT)
 
-        LIST_MODELS = cst.MODELS_15
-        LIST_STOCKS = ["ALL", "SOFI","NFLX","CSCO", "WING", "SHLS", "LSTR"]  # "ALL","SOFI","NFLX","CSCO", "WING", "SHLS"
-        # LOBSTER
-        MAT_REP = reproduced_metrics_stocks(PATH, LIST_MODELS, LIST_STOCKS, LIST_SEEDS,
-                                     dataset_type=cst.DatasetFamily.LOBSTER,
-                                     train_src=train_src, time_period=time_period, jolly_seed=None)
-
-        print(MAT_REP.shape)
-
-        for imet, met in enumerate(metrics):
-            met_name = metrics[met]
-            metrics_vs_models_bars(met_name, LIST_STOCKS, MAT_REP[:, :, :, imet], OUT, LIST_MODELS, dataset_type=DATASET, is_stocks=True)  # each mat has shape MODELS x K x METRICA
-            print("plot done perf", met)
 
 
 def metrics_to_plot(test_src):
@@ -753,9 +821,183 @@ def map_id_metric_declared(metrics_dict, metric):
     return None
 
 
+def perf_table():
+    import matplotlib.cm as cm
+
+    PATH = "final_data/FI-2010-TESTS/jsons/"
+    OUT = "final_data/FI-2010-TESTS/all-pdfs/"
+
+    DATASET = cst.DatasetFamily.FI
+
+    train_src = "FI"
+    test_src = "FI"
+    time_period = "FI"
+
+    LIST_SEEDS = [500, 501, 502, 503, 504]
+
+    LIST_MODELS = cst.MODELS_17
+
+    os.makedirs(OUT, exist_ok=True)
+    setup_plotting_env()
+
+    metrics = metrics_to_plot(test_src)
+
+    LIST_HORIZONS = cst.FI_Horizons
+    MAT_ORI = original_metrics(metrics, LIST_MODELS, LIST_HORIZONS)
+
+    LIST_HORIZONS = cst.FI_Horizons
+    MAT_REP = reproduced_metrics(PATH, metrics, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS,
+                                 dataset_type=cst.DatasetFamily.FI,
+                                 train_src=train_src, test_src=test_src, time_period=time_period, jolly_seed=None)
+
+    print("Models performance:")
+    BOOL = np.where(np.isnan(MAT_ORI[:, :, 0]) == 1, np.nan, 1)  # np.nan USELESS FOR NOW
+
+    MOD = LIST_MODELS
+    AVG = np.nanmean(MAT_REP[:, :, :, 0], axis=(0, 2)) * 100
+    STD = np.nanstd(MAT_REP[:, :, :, 0], axis=(0, 2)) * 100
+
+    CLAIM_AVG = np.nanmean(MAT_ORI[:, :, 0], axis=1)
+    CLAIM_STD = np.nanstd(MAT_ORI[:, :, 0], axis=1)
+    print(CLAIM_AVG)
+    ved = list(reversed(sorted(AVG)))
+
+    DISTS = MAT_REP[:, :, :, 0] * 100 - MAT_ORI[:, :, 0]
+    DISTS_AVG = np.nanmean(DISTS, axis=(0, 2))
+    DISTS_STD = np.nanstd(DISTS, axis=(0, 2))
+    print(DISTS_AVG)
+    print(DISTS_STD)
+    ROBUSTNESS_SCORE = -np.abs(DISTS_AVG) - DISTS_STD
+    ROBUSTNESS_SCORE = 100 + ROBUSTNESS_SCORE
+    print(ROBUSTNESS_SCORE)
+
+    # NOW GEN FEB
+    train_src = "ALL"
+    test_src = "ALL"
+    time_period = cst.Periods.FEBRUARY2022.name
+    LIST_SEEDS = [500]
+    metrics = metrics_to_plot(test_src)
+    month = 'JUL' if time_period == cst.Periods.JULY2021.name else 'FEB'
+
+    PATH = f"final_data/LOBSTER-{month}-TESTS/jsons/"
+
+    backwards = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1]
+    forwards = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS2, cst.WinSize.EVENTS3, cst.WinSize.EVENTS5, cst.WinSize.EVENTS10]
+    LIST_HORIZONS = list(zip(backwards, forwards))  # cst.FI_Horizons
+
+    # LOBSTER
+    MAT_REP_FEB = reproduced_metrics(PATH, metrics, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS,
+                                 dataset_type=cst.DatasetFamily.LOBSTER,
+                                 train_src=train_src, test_src=test_src, time_period=time_period, jolly_seed=None)
+
+    AVG_FEB = np.nanmean(MAT_REP_FEB[:, :, :, 0], axis=(0, 2)) * 100
+    STD_FEB = np.nanstd(MAT_REP_FEB[:, :, :, 0], axis=(0, 2)) * 100
+    ved_FEB = list(reversed(sorted(AVG_FEB)))
+
+    DISTS_3 = MAT_REP_FEB[:, :, :, 0] * 100 - MAT_ORI[:, :, 0]
+    DISTS_AVG_3 = np.nanmean(DISTS_3, axis=(0, 2))
+    DISTS_STD_3 = np.nanstd(DISTS_3, axis=(0, 2))
+    GENERALIZATION_SCORE_2 = -np.abs(DISTS_AVG_3) - DISTS_STD_3
+    GENERALIZATION_SCORE_2 = 100+GENERALIZATION_SCORE_2
+
+    # NOW GEN FEB
+    train_src = "ALL"
+    test_src = "ALL"
+    time_period = cst.Periods.JULY2021.name
+    LIST_SEEDS = [500, 501, 502, 503, 504]
+    metrics = metrics_to_plot(test_src)
+    month = 'JUL' if time_period == cst.Periods.JULY2021.name else 'FEB'
+
+    PATH = f"final_data/LOBSTER-{month}-TESTS/jsons/"
+
+    backwards = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1]
+    forwards = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS2, cst.WinSize.EVENTS3, cst.WinSize.EVENTS5, cst.WinSize.EVENTS10]
+    LIST_HORIZONS = list(zip(backwards, forwards))  # cst.FI_Horizons
+
+    # LOBSTER
+    MAT_REP_JUL = reproduced_metrics(PATH, metrics, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS,
+                                 dataset_type=cst.DatasetFamily.LOBSTER,
+                                 train_src=train_src, test_src=test_src, time_period=time_period, jolly_seed=None)
+
+    AVG_JUL = np.nanmean(MAT_REP_JUL[:, :, :, 0], axis=(0, 2)) * 100
+    print(np.min(AVG_JUL), np.max(AVG_JUL))
+
+    STD_JUL = np.nanstd(MAT_REP_JUL[:, :, :, 0], axis=(0, 2)) * 100
+    ved_JUL = list(reversed(sorted(AVG_JUL)))
+
+    DISTS_2 = MAT_REP_JUL[:, :, :, 0] * 100 - MAT_ORI[:, :, 0]
+    DISTS_AVG_2 = np.nanmean(DISTS_2, axis=(0, 2))
+    DISTS_STD_2 = np.nanstd(DISTS_2, axis=(0, 2))
+    GENERALIZATION_SCORE = -np.abs(DISTS_AVG_2) - DISTS_STD_2
+    GENERALIZATION_SCORE = 100+GENERALIZATION_SCORE
+
+    def get_hot_scale(value, max=0, min=100):
+        normalized_value = (value - min) / (max-min)  # Normalize the value between 0 and 1
+        r, g, b, _ = cm.RdYlGn(normalized_value)
+        return r, g, b
+
+    score_min, score_max = min(list(ROBUSTNESS_SCORE) + list(GENERALIZATION_SCORE) + list(GENERALIZATION_SCORE_2)), max(list(ROBUSTNESS_SCORE) + list(GENERALIZATION_SCORE) + list(GENERALIZATION_SCORE_2))
+    for im, m in enumerate(MOD):
+        signed_1 = round(ROBUSTNESS_SCORE[im], 1)  # round(AVG[im] - CLAIM_AVG[im], 1)
+        signed_2 = round(GENERALIZATION_SCORE[im], 1)
+        signed_3 = round(GENERALIZATION_SCORE_2[im], 1)
+
+        signed_1 = "" + str(signed_1) if signed_1 > 0 else str(signed_1)
+        signed_2 = "" + str(signed_2) if signed_2 > 0 else str(signed_2)
+        signed_3 = "" + str(signed_3) if signed_3 > 0 else str(signed_3)
+
+        if str(signed_1) != 'nan':
+            rgb_1 = str(get_hot_scale(float(signed_1), score_max, score_min))[1:-1]
+            rgb_1 = "\cellcolor[rgb]{{{}}}".format(rgb_1)
+        else:
+            signed_1 = "-"
+            rgb_1 = ""
+
+        if str(signed_2) != 'nan':
+            rgb_2 = str(get_hot_scale(float(signed_2), score_max, score_min))[1:-1]
+            rgb_2 = "\cellcolor[rgb]{{{}}}".format(rgb_2)
+        else:
+            signed_2 = "-"
+            rgb_2 = ""
+
+        if str(signed_3) != 'nan':
+            rgb_3 = str(get_hot_scale(float(signed_3), score_max, score_min))[1:-1]
+            rgb_3 = "\cellcolor[rgb]{{{}}}".format(rgb_3)
+        else:
+            signed_3 = "-"
+            rgb_3 = ""
+
+        claim = round(CLAIM_AVG[im], 1)
+        claim = "-" if str(claim) == 'nan' else claim
+
+        claim_std = round(CLAIM_STD[im], 1)
+
+        formato = "{}\t&${} \pm {}$\t&${} \pm {}$\t&${}$\t&{}${}$\t&${}\pm {}$\t&${}$\t&{}${}$&${}\pm {}$\t&${}$\t&{}${}$ \\\\ \n \hline".format(m.name,
+                                                                                                               claim,
+                                                                                                               claim_std,
+                                                                                                 round(AVG[im], 1),
+                                                                                                 round(STD[im], 1),
+                                                                                                 ved.index(AVG[im]) + 1,
+
+                                                                                                 rgb_1,
+                                                                                                 signed_1,
+                                                                                                 round(AVG_JUL[im], 1),
+                                                                                                 round(STD_JUL[im], 1),
+                                                                                                 ved_JUL.index(AVG_JUL[im]) + 1,
+                                                                                                 rgb_2,
+                                                                                                 signed_2,
+                                                                                                 round(AVG_FEB[im], 1),
+                                                                                                 round(STD_FEB[im], 1),
+                                                                                                 ved_FEB.index(AVG_FEB[im]) + 1,
+                                                                                                 rgb_3,
+                                                                                                 signed_3,
+                                                                                                 )
+
+        print(formato)
+
+
 if __name__ == '__main__':
 
     lobster_plots()
     # FI_plots()
-
-
+    # perf_table()

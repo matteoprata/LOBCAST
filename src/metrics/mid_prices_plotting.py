@@ -119,17 +119,22 @@ MID_PRICES[Period.FEB] = df_feb
 # exit()
 
 def eval_norm_mid(daily_midprice, gran=1, smooth=1):
-    midprice_ret = daily_midprice.iloc[::gran.value, :]
+    midprice_ret = daily_midprice.iloc[::gran, :]
     midprice_ret = midprice_ret / midprice_ret.iloc[0, :]
     midprice_ret = midprice_ret.rolling(smooth).mean()
     return midprice_ret
 
 
-def eval_returns(daily_midprice, gran=Granularity.HOUR):
-    norm = eval_norm_mid(daily_midprice, gran=Granularity.HOUR.SEC).iloc[::gran.value, :]
-    rets = (norm - norm.shift(-1)) / norm.shift(-1)
-    rets = rets.dropna()
-    return rets
+def eval_returns(daily_midprice, gran=Granularity.HOUR, is_total=False):
+    if not is_total:
+        norm = eval_norm_mid(daily_midprice, gran=Granularity.SEC.value).iloc[::gran.value, :]
+        rets = norm.pct_change()
+        reto = rets.dropna()
+    else:
+        norm = eval_norm_mid(daily_midprice, gran=Granularity.SEC.value).iloc[::gran.value, :]
+        reto = (norm.iloc[-1] - norm.iloc[0]) / norm.iloc[-1]
+        reto = reto
+    return reto
 
 
 def increment_volatiltuy(df_jul, df_mar, gran=Granularity.HOUR):
@@ -148,11 +153,27 @@ def increment_volatiltuy(df_jul, df_mar, gran=Granularity.HOUR):
     print("WAR Feb 2022 period is {}+/-{}% more volatile ({}) than the July 2021 period.".format(me, st, gran))
 
 
-increment_volatiltuy(MID_PRICES[Period.JULY], MID_PRICES[Period.FEB], gran=Granularity.HOUR)
-increment_volatiltuy(MID_PRICES[Period.JULY], MID_PRICES[Period.FEB], gran=Granularity.MIN)
-increment_volatiltuy(MID_PRICES[Period.JULY], MID_PRICES[Period.FEB], gran=Granularity.DAY)
-increment_volatiltuy(MID_PRICES[Period.JULY], MID_PRICES[Period.FEB], gran=Granularity.TWO_DAYS)
-increment_volatiltuy(MID_PRICES[Period.JULY], MID_PRICES[Period.FEB], gran=Granularity.THREE_DAYS)
+# period_stats = pd.DataFrame()
+ret_jul = eval_returns(df_jul, Granularity.HOUR)
+print(ret_jul.shape)
+print(ret_jul.mean(axis=0)*100)
+print(ret_jul.std(axis=0)*100)
+exit()
+# print(ret_jul.std(axis=0)*100)
+# print(ret_jul.describe())
+
+
+
+# ret_jul = eval_returns(df_jul, Granularity.DAY, is_total=True)
+# print(ret_jul)
+
+# print(ret_jul.describe())
+
+# increment_volatiltuy(MID_PRICES[Period.JULY], MID_PRICES[Period.FEB], gran=Granularity.HOUR)
+# increment_volatiltuy(MID_PRICES[Period.JULY], MID_PRICES[Period.FEB], gran=Granularity.MIN)
+# increment_volatiltuy(MID_PRICES[Period.JULY], MID_PRICES[Period.FEB], gran=Granularity.DAY)
+# increment_volatiltuy(MID_PRICES[Period.JULY], MID_PRICES[Period.FEB], gran=Granularity.TWO_DAYS)
+# increment_volatiltuy(MID_PRICES[Period.JULY], MID_PRICES[Period.FEB], gran=Granularity.THREE_DAYS)
 
 def setup_plotting_env():
     plt.rcParams["figure.figsize"] = [16, 9]
@@ -190,14 +211,12 @@ def plot_mids(mids_df, period, save_path):
     plt.title("Midprice on {}".format(perios))
 
     plt.xlabel("date")
-    plt.ylim([.78, 1.085])
+    # plt.ylim([.78, 1.085])
     ax.legend(loc='lower left', fontsize=20)
     plt.tight_layout()
     fig.savefig(save_path + 'scenario-{}.pdf'.format(period))
 
 
 OUT = ""
-plot_mids(eval_norm_mid(MID_PRICES[Period.FEB], gran=Granularity.FIVE_MIN), Period.FEB, save_path=OUT)
-plot_mids(eval_norm_mid(MID_PRICES[Period.JULY], gran=Granularity.FIVE_MIN), Period.JULY, save_path=OUT)
-
-
+# plot_mids(eval_norm_mid(MID_PRICES[Period.FEB], gran=Granularity.FIVE_MIN), Period.FEB, save_path=OUT)
+# plot_mids(eval_norm_mid(MID_PRICES[Period.JULY], gran=Granularity.FIVE_MIN), Period.JULY, save_path=OUT)
