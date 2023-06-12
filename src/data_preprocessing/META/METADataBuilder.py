@@ -16,7 +16,7 @@ class MetaDataBuilder:
         self.seed = config.SEED
         self.trst = config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name
         self.test = config.CHOSEN_STOCKS[cst.STK_OPEN.TEST].name
-        self.chosen_dataset = cst.DatasetFamily.FI if config.CHOSEN_PERIOD == cst.Periods.FI else cst.DatasetFamily.LOBSTER
+        self.chosen_dataset = cst.DatasetFamily.FI if config.CHOSEN_PERIOD == cst.Periods.FI else cst.DatasetFamily.LOB
         self.peri = config.CHOSEN_PERIOD.name
         self.bw  = config.HYPER_PARAMETERS[cst.LearningHyperParameter.BACKWARD_WINDOW]
         self.fw  = config.HYPER_PARAMETERS[cst.LearningHyperParameter.FORWARD_WINDOW]
@@ -107,7 +107,7 @@ class MetaDataBuilder:
                     horizons = [horizon.value for horizon in cst.FI_Horizons]
                     h = horizons.index(horizon)
 
-                elif dataset == cst.DatasetFamily.LOBSTER:
+                elif dataset == cst.DatasetFamily.LOB:
                     horizons = [cst.WinSize.EVENTS1.value, cst.WinSize.EVENTS2.value, cst.WinSize.EVENTS3.value,
                                 cst.WinSize.EVENTS5.value, cst.WinSize.EVENTS10.value]
                     h = horizons.index(fw)

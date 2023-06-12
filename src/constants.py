@@ -48,12 +48,9 @@ val:     0.35    0.31    0.34
 test:    0.36    0.3     0.35
 '''
 
-ALFA_NFLX = 25e-6
-ALFA_SOFI = 11e-5
-
-# ALFA = ALFA_NFLX
-# ALFA = ALFA_SOFI
-ALFA = 1e-6
+ALPHA_NFLX = 25e-6
+ALPHA_SOFI = 11e-5
+ALPHA = 1e-6
 
 
 class LearningHyperParameter(str, Enum):
@@ -77,6 +74,8 @@ class LearningHyperParameter(str, Enum):
     LABELING_SIGMA_SCALER = "labeling_sigma_scaler"
     FI_HORIZON = 'fi_horizon_k'
     NUM_SNAPSHOTS = 'num_snapshots'
+    META_HIDDEN = 'meta_hidden'
+
 
 class STK_OPEN(str, Enum):
     """ The modalities associated to a list of stocks. """
@@ -110,8 +109,8 @@ class Metrics(Enum):
 
 class ModelSteps(Enum):
     TRAINING = "training"
-    VALIDATION_EPOCH = "validation-epoch-last"
-    VALIDATION_MODEL = "validation-model"
+    VALIDATION_EPOCH = "validation-epoch-last"  # final validation
+    VALIDATION_MODEL = "validation-model"       # intermediate validation
     TESTING = "testing"
 
 
@@ -186,7 +185,7 @@ class Models(str, Enum):
 
 class DatasetFamily(str, Enum):
     FI = "FI"
-    LOBSTER = "Lobster"
+    LOB = "Lobster"
     META = "Meta"
 
 
@@ -567,9 +566,9 @@ LOBSTER_FEB_PERF = [[60.11047428, 60.75883992, 60.49401491, 59.17928698, 53.7836
                      [62.02177144, 60.59479102, 59.74870857, 58.02517253, 53.41501285],]
 
 
-FI_2010_PERF = np.array(FI_2010_PERF) / 100  # NORMALIZED
+FI_2010_PERF = np.array(FI_2010_PERF) / 100            # NORMALIZED
 LOBSTER_JULY_PERF = np.array(LOBSTER_JULY_PERF) / 100  # NORMALIZED
-LOBSTER_FEB_PERF = np.array(LOBSTER_FEB_PERF) / 100  # NORMALIZED
+LOBSTER_FEB_PERF = np.array(LOBSTER_FEB_PERF) / 100    # NORMALIZED
 
 # metrics_name = ['F1 Score (%)', 'Precision (%)', 'Recall (%)', 'Accuracy (%)', 'MCC']
 

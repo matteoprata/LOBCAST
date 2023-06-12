@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from src.config import Configuration
-from src.utils.utilities import write_data, read_data
+from src.utils.utils_generic import write_data, read_data
 
 DIR_LOBSTER_FINAL_JSONS = "all_models_25_04_23/jsons/"
 DIR_OHLC = "data/ohlc_stocks/"
@@ -242,7 +242,7 @@ def table_plot(Returns, horizon):
 
 def box_plot(Returns, horizon):
 
-    #Returns = np.random.rand(len(cst.Models)-2, len(cst.Stocks)-2)
+    # Returns = np.random.rand(len(cst.Models)-2, len(cst.Stocks)-2)
     Returns = Returns.T
     models = [model.name for model in cst.Models if model.name != "METALOB" and model.name != "MAJORITY"]
     df = pd.DataFrame(Returns, columns=models)
@@ -250,7 +250,7 @@ def box_plot(Returns, horizon):
     plt.boxplot(df)
     plt.xticks(np.arange(len(models)), models, rotation=90)
     plt.title("Boxplot of the returns for horizon " + str(horizon))
-    #plt.savefig("Boxplot_{}.pdf".format(horizon))
+    # plt.savefig("Boxplot_{}.pdf".format(horizon))
     plt.show()
 
 

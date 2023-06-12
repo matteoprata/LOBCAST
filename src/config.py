@@ -11,15 +11,15 @@ np.set_printoptions(suppress=True)
 
 
 class Configuration:
-
-    def __init__(self, now=None):
+    """ Represents the configuration file of the simulation, containing all variables of the simulation. """
+    def __init__(self, run_name_prefix=None):
 
         self.IS_DEBUG = False
         self.IS_TEST_ONLY = False
 
-        self.NOW = self.assign_now(now=now, is_debug=self.IS_DEBUG)
+        self.RUN_NAME_PREFIX = self.assign_prefix(prefix=run_name_prefix, is_debug=self.IS_DEBUG)
 
-        self.setup_all_directories(self.NOW, self.IS_DEBUG, self.IS_TEST_ONLY)
+        self.setup_all_directories(self.RUN_NAME_PREFIX, self.IS_DEBUG, self.IS_TEST_ONLY)
 
         self.SEED = 0
         self.RANDOM_GEN_DATASET = None
@@ -54,7 +54,7 @@ class Configuration:
             'name': None
         }
 
-        self.TARGET_DATASET_META_MODEL = cst.DatasetFamily.LOBSTER
+        self.TARGET_DATASET_META_MODEL = cst.DatasetFamily.LOB
         self.JSON_DIRECTORY = ""
 
         self.EARLY_STOPPING_METRIC = None
@@ -71,7 +71,7 @@ class Configuration:
         self.HYPER_PARAMETERS[LearningHyperParameter.MOMENTUM] = 0.9
 
         self.HYPER_PARAMETERS[LearningHyperParameter.NUM_SNAPSHOTS] = 100
-        # LOBSTER way to label to measure percentage change LOBSTER = HORIZON
+        # LOB way to label to measure percentage change LOB = HORIZON
         self.HYPER_PARAMETERS[LearningHyperParameter.BACKWARD_WINDOW] = cst.WinSize.NONE.value
         self.HYPER_PARAMETERS[LearningHyperParameter.FORWARD_WINDOW] = cst.WinSize.NONE.value
         self.HYPER_PARAMETERS[LearningHyperParameter.IS_SHUFFLE_TRAIN_SET] = True
@@ -104,7 +104,6 @@ class Configuration:
             self.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON],
         )
 
-        # TODO: controllare
         if not self.IS_TUNE_H_PARAMS and not self.IS_WANDB:
             self.WANDB_RUN_NAME = self.WANDB_SWEEP_NAME
 
@@ -113,22 +112,29 @@ class Configuration:
         return "model={}-seed={}-trst={}-test={}-data={}-peri={}-bw={}-fw={}-fiw={}" + ext
 
     @staticmethod
-    def setup_all_directories(now, is_debug, is_test):
-        if not is_test:
-            cst.PROJECT_NAME = cst.PROJECT_NAME.format(now)
-            cst.DIR_SAVED_MODEL = cst.DIR_SAVED_MODEL.format(now) + "/"
-            cst.DIR_EXPERIMENTS = cst.DIR_EXPERIMENTS.format(now) + "/"
+    def setup_all_directories(prefix, is_debug, is_test):
+        """
+        Creates two folders:
+            (1) data.experiments.LOB-CLASSIFIERS-(PREFIX) for the jsons with the stats
+            (2) data.saved_models.LOB-CLASSIFIERS-(PREFIX) for the models
+        """
 
+        if not is_test:
+            cst.PROJECT_NAME = cst.PROJECT_NAME.format(prefix)
+            cst.DIR_SAVED_MODEL = cst.DIR_SAVED_MODEL.format(prefix) + "/"
+            cst.DIR_EXPERIMENTS = cst.DIR_EXPERIMENTS.format(prefix) + "/"
+
+            # create the paths for the simulation if they do not exist already
             paths = ["data", cst.DIR_SAVED_MODEL, cst.DIR_EXPERIMENTS]
             for p in paths:
                 if not os.path.exists(p):
                     os.makedirs(p)
 
     @staticmethod
-    def assign_now(now, is_debug):
+    def assign_prefix(prefix, is_debug):
         if is_debug:
             return "debug"
-        elif now is not None:
-            return now
+        elif prefix is not None:
+            return prefix
         else:
             return datetime.now().strftime("%Y-%m-%d+%H-%M-%S")

@@ -2,8 +2,8 @@
 
 import os
 import src.data_preprocessing.preprocessing_utils as ppu
-import src.utils.utilities as util
-import src.utils.lob_util as lbu
+import src.utils.utils_generic as util
+import src.utils.utilis_lobster_datasource as lbu
 
 import numpy as np
 from src.config import Configuration
@@ -146,7 +146,7 @@ class LOBSTERDataBuilder:
     def __label_dataset(self):
         if self.config.CHOSEN_MODEL == cst.Models.DEEPLOBATT:
             for winsize in cst.FI_Horizons:
-                self.__data = ppu.add_lob_labels_march_2023(self.__data, winsize.value, self.window_size_backward, cst.ALFA)
+                self.__data = ppu.add_lob_labels_march_2023(self.__data, winsize.value, self.window_size_backward, cst.ALPHA)
                 self.__data = self.__data.rename(columns={'y': f'y{winsize.value}'})
             self.__data['y'] = self.__data[[f'y{winsize.value}' for winsize in cst.FI_Horizons]].values.tolist()
             self.__data = self.__data.drop([f'y{winsize.value}' for winsize in cst.FI_Horizons], axis=1)
@@ -155,7 +155,7 @@ class LOBSTERDataBuilder:
                 self.__data,
                 self.window_size_forward,
                 self.window_size_backward,
-                cst.ALFA
+                cst.ALPHA
             )
 
     # def plot_dataset(self):

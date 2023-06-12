@@ -14,7 +14,7 @@ from src.config import Configuration
 
 LOSS_WEIGHTS_DICT = {m: 1e6 for m in cst.Models}
 # LOSS_WEIGHTS_DICT[cst.Models.ATNBoF] = 1e3
-from src.utils.utilities import write_data
+from src.utils.utils_generic import write_data
 
 
 class LOBDataset(data.Dataset):

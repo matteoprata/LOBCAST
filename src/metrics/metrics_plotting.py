@@ -3,7 +3,7 @@ import time
 from src.data_preprocessing.META.METADataBuilder import MetaDataBuilder
 
 import matplotlib.pyplot as plt
-import src.utils.utilities as util
+import src.utils.utils_generic as util
 import src.constants as cst
 
 import numpy as np
@@ -35,7 +35,7 @@ def reproduced_metrics(path, metrics, list_models, list_horizons, list_seeds, da
                 # print(mod, k, s)
 
                 bw, fw, fik = None, None, k
-                if dataset_type == cst.DatasetFamily.LOBSTER:
+                if dataset_type == cst.DatasetFamily.LOB:
                     bw, fw = k
                     bw, fw = bw.value, fw.value
                     fik = cst.FI_Horizons.K10
@@ -97,7 +97,7 @@ def inference_data(path, list_models, dataset_type, seed=500, horizon=10, bw=1, 
         if mod == cst.Models.MAJORITY:
             continue
 
-        if dataset_type == cst.DatasetFamily.LOBSTER:
+        if dataset_type == cst.DatasetFamily.LOB:
             horizon = cst.FI_Horizons.K10.value
         elif dataset_type == cst.DatasetFamily.FI:
             bw, fw = None, None
@@ -136,7 +136,7 @@ def confusion_metrix(path, list_models, list_horizons, list_seeds, dataset_type,
             for iss, s in enumerate(list_seeds):
 
                 bw, fw, fik = None, None, k
-                if dataset_type == cst.DatasetFamily.LOBSTER:
+                if dataset_type == cst.DatasetFamily.LOB:
                     bw, fw = k
                     bw, fw = bw.value, fw.value
                     fik = cst.FI_Horizons.K10
@@ -176,7 +176,7 @@ def metrics_vs_models_bars(met_name, horizons, met_vec, out_dir, list_models, da
     horizons = np.array(horizons)
     if dataset_type == cst.DatasetFamily.FI:
         labels = ["K={}".format(k.value) for k in horizons]
-    elif dataset_type == cst.DatasetFamily.LOBSTER and not is_stocks:
+    elif dataset_type == cst.DatasetFamily.LOB and not is_stocks:
         labels = ["K={}".format(fw.value) for bw, fw in horizons]
     elif is_stocks:
         labels = ["S={}".format(bw) for bw in horizons]
@@ -214,7 +214,7 @@ def metrics_vs_models_bars(met_name, horizons, met_vec, out_dir, list_models, da
                 bar_value = ["{}%".format(Decimal(str(round(it, 1))).normalize()) for it in avg_met[iri, :]]
                 ax.bar_label(r_bar_i, labels=bar_value, padding=3, fmt=fmt, rotation=90, fontsize=LABEL_FONT_SIZE)
 
-        elif dataset_type == cst.DatasetFamily.LOBSTER:
+        elif dataset_type == cst.DatasetFamily.LOB:
             r_bar_i = ax.bar(x + width * ranges[iri], avg_met[iri, :], width, yerr=std_met[iri, :],
                              label=ri.name, color=util.sample_color(iri, "tab20"), align='center', edgecolor='black')  # hatch=util.sample_pattern(iri))
 
@@ -262,7 +262,7 @@ def metrics_vs_models_bars(met_name, horizons, met_vec, out_dir, list_models, da
     if dataset_type == cst.DatasetFamily.FI:
         ax.set_ylim((20, 100))
 
-    elif dataset_type == cst.DatasetFamily.LOBSTER:
+    elif dataset_type == cst.DatasetFamily.LOB:
         ax.set_ylim((25, 70))
         if is_stocks:
             ax.set_ylim((0, 75))
@@ -427,7 +427,7 @@ def confusion_matrix_single(cms, list_models, out_dir, chosen_horizons, dataset)
             for t in ax.texts: t.set_text(t.get_text() + "%")
 
             dataset_name = "FI-2010" if cst.DatasetFamily.FI == dataset else dataset.name
-            wind_value = k[1].value if cst.DatasetFamily.LOBSTER == dataset else k.value
+            wind_value = k[1].value if cst.DatasetFamily.LOB == dataset else k.value
             fig.suptitle('{} K={} ({})'.format(mod, wind_value, dataset_name), fontsize=30, fontweight="bold")
 
             fig.supylabel('Real', fontsize=30)
@@ -435,7 +435,7 @@ def confusion_matrix_single(cms, list_models, out_dir, chosen_horizons, dataset)
 
             fig.tight_layout()
 
-            wind_id = k[1].name if cst.DatasetFamily.LOBSTER == dataset else k.name
+            wind_id = k[1].name if cst.DatasetFamily.LOB == dataset else k.name
             print("OUT", out_dir + "cm-{}-{}.pdf")
             fig.savefig(out_dir + "cm-{}-{}.pdf".format(mod, wind_id))
             # plt.show()
@@ -661,17 +661,17 @@ def lobster_stocks_plots():
     LIST_SEEDS = [500]
     LIST_MODELS = cst.MODELS_15
     LIST_STOCKS = ["ALL", "SOFI", "NFLX", "CSCO", "WING", "SHLS", "LSTR"]  # "ALL","SOFI","NFLX","CSCO", "WING", "SHLS"
-    # LOBSTER
+    # LOB
     MAT_REP = reproduced_metrics_stocks(PATH, LIST_MODELS, LIST_STOCKS, LIST_SEEDS,
-                                 dataset_type=cst.DatasetFamily.LOBSTER,
-                                 train_src="ALL", time_period=time_period, jolly_seed=None, target_horizon=cst.WinSize.EVENTS5)
+                                        dataset_type=cst.DatasetFamily.LOB,
+                                        train_src="ALL", time_period=time_period, jolly_seed=None, target_horizon=cst.WinSize.EVENTS5)
 
     print(MAT_REP.shape)
     src_stock = "ALL"
     metrics = metrics_to_plot(src_stock)
 
     OUT = f"final_data/LOBSTER-{month}-TESTS/pdfs/all-pdfs-{src_stock}/"
-    DATASET = cst.DatasetFamily.LOBSTER
+    DATASET = cst.DatasetFamily.LOB
 
     for imet, met in enumerate(metrics):
         met_name = metrics[met]
@@ -694,7 +694,7 @@ def lobster_plots():
         del CMS
 
         OUT = f"final_data/LOBSTER-{month}-TESTS/pdfs/all-pdfs-{sto}/"
-        DATASET = cst.DatasetFamily.LOBSTER
+        DATASET = cst.DatasetFamily.LOB
 
         train_src = "ALL"
         test_src = sto
@@ -717,8 +717,8 @@ def lobster_plots():
         forwards = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS5, cst.WinSize.EVENTS10]
         LIST_HORIZONS = list(zip(backwards, forwards))  # cst.FI_Horizons
 
-        # LOBSTER
-        MAT_REP = reproduced_metrics(PATH, metrics, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS, dataset_type=cst.DatasetFamily.LOBSTER,
+        # LOB
+        MAT_REP = reproduced_metrics(PATH, metrics, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS, dataset_type=cst.DatasetFamily.LOB,
                                      train_src=train_src, test_src=test_src, time_period=time_period, jolly_seed=None)
 
         # n1: PLOT with 3 bars
@@ -731,9 +731,9 @@ def lobster_plots():
         forwards  = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS2, cst.WinSize.EVENTS3, cst.WinSize.EVENTS5, cst.WinSize.EVENTS10]
         LIST_HORIZONS = list(zip(backwards, forwards))  # cst.FI_Horizons
 
-        # LOBSTER
+        # LOB
         MAT_REP = reproduced_metrics(PATH, metrics, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS,
-                                     dataset_type=cst.DatasetFamily.LOBSTER,
+                                     dataset_type=cst.DatasetFamily.LOB,
                                      train_src=train_src, test_src=test_src, time_period=time_period, jolly_seed=None)
 
         # n2: PLOT with 5 lines
@@ -748,7 +748,7 @@ def lobster_plots():
 
         # 5 x 15 x 5 x 3 x 3
         CMS = confusion_metrix(PATH, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS, jolly_seed=None,
-                               dataset_type=cst.DatasetFamily.LOBSTER, train_src=train_src, test_src=test_src,
+                               dataset_type=cst.DatasetFamily.LOB, train_src=train_src, test_src=test_src,
                                time_period=time_period)
 
         #
@@ -757,7 +757,7 @@ def lobster_plots():
         confusion_matrix_single(CMS[0, :], LIST_MODELS, OUT, LIST_HORIZONS, DATASET)
         #
         # if sto == 'ALL':
-        #     INFER = inference_data(PATH, LIST_MODELS, dataset_type=cst.DatasetFamily.LOBSTER, train_src=train_src,
+        #     INFER = inference_data(PATH, LIST_MODELS, dataset_type=cst.DatasetFamily.LOB, train_src=train_src,
         #                            test_src=test_src, time_period=time_period)
         #     plot_inference_time(INFER[0], INFER[1], cst.MODELS_15, OUT)
         #
@@ -772,7 +772,7 @@ def lobster_plots():
 
         # logits, pred = MetaDataBuilder.load_predictions_from_jsons(
         #     PATH,
-        #     cst.DatasetFamily.LOBSTER,
+        #     cst.DatasetFamily.LOB,
         #     agreement_stocks,
         #     500,
         #     cst.FI_Horizons.K10.value,
@@ -851,7 +851,7 @@ def perf_table():
                                  train_src=train_src, test_src=test_src, time_period=time_period, jolly_seed=None)
 
     print("Models performance:")
-    BOOL = np.where(np.isnan(MAT_ORI[:, :, 0]) == 1, np.nan, 1)  # np.nan USELESS FOR NOW
+    BOOL = np.where(np.isnan(MAT_ORI[:, :, 0]) == 1, np.nan, 1)  # np.nan USELESS FOR RUN_NAME_PREFIX
 
     MOD = LIST_MODELS
     AVG = np.nanmean(MAT_REP[:, :, :, 0], axis=(0, 2)) * 100
@@ -871,7 +871,7 @@ def perf_table():
     ROBUSTNESS_SCORE = 100 + ROBUSTNESS_SCORE
     print(ROBUSTNESS_SCORE)
 
-    # NOW GEN FEB
+    # RUN_NAME_PREFIX GEN FEB
     train_src = "ALL"
     test_src = "ALL"
     time_period = cst.Periods.FEBRUARY2022.name
@@ -885,10 +885,10 @@ def perf_table():
     forwards = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS2, cst.WinSize.EVENTS3, cst.WinSize.EVENTS5, cst.WinSize.EVENTS10]
     LIST_HORIZONS = list(zip(backwards, forwards))  # cst.FI_Horizons
 
-    # LOBSTER
+    # LOB
     MAT_REP_FEB = reproduced_metrics(PATH, metrics, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS,
-                                 dataset_type=cst.DatasetFamily.LOBSTER,
-                                 train_src=train_src, test_src=test_src, time_period=time_period, jolly_seed=None)
+                                     dataset_type=cst.DatasetFamily.LOB,
+                                     train_src=train_src, test_src=test_src, time_period=time_period, jolly_seed=None)
 
     AVG_FEB = np.nanmean(MAT_REP_FEB[:, :, :, 0], axis=(0, 2)) * 100
     STD_FEB = np.nanstd(MAT_REP_FEB[:, :, :, 0], axis=(0, 2)) * 100
@@ -900,7 +900,7 @@ def perf_table():
     GENERALIZATION_SCORE_2 = -np.abs(DISTS_AVG_3) - DISTS_STD_3
     GENERALIZATION_SCORE_2 = 100+GENERALIZATION_SCORE_2
 
-    # NOW GEN FEB
+    # RUN_NAME_PREFIX GEN FEB
     train_src = "ALL"
     test_src = "ALL"
     time_period = cst.Periods.JULY2021.name
@@ -914,10 +914,10 @@ def perf_table():
     forwards = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS2, cst.WinSize.EVENTS3, cst.WinSize.EVENTS5, cst.WinSize.EVENTS10]
     LIST_HORIZONS = list(zip(backwards, forwards))  # cst.FI_Horizons
 
-    # LOBSTER
+    # LOB
     MAT_REP_JUL = reproduced_metrics(PATH, metrics, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS,
-                                 dataset_type=cst.DatasetFamily.LOBSTER,
-                                 train_src=train_src, test_src=test_src, time_period=time_period, jolly_seed=None)
+                                     dataset_type=cst.DatasetFamily.LOB,
+                                     train_src=train_src, test_src=test_src, time_period=time_period, jolly_seed=None)
 
     AVG_JUL = np.nanmean(MAT_REP_JUL[:, :, :, 0], axis=(0, 2)) * 100
     print(np.min(AVG_JUL), np.max(AVG_JUL))

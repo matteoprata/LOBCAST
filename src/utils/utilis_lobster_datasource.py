@@ -276,12 +276,12 @@ COLUMNS_NAMES = {"orderbook": ["sell", "vsell", "buy", "vbuy"],
 
 
 def message_columns():
-    """ return the message columns for the LOBSTER orderbook """
+    """ return the message columns for the LOB orderbook """
     return ["time", "event_type", "order_id", "size", "price", "direction", "unk"]
 
 
 def orderbook_columns(level: int):
-    """ return the column names for the LOBSTER orderbook, acording the input level """
+    """ return the column names for the LOB orderbook, acording the input level """
     orderbook_columns = []
     for i in range(1, level + 1):
         orderbook_columns += ["psell" + str(i), "vsell" + str(i), "pbuy" + str(i), "vbuy" + str(i)]
@@ -335,7 +335,7 @@ def read_sub_routine(file_7z: str, first_date: str = "1990-01-01",
         :param first_date: the first day to load from the input file
         :param last_date: the last day to load from the input file
         :param type_file: the kind of old_data to read. type_file in ("orderbook", "message")
-        :param level: the LOBSTER level of the orderbook
+        :param level: the LOB level of the orderbook
         :param path: data path
         :return: a dictionary with {day : dataframe}
     """

@@ -1,19 +1,19 @@
 import os
 import sys
-import torch
 
 # preamble needed for cluster
 module_path = os.path.abspath(os.getcwd())
 if module_path not in sys.path:
     sys.path.append(module_path)
 
-from src.main_single import *
-from src.main_helper import pick_dataset, pick_model
-from src.utils.utilities import make_dir
+from src.utils.utils_training_loop import *
+from src.utils.utils_dataset import pick_dataset
+from src.utils.utils_models import pick_model
+from src.utils.utils_generic import make_dir
 
 
-def core_test(seed, model, dataset, src_data, out_data, horizon=None, win_back=None, win_forward=None, target_dataset_meta=cst.DatasetFamily.LOBSTER):
-    cf: Configuration = set_configuration()
+def core_test(seed, model, dataset, src_data, out_data, horizon=None, win_back=None, win_forward=None, target_dataset_meta=cst.DatasetFamily.LOB):
+    cf: Configuration = Configuration()
     cf.SEED = seed
 
     set_seeds(cf)
@@ -109,7 +109,7 @@ def launch_lobster_test(seeds, model_todo, models_to_avoid, dataset_type, backwa
                 km, kp = backwards[i], forwards[i]
 
                 if model in set(model_todo) - set(models_to_avoid):
-                    core_test(s, model, dataset_type, src_data, out_data, win_back=km, win_forward=kp, target_dataset_meta=cst.DatasetFamily.LOBSTER)
+                    core_test(s, model, dataset_type, src_data, out_data, win_back=km, win_forward=kp, target_dataset_meta=cst.DatasetFamily.LOB)
 
 
 def launch_FI_test(seeds, model_todo, models_to_avoid, dataset_type, kset, src_data, out_data):
@@ -120,21 +120,37 @@ def launch_FI_test(seeds, model_todo, models_to_avoid, dataset_type, kset, src_d
                     core_test(s, model, dataset_type, src_data, out_data, target_dataset_meta=cst.DatasetFamily.FI)
 
 
-if __name__ == "__main__":
+def lobster_testing(src_data, out_data):
     # kset, mset = cst.FI_Horizons, cst.Models
-    dataset_type = cst.DatasetFamily.LOBSTER  # "FI"
+    dataset_type = cst.DatasetFamily.LOB  # "FI"
 
-    src_data = "all_models_25_04_23/"  # "all_models_28_03_23/"
-    out_data = "all_models_25_04_23/jsons/"  # "data/experiments/all_models_28_03_23/"
+    # src_data = "all_models_25_04_23/"         # "all_models_28_03_23/"
+    # out_data = "all_models_25_04_23/jsons/"  # "data/experiments/all_models_28_03_23/"
 
-    target_dataset_meta = cst.DatasetFamily.LOBSTER
+    target_dataset_meta = cst.DatasetFamily.LOB
 
-    model_todo = [cst.Models.METALOB]
-    models_to_avoid = []  # [cst.Models.DAIN, cst.Models.DEEPLOB, cst.Models.AXIALLOB, cst.Models.ATNBoF]  # [cst.Models.METALOB]  # [cst.Models.ATNBoF]
-    seeds = [500, 501, 502, 503, 504]
+    model_todo = [cst.Models.BINCTABL]
+    models_to_avoid = []
+    seeds = [500]
 
-    # LOBSTER
+    # LOB
     backwards = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1]
-    forwards  = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS2, cst.WinSize.EVENTS3, cst.WinSize.EVENTS5, cst.WinSize.EVENTS10]
+    forwards = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS2, cst.WinSize.EVENTS3, cst.WinSize.EVENTS5, cst.WinSize.EVENTS10]
 
     launch_lobster_test(seeds, model_todo, models_to_avoid, dataset_type, backwards, forwards, src_data, out_data, target_dataset_meta)
+
+
+def fi_testing(src_data, out_data):
+    dataset_type = cst.DatasetFamily.FI  # "FI"
+
+    model_todo = [cst.Models.BINCTABL]
+    models_to_avoid = []
+    seeds = [500]
+    kset = [cst.FI_Horizons.K5]
+
+    launch_FI_test(seeds, model_todo, models_to_avoid, dataset_type, kset, src_data, out_data)
+
+
+if __name__ == "__main__":
+    src_data, out_data = "data/saved_models/", "data/saved_models/"
+    fi_testing(src_data, out_data)

@@ -1,21 +1,20 @@
-import os
+
+import src.utils.utils_training_loop as tlu
+import src.constants as cst
 import sys
 
-# preamble needed for cluster
-module_path = os.path.abspath(os.getcwd())
-if module_path not in sys.path:
-    sys.path.append(module_path)
-
-from src.main_single import *
+from src.config import Configuration
 
 DEFAULT_SEEDS = set(range(500, 505))
 DEFAULT_HORIZONS = set(cst.FI_Horizons)
 
 
-def experiment_fi(execution_plan, run_name_prefix=None, servers=None, is_debug=False):
-    """ Sets the experiment configuration based on the execution plan and runs the simulation. """
+def experiment_fi(execution_plan, run_name_prefix="FI-EXPERIMENTS", servers=None):
+    """ Sets the experiment configuration object based on the execution plan and runs the simulation. """
 
-    run_name_prefix, server_name, _, _ = experiment_preamble(run_name_prefix, servers)
+    servers = [server for server in execution_plan.keys()] if servers is None else servers
+
+    run_name_prefix, server_name, _, _ = tlu.experiment_preamble(run_name_prefix, servers)
     lunches_server = execution_plan[server_name]  # the execution plan for this machine
 
     # iterates over the models and the plans assigned to this machine (i.e, seeds and horizons)
@@ -31,10 +30,11 @@ def experiment_fi(execution_plan, run_name_prefix=None, servers=None, is_debug=F
                 print("Running FI experiment on {}, with K={}".format(mod, k))
 
                 try:
+                    # creates the configuration object to be used thought all the simulation
                     cf: Configuration = Configuration(run_name_prefix)
                     cf.SEED = see
 
-                    set_seeds(cf)
+                    tlu.set_seeds(cf)
 
                     if mod == cst.Models.METALOB:
                         cf.CHOSEN_DATASET = cst.DatasetFamily.META
@@ -42,11 +42,10 @@ def experiment_fi(execution_plan, run_name_prefix=None, servers=None, is_debug=F
                         cf.CHOSEN_DATASET = cst.DatasetFamily.FI
 
                     cf.CHOSEN_MODEL = mod
+                    cf.IS_WANDB = True
+                    cf.IS_TUNE_H_PARAMS = True
 
-                    cf.IS_WANDB = 1 if not is_debug else 0
-                    cf.IS_TUNE_H_PARAMS = not is_debug
-
-                    launch_wandb(cf)
+                    tlu.run(cf)
 
                 except KeyboardInterrupt:
                     print("There was a problem running on", server_name.name, "FI experiment on {}, with K={}".format(mod, k))
@@ -63,15 +62,9 @@ if __name__ == '__main__':
 
     EXE_PLAN = {
         cst.Servers.ANY: [
-            (cst.Models.MLP, {'k': [cst.FI_Horizons.K5],
-                              'seed': [500]}),
-
-            (cst.Models.BINCTABL, {'k': [cst.FI_Horizons.K5],
-                                   'seed': 'all'})
+            (cst.Models.MLP,      {'k': [cst.FI_Horizons.K5], 'seed': [500]}),
+            (cst.Models.BINCTABL, {'k': [cst.FI_Horizons.K5], 'seed': 'all'})
         ],
     }
 
-    PREFIX = "FI-DEFINITIVE-23-03-23"
-    SERVERS = [server for server in EXE_PLAN.keys()]
-
-    experiment_fi(EXE_PLAN, run_name_prefix=PREFIX, servers=SERVERS, is_debug=False)
+    experiment_fi(EXE_PLAN)

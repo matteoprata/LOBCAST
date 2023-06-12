@@ -63,7 +63,7 @@ def get_sys_mac():
 def get_index_from_window(config):
     if config.CHOSEN_DATASET == cst.DatasetFamily.FI:
         return cst.HORIZONS_MAPPINGS_FI[config.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON]]
-    elif config.CHOSEN_DATASET == cst.DatasetFamily.LOBSTER:
+    elif config.CHOSEN_DATASET == cst.DatasetFamily.LOB:
         return cst.HORIZONS_MAPPINGS_LOBSTER[config.HYPER_PARAMETERS[cst.LearningHyperParameter.FORWARD_WINDOW.value]]
 
 

@@ -10,7 +10,7 @@ import numpy as np
 import src.constants as cst
 import wandb
 from src.config import Configuration
-from src.utils.utilities import get_index_from_window
+from src.utils.utils_generic import get_index_from_window
 from src.metrics.metrics_learning import compute_sk_cm, compute_metrics
 
 
@@ -115,7 +115,7 @@ class NNEngine(pl.LightningModule):
         if self.remote_log is not None:
             self.remote_log.log({var_name: sum_losses})
 
-        # self.config.METRICS_JSON.add_testing_metrics(self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, {'MAX-EPOCHS': self.current_epoch})
+        # self.cf.METRICS_JSON.add_testing_metrics(self.cf.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, {'MAX-EPOCHS': self.current_epoch})
         # self.remote_log({"current_epoch": self.current_epoch})
 
     def validation_epoch_end(self, validation_step_outputs):

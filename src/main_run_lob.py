@@ -6,7 +6,7 @@ module_path = os.path.abspath(os.getcwd())
 if module_path not in sys.path:
     sys.path.append(module_path)
 
-from src.main_single import *
+from src.utils.utils_training_loop import *
 
 DEFAULT_SEEDS = set(range(500, 505))
 DEFAULT_MODELS = cst.MODELS_15
@@ -39,7 +39,7 @@ def experiment_lobster(execution_plan, dataset, now=None, servers=None, is_debug
 
                 for window_forward in forward_windows:
 
-                        print(f"Running LOBSTER experiment: model={mod}, fw={window_forward.value}, seed={seed}")
+                        print(f"Running LOB experiment: model={mod}, fw={window_forward.value}, seed={seed}")
 
                         try:
                             cf: Configuration = Configuration(now)
@@ -65,10 +65,10 @@ def experiment_lobster(execution_plan, dataset, now=None, servers=None, is_debug
                             cf.IS_WANDB = int(not is_debug)
                             cf.IS_TUNE_H_PARAMS = int(not is_debug)
 
-                            launch_wandb(cf)
+                            run(cf)
 
                         except KeyboardInterrupt:
-                            print("There was a problem running on", server_name.name, "LOBSTER experiment on {}, with K+={}".format(mod, window_forward))
+                            print("There was a problem running on", server_name.name, "LOB experiment on {}, with K+={}".format(mod, window_forward))
                             sys.exit()
 
 
@@ -99,12 +99,12 @@ execution_plan = {
 }
 
 now = 'FEB-META'
-jsons_dir = "final_data/LOBSTER-FEB-TESTS/jsons/"
-target_dataset_meta = cst.DatasetFamily.LOBSTER
+jsons_dir = "final_data/LOB-FEB-TESTS/jsons/"
+target_dataset_meta = cst.DatasetFamily.LOB
 
 experiment_lobster(
     execution_plan,
-    dataset=cst.DatasetFamily.LOBSTER,
+    dataset=cst.DatasetFamily.LOB,
     now=now,
     servers=servers,
     is_debug=False,

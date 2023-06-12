@@ -1,22 +1,16 @@
 import os
 import sys
-import torch
 
 # preamble needed for cluster
 module_path = os.path.abspath(os.getcwd())
 if module_path not in sys.path:
     sys.path.append(module_path)
 
-from src.config import Configuration
-import src.constants as cst
-from src.main_single import *
-from src.main_helper import pick_dataset, pick_model
-from src.models.model_executor import NNEngine
-from sklearn.ensemble import BaggingClassifier
+from src.utils.utils_training_loop import *
 
 kset, mset = cst.FI_Horizons, cst.Models
 
-out_data = "final_data/FI-2010-TESTS/jsons/" #"final_data/FI-2010-TESTS/jsons/" #"final_data/LOBSTER-FEB-TESTS/jsons/"
+out_data = "final_data/FI-2010-TESTS/jsons/" #"final_data/FI-2010-TESTS/jsons/" #"final_data/LOB-FEB-TESTS/jsons/"
 jsons_dir = out_data
 
 from src.data_preprocessing.LOB.LOBDataset import LOBDataset
@@ -26,7 +20,7 @@ def launch_test_FI(seeds_set):
 
     for s in seeds_set:
         for k in kset:
-            cf = set_configuration()
+            cf: Configuration = Configuration()
             cf.SEED = s
 
             set_seeds(cf)
@@ -98,13 +92,13 @@ def launch_test_LOBSTER(seeds, kset, period, json_dir):
 
     for s in seeds:
         for iw, (wb, wf) in enumerate(kset):
-            cf = set_configuration()
+            cf = Configuration()
             cf.SEED = s
 
             set_seeds(cf)
 
             cf.IS_TEST_ONLY = True
-            cf.CHOSEN_DATASET = cst.DatasetFamily.LOBSTER
+            cf.CHOSEN_DATASET = cst.DatasetFamily.LOB
 
             cf.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN] = cst.Stocks.ALL
             cf.CHOSEN_STOCKS[cst.STK_OPEN.TEST] = cst.Stocks.ALL
@@ -116,7 +110,7 @@ def launch_test_LOBSTER(seeds, kset, period, json_dir):
             cf.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON] = 10
             cf.HYPER_PARAMETERS[cst.LearningHyperParameter.FORWARD_WINDOW] = wf.value
             cf.HYPER_PARAMETERS[cst.LearningHyperParameter.BACKWARD_WINDOW] = wb.value
-            cf.TARGET_DATASET_META_MODEL = cst.DatasetFamily.LOBSTER
+            cf.TARGET_DATASET_META_MODEL = cst.DatasetFamily.LOB
             cf.JSON_DIRECTORY = json_dir
 
             # Setting configuration parameters
@@ -185,9 +179,9 @@ def launch_test_LOBSTER(seeds, kset, period, json_dir):
             #
             # print(logits_train.shape, logits_test.shape)
             # clf = BaggingClassifier(n_estimators=100, verbose=True, n_jobs=11).fit(logits_train, truths_train)
-            # print("NOW PREDICT")
+            # print("RUN_NAME_PREFIX PREDICT")
             # preds_test = clf.predict(logits_test)
-            # print("NOW METRICS")
+            # print("RUN_NAME_PREFIX METRICS")
             # print(preds_test.shape)
             # val_dict = compute_metrics(truths_test, preds_test, cst.ModelSteps.TESTING, [],
             #                            cf.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name)  # dict to log
