@@ -1,20 +1,15 @@
 # LOBCAST for Stock Trend Forcasting 
 
-LOBCAST is a Python-based framework developed for stock market trend forecasting using LOB data. 
-LOBCAST is an open-source framework that enables users to test DL models for the Stock Price Trend Prediction (SPTP) task. 
+LOBCAST is a Python-based open-source framework developed for stock market trend forecasting using Limit Order Book (LOB) data. The framework enables users to test deep learning models for the task of Stock Price Trend Prediction (SPTP).
 
-The framework provides data **pre-processing** functionalities, which include **normalization**, **splitting**, and **labelling**.
-LOBCAST also offers a comprehensive training environment for DL models implemented in PyTorch Lightning. 
-It integrates interfaces with the popular hyperparameter tuning framework WANDB, which allows users to tune and optimize 
-model performance efficiently. The framework generates detailed reports for the trained models, including performance 
-metrics regarding the learning task (F1, Accuracy, Recall, etc.). LOBCAST supports backtesting for profit analysis, 
-utilizing the Backtesting.py external library. This feature enables users to assess the profitability of their models in
-simulated trading scenarios.
-
-LOBCAST will soon support (i) training and testing with different LOB representations, and (ii) test on adversarial
-perturbations to evaluate the representations' robustness. We believe that LOBCAST, along with the advancements in DL 
-models and the utilization of LOB data, has the potential to improve the state of the art on trend forecasting in the 
-financial domain.
+### Key Features
+- Data pre-processing functionalities including **normalization**, **splitting**, and **labeling**.
+- Comprehensive training environment for deep learning models implemented in PyTorch Lightning.
+- Integration with the hyperparameter tuning framework WANDB for efficient model performance optimization.
+- Generation of detailed reports for trained models, including performance metrics such as F1, Accuracy, Recall, etc.
+- Support for backtesting and profit analysis using the Backtesting.py external library.
+- Future support for training and testing with different LOB representations.
+- Planned support for testing adversarial perturbations to evaluate the robustness of representations.
 
 ### Getting Started
 #### Installation 
@@ -22,14 +17,15 @@ financial domain.
     ```
     git clone https://github.com/xxx/xxx
     ```
-2. Install the dependencies:
+2. Install the required dependencies:
     ```
     pip install -r requirements.txt
     ```
 
 #### Execution
 ###### Training
-Train the models providing an execution plan as in `src.main_run_fi.py`, similarly for `src.main_run_lob.py`:
+To train the models, provide an execution plan in `src.main_run_fi.py` for tests over FI-2010 dataset or in `src.main_run_lob.py` for tests over LOBSTER data. 
+Here's an example execution plan:
 
 ```
 EXE_PLAN = {
@@ -41,16 +37,20 @@ EXE_PLAN = {
 experiment_fi(EXE_PLAN)
 ```
 
-An execution list of all the desired sequential lunches to do.
-Mapping the running servers to: the models to lunch, relative seeds and horizons. The snipped above will launch sequentially training on 
-_(1) MLP model, horizon 5, seed 500; (2) BINCTABL model, horizon 1, seed 0; (3) BINCTABL model, horizon 1, seeds 1._
+The execution plan specifies the models to be trained, along with their respective seeds and horizons. 
+The above example will sequentially launch training for:
 
-The output of a simulation will be the Pytorch model saved in the directory `data.saved_models` + the name of the simulation 
-input of `experiment_fi`, if `None` is passed, then current date and time will be used as the name of the folder.
+- MLP model with horizon 5 and seed 500.
+- BINCTABL model with horizon 1 and seed 0.
+- BINCTABL model with horizon 1 and seed 1.
+
+The trained models will be saved in the `data.saved_models` directory with the name of the simulation input of experiment_fi function. 
+If no name is provided, the current date and time will be used as the folder name.
+
 
 ###### Testing
-From `src.main_testing.py` it is possible to lunch testing of the saved models in `data.saved_models`, results of the analysis 
-are saved in .json files containing the following desirable statistics:
+To perform testing on the saved models in `data.saved_models`, use `src.main_testing.py`. 
+The results of the analysis will be saved in .json files, which include the following statistics:
 
 ```
 "testing_FI_f1": 0.7122599109744749,
@@ -68,6 +68,8 @@ are saved in .json files containing the following desirable statistics:
 ```
 
 ###### Plotting
-From `src.metrics.metrics_plotting.py` it is possible to generate the plots in the paper. 
+To generate plots from the data in the JSON files, you can use `src.main_metrics_plots.py`. This will help in visualizing the results as mentioned in the paper.
 
-A much stabler version is in progress and will be released for the camera ready. 
+Please note that a more stable version is currently in progress and will be released for the camera-ready version.
+
+

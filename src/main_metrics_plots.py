@@ -27,6 +27,8 @@ def setup_plotting_env():
 
 
 def reproduced_metrics(path, metrics, list_models, list_horizons, list_seeds, dataset_type, train_src="ALL", test_src="ALL", time_period=cst.Periods.JULY2021.name, jolly_seed=None):
+    """ Outputs METRICS, a tensor containing performances at varying: seed, model, horizon, metric. """
+
     METRICS = np.zeros(shape=(len(list_seeds), len(list_models), len(list_horizons), len(metrics)))
 
     for imod, mod in enumerate(list_models):
@@ -60,6 +62,8 @@ def reproduced_metrics(path, metrics, list_models, list_horizons, list_seeds, da
 
 
 def reproduced_metrics_stocks(path, list_models, list_stocks, list_seeds, dataset_type, train_src="ALL", time_period=cst.Periods.JULY2021.name, jolly_seed=None, target_horizon=cst.WinSize.EVENTS5):
+    """ Outputs METRICS, a tensor containing performances at varying: seed, model, stocks, metric. """
+
     n_metrics = 8
     METRICS = np.zeros(shape=(len(list_seeds), len(list_models), len(list_stocks), n_metrics))
 
@@ -91,7 +95,9 @@ def reproduced_metrics_stocks(path, list_models, list_stocks, list_seeds, datase
     return METRICS
 
 
-def inference_data(path, list_models, dataset_type, seed=500, horizon=10, bw=1, fw=5, train_src="ALL", test_src="ALL", time_period=cst.Periods.JULY2021.name):
+def inference_time_data(path, list_models, dataset_type, seed=500, horizon=10, bw=1, fw=5, train_src="ALL", test_src="ALL", time_period=cst.Periods.JULY2021.name):
+    """ Outputs INFERENCE, a tensor containing std (0) and avg (1) inference time for all the models. """
+
     INFERENCE = np.zeros(shape=(2, len(list_models)))
     for imod, mod in enumerate(list_models):
         if mod == cst.Models.MAJORITY:
@@ -114,6 +120,8 @@ def inference_data(path, list_models, dataset_type, seed=500, horizon=10, bw=1, 
 
 
 def original_metrics(metrics, list_models, list_horizons):
+    """ Outputs METRICS_ORI, a tensor containing original performances of the models at varying: model, horizon, metric. """
+
     METRICS_ORI = np.zeros(shape=(len(list_models), len(list_horizons), len(metrics)))
 
     for imod, mod in enumerate(list_models):
@@ -129,6 +137,8 @@ def original_metrics(metrics, list_models, list_horizons):
 
 
 def confusion_metrix(path, list_models, list_horizons, list_seeds, dataset_type, train_src="ALL", test_src="ALL", time_period=cst.Periods.JULY2021.name, jolly_seed=None):
+    """ Outputs CMS, a tensor containing  3x3 confusion metrix of the models at varying: seed, model, horizon. """
+
     CMS = np.zeros(shape=(len(list_seeds), len(list_models), len(list_horizons), 3, 3))  # 5 x 15 x 5 x 3 x 3
 
     for imod, mod in enumerate(list_models):
@@ -155,20 +165,6 @@ def confusion_metrix(path, list_models, list_horizons, list_seeds, dataset_type,
                     jsn = util.read_json(path + fname)
                     CMS[iss, imod, ik] = np.array(jsn["cm"])
     return CMS
-
-
-# def relative_improvement_table(metrics_repr, metrics_original, list_models):
-#     # relative improvement
-#     me = np.nanmean(metrics_repr, axis=1)
-#     ome = np.nanmean(metrics_original, axis=1) / 100
-#
-#     tab = (me - ome) / ome
-#     tab = tab.T
-#     tab = np.round(tab * 100, 2)
-#
-#     improvement = pd.DataFrame(tab, index=cst.metrics_name, columns=[k.name for k in list_models])
-#     # print(improvement.to_latex(index=True))
-#     return improvement
 
 
 def metrics_vs_models_bars(met_name, horizons, met_vec, out_dir, list_models, dataset_type, met_vec_original=None, is_stocks=False):
@@ -269,14 +265,12 @@ def metrics_vs_models_bars(met_name, horizons, met_vec, out_dir, list_models, da
 
     ax.legend(fontsize=15, ncol=6, handleheight=2, labelspacing=0.05, loc="lower right", framealpha=1)
 
-    # plt.ylim(miny, maxy)
     fig.tight_layout()
     met_name_new = met_name.replace("(%)", "perc")
     met_name_new = met_name_new.replace(" ", "_")
     pdf_path = out_dir + f"ultimate_bar-{'stocks' if is_stocks else 'horizons'}-nbars{len(horizons)}-" + met_name_new + ".pdf"
     print(pdf_path)
     plt.savefig(pdf_path)
-    # plt.show()
     plt.close(fig)
 
 
@@ -495,9 +489,6 @@ def scatter_plot_year(met_name, met_data, list_models, list_models_years, out_di
     # plt.show()
     plt.close()
 
-# ADJUST
-
-
 def plot_agreement_matrix(list_models, fw_win, preds, out_dir):
     fig, ax = plt.subplots(figsize=(30, 30))
 
@@ -568,7 +559,6 @@ def FI_plots():
     MAT_REP = reproduced_metrics(PATH, metrics, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS,
                                  dataset_type=cst.DatasetFamily.FI,
                                  train_src=train_src, test_src=test_src, time_period=time_period, jolly_seed=None)
-    print("QUIIII")
     print("Models performance:")
     MOD = LIST_MODELS
     AVG = np.average(MAT_REP[:, :, :, 0], axis=0) * 100
@@ -577,13 +567,12 @@ def FI_plots():
     # print(AVG)
     # print(STD)
     # print(LIST_MODELS)
-    print("DOVREI 2")
-    INFER = inference_data(PATH, LIST_MODELS, dataset_type=cst.DatasetFamily.FI, train_src=train_src,
-                           test_src=test_src, time_period=time_period)
+
+    INFER = inference_time_data(PATH, LIST_MODELS, dataset_type=cst.DatasetFamily.FI, train_src=train_src,
+                                test_src=test_src, time_period=time_period)
     print(INFER[0])
     for im, m in enumerate(LIST_MODELS):
         print("MODEL {} VALUE {:e}".format(m, INFER[0][im]))
-    print("QUIIII")
 
     # 1: PLOT 2
     # 1: PLOT 2
@@ -616,8 +605,8 @@ def FI_plots():
     CMS = confusion_metrix(PATH, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS, jolly_seed=None, dataset_type=cst.DatasetFamily.FI,
                            train_src=train_src, test_src=test_src, time_period=time_period)
 
-    INFER = inference_data(PATH, LIST_MODELS, dataset_type=cst.DatasetFamily.FI, train_src=train_src,
-                           test_src=test_src, time_period=time_period)
+    INFER = inference_time_data(PATH, LIST_MODELS, dataset_type=cst.DatasetFamily.FI, train_src=train_src,
+                                test_src=test_src, time_period=time_period)
 
     # 1: PLOT 2
     # 1: PLOT 2
@@ -998,6 +987,6 @@ def perf_table():
 
 if __name__ == '__main__':
 
-    lobster_plots()
-    # FI_plots()
+    # lobster_plots()
+    FI_plots()
     # perf_table()
