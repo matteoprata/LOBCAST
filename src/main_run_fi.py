@@ -9,10 +9,10 @@ DEFAULT_SEEDS = set(range(500, 505))
 DEFAULT_HORIZONS = set(cst.FI_Horizons)
 
 
-def experiment_fi(execution_plan, run_name_prefix="FI-EXPERIMENTS", servers=None):
+def experiment_fi(execution_plan, run_name_prefix="FI-EXPERIMENTS"):
     """ Sets the experiment configuration object based on the execution plan and runs the simulation. """
 
-    servers = [server for server in execution_plan.keys()] if servers is None else servers
+    servers = [server for server in execution_plan.keys()]
 
     run_name_prefix, server_name, _, _ = tlu.experiment_preamble(run_name_prefix, servers)
     lunches_server = execution_plan[server_name]  # the execution plan for this machine
@@ -64,7 +64,7 @@ if __name__ == '__main__':
         cst.Servers.ANY: [
             (cst.Models.MLP,      {'k': [cst.FI_Horizons.K5], 'seed': [500]}),
             (cst.Models.BINCTABL, {'k': [cst.FI_Horizons.K5], 'seed': 'all'})
-        ],
+        ]
     }
 
     experiment_fi(EXE_PLAN)

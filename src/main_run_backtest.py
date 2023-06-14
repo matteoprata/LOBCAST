@@ -56,42 +56,6 @@ def load_OHLC(stock, period):
 
     return df
 
-
-class DLstrategy1(Strategy):
-    def init(self):
-        print("starting")
-
-    def next(self):
-        # Proceed only with out-of-sample data. Prepare some variables
-        high, low, close = self.data.High[-1], self.data.Low[-1], self.data.Close[-1]
-        pred = self.data.Preds[-1]
-        # print(self.position)
-
-        # we predict the price will go up
-        if int(pred) == 2:
-
-            # if we are short and the price is going up, we close the position and go long
-            if self.position.is_short:
-                self.position.close()
-                self.buy(size=1)
-
-            # if we are not in a position, we go long
-            elif self.position.is_long == False and self.position.is_short == False:
-                self.buy(size=1)
-
-        # we predict the price will go down
-        elif int(pred) == 0:
-
-            # if we are long and the price is going down, we close the position and go short
-            if self.position.is_long:
-                self.position.close()
-                self.sell(size=1)
-
-            # if we are not in a position, we go short
-            elif self.position.is_long == False and self.position.is_short == False:
-                self.sell(size=1)
-
-
 class DLstrategy2(Strategy):
 
     def init(self):

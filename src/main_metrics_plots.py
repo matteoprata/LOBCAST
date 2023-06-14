@@ -175,7 +175,7 @@ def metrics_vs_models_bars(met_name, horizons, met_vec, out_dir, list_models, da
     elif dataset_type == cst.DatasetFamily.LOB and not is_stocks:
         labels = ["K={}".format(fw.value) for bw, fw in horizons]
     elif is_stocks:
-        labels = ["S={}".format(bw) for bw in horizons]
+        labels = ["{}".format(bw) for bw in horizons]
 
     fmt = "%.2f"
     miny, maxy = -1, 1.1
@@ -188,7 +188,7 @@ def metrics_vs_models_bars(met_name, horizons, met_vec, out_dir, list_models, da
     avg_met = np.average(met_vec, axis=0)  # avg seeds
     std_met = np.std(met_vec, axis=0)
 
-    x = np.arange(len(labels)) * 9  # the label locations
+    x = np.arange(len(labels)) * 8  # the label locations
     width = 0.48  # the width of the bars
 
     fig, ax = plt.subplots(figsize=(21, 10))
@@ -212,12 +212,12 @@ def metrics_vs_models_bars(met_name, horizons, met_vec, out_dir, list_models, da
 
         elif dataset_type == cst.DatasetFamily.LOB:
             r_bar_i = ax.bar(x + width * ranges[iri], avg_met[iri, :], width, yerr=std_met[iri, :],
-                             label=ri.name, color=util.sample_color(iri, "tab20"), align='center', edgecolor='black')  # hatch=util.sample_pattern(iri))
+                             label=ri.name, color=util.sample_color(iri, "tab20"), align='center')  # hatch=util.sample_pattern(iri))
 
             bar_value = ["{}%".format(Decimal(str(round(it, 1))).normalize()) for it in avg_met[iri, :]]
             ax.bar_label(r_bar_i, labels=bar_value, padding=3, fmt=fmt, rotation=90, fontsize=LABEL_FONT_SIZE)
 
-    if met_vec_original is not None:
+    if met_vec_original is not None and not is_stocks:
         diffp = avg_met - met_vec_original
         for iri, ri in enumerate(R):  # models
 
@@ -247,13 +247,14 @@ def metrics_vs_models_bars(met_name, horizons, met_vec, out_dir, list_models, da
                    edgecolor='black', label=label, align='center')
 
     # Add some text for labels, title and custom x-axis tick labels, etc.
-    ax.set_ylabel(met_name)
+    ax.set_ylabel(met_name, fontsize=20)
 
     dataset_name = dataset_type.name
     dataset_name = "FI-2010" if cst.DatasetFamily.FI == dataset_name else dataset_name
 
-    ax.set_title("{}".format(dataset_name))
-    ax.set_xticks(x, labels)  # , rotation=0, ha="right", rotation_mode="anchor")
+    # ax.set_title("{}".format(dataset_name), fontsize=15)
+    ax.set_xticks(x, labels, fontsize=20)  # , rotation=0, ha="right", rotation_mode="anchor")
+    plt.yticks(fontsize=20)  # , rotation=0, ha="right", rotation_mode="anchor")
 
     if dataset_type == cst.DatasetFamily.FI:
         ax.set_ylim((20, 100))
@@ -263,7 +264,11 @@ def metrics_vs_models_bars(met_name, horizons, met_vec, out_dir, list_models, da
         if is_stocks:
             ax.set_ylim((0, 75))
 
-    ax.legend(fontsize=15, ncol=6, handleheight=2, labelspacing=0.05, loc="lower right", framealpha=1)
+    if not is_stocks:
+        ax.legend(fontsize=15, ncol=6, handleheight=2, labelspacing=0.05, loc="lower right", framealpha=1)
+    else:
+        ax.legend(fontsize=20, ncol=5, handleheight=2, labelspacing=0.05, loc="lower right", framealpha=1)
+        ax.set_xlim((-5, 53))
 
     fig.tight_layout()
     met_name_new = met_name.replace("(%)", "perc")
@@ -647,7 +652,7 @@ def lobster_stocks_plots():
     PATH = f"final_data/LOBSTER-{month}-TESTS/jsons/"
 
     # HERE FOR PER STOCK
-    LIST_SEEDS = [500]
+    LIST_SEEDS = [500, 501, 502, 503, 504]
     LIST_MODELS = cst.MODELS_15
     LIST_STOCKS = ["ALL", "SOFI", "NFLX", "CSCO", "WING", "SHLS", "LSTR"]  # "ALL","SOFI","NFLX","CSCO", "WING", "SHLS"
     # LOB
@@ -984,9 +989,114 @@ def perf_table():
 
         print(formato)
 
+def perf_table_2():
+    import matplotlib.cm as cm
+
+    PATH = "final_data/FI-2010-TESTS/jsons/"
+    OUT = "final_data/FI-2010-TESTS/all-pdfs/"
+
+    DATASET = cst.DatasetFamily.FI
+
+    train_src = "FI"
+    test_src = "FI"
+    time_period = "FI"
+
+    LIST_SEEDS = [500, 501, 502, 503, 504]
+    LIST_MODELS = cst.MODELS_17
+
+    os.makedirs(OUT, exist_ok=True)
+    setup_plotting_env()
+
+    metrics = metrics_to_plot(test_src)
+
+    LIST_HORIZONS = cst.FI_Horizons
+    MAT_ORI = original_metrics(metrics, LIST_MODELS, LIST_HORIZONS)
+
+    LIST_HORIZONS = cst.FI_Horizons
+    MAT_REP = reproduced_metrics(PATH, metrics, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS,
+                                 dataset_type=cst.DatasetFamily.FI,
+                                 train_src=train_src, test_src=test_src, time_period=time_period, jolly_seed=None)
+
+    print("Models performance:")
+    BOOL = np.where(np.isnan(MAT_ORI[:, :, 0]) == 1, np.nan, 1)  # np.nan USELESS FOR RUN_NAME_PREFIX
+
+    MOD = LIST_MODELS
+    AVG = np.nanmean(MAT_REP[:, :, :, 0], axis=0) * 100
+    STD = np.nanstd(MAT_REP[:, :, :, 0], axis=0) * 100
+
+    # RUN_NAME_PREFIX GEN FEB
+    train_src = "ALL"
+    test_src = "ALL"
+    time_period = cst.Periods.FEBRUARY2022.name
+    LIST_SEEDS = [500]
+    metrics = metrics_to_plot(test_src)
+    month = 'JUL' if time_period == cst.Periods.JULY2021.name else 'FEB'
+
+    PATH = f"final_data/LOBSTER-{month}-TESTS/jsons/"
+
+    backwards = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1]
+    forwards = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS2, cst.WinSize.EVENTS3, cst.WinSize.EVENTS5, cst.WinSize.EVENTS10]
+    LIST_HORIZONS = list(zip(backwards, forwards))  # cst.FI_Horizons
+
+    # LOB
+    MAT_REP_FEB = reproduced_metrics(PATH, metrics, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS,
+                                     dataset_type=cst.DatasetFamily.LOB,
+                                     train_src=train_src, test_src=test_src, time_period=time_period, jolly_seed=None)
+
+    AVG_FEB = np.nanmean(MAT_REP_FEB[:, :, :, 0], axis=0) * 100
+    STD_FEB = np.nanstd(MAT_REP_FEB[:, :, :, 0], axis=0) * 100
+
+    # RUN_NAME_PREFIX GEN FEB
+    train_src = "ALL"
+    test_src = "ALL"
+    time_period = cst.Periods.JULY2021.name
+    LIST_SEEDS = [500, 501, 502, 503, 504]
+    metrics = metrics_to_plot(test_src)
+    month = 'JUL' if time_period == cst.Periods.JULY2021.name else 'FEB'
+
+    PATH = f"final_data/LOBSTER-{month}-TESTS/jsons/"
+
+    backwards = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1, cst.WinSize.EVENTS1]
+    forwards = [cst.WinSize.EVENTS1, cst.WinSize.EVENTS2, cst.WinSize.EVENTS3, cst.WinSize.EVENTS5, cst.WinSize.EVENTS10]
+    LIST_HORIZONS = list(zip(backwards, forwards))  # cst.FI_Horizons
+
+    # LOB
+    MAT_REP_JUL = reproduced_metrics(PATH, metrics, LIST_MODELS, LIST_HORIZONS, LIST_SEEDS,
+                                     dataset_type=cst.DatasetFamily.LOB,
+                                     train_src=train_src, test_src=test_src, time_period=time_period, jolly_seed=None)
+
+    AVG_JUL = np.nanmean(MAT_REP_JUL[:, :, :, 0], axis=0) * 100
+    STD_JUL = np.nanstd(MAT_REP_JUL[:, :, :, 0], axis=0) * 100
+
+    for im, m in enumerate(MOD):
+        formato = "{} & ${}$ & ${}$ & ${}$ & ${}$ & ${}$ & ${}$ & ${}$ & ${}$ & ${}$ & ${}$ & ${}$ & ${}$ & ${}$ & ${}$ & ${}$ & ${}$ & ${}$ & ${}$ & ${}$ & ${}$ \\\\ \hline".\
+            format(m.name,
+                   round(MAT_ORI[im, 0, 0], 1),
+                   round(AVG[im, 0], 1),
+                   round(AVG_JUL[im, 0], 1),
+                   round(AVG_FEB[im, 0], 1),
+                   round(MAT_ORI[im, 1, 0], 1),
+                   round(AVG[im, 1], 1),
+                   round(AVG_JUL[im, 1], 1),
+                   round(AVG_FEB[im, 1], 1),
+                   round(MAT_ORI[im, 2, 0], 1),
+                   round(AVG[im, 2], 1),
+                   round(AVG_JUL[im, 2], 1),
+                   round(AVG_FEB[im, 2], 1),
+                   round(MAT_ORI[im, 3, 0], 1),
+                   round(AVG[im, 3], 1),
+                   round(AVG_JUL[im, 3], 1),
+                   round(AVG_FEB[im, 3], 1),
+                   round(MAT_ORI[im, 4, 0], 1),
+                   round(AVG[im, 4], 1),
+                   round(AVG_JUL[im, 4], 1),
+                   round(AVG_FEB[im, 4], 1))
+
+        print(formato)
+
 
 if __name__ == '__main__':
-
+    lobster_stocks_plots()
     # lobster_plots()
-    FI_plots()
+    # FI_plots()
     # perf_table()

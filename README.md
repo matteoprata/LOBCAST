@@ -47,6 +47,10 @@ The above example will sequentially launch training for:
 The trained models will be saved in the `data.saved_models` directory with the name of the simulation input of experiment_fi function. 
 If no name is provided, the current date and time will be used as the folder name.
 
+Make sure to have the FI-2010 dataset (https://etsin.fairdata.fi/dataset/73eb48d7-4dbc-4a10-a52a-da745b47a649/data) downloaded in `data.FI-2010.BenchmarkDatasets`. Now you can run the execution plan as:
+```
+python -m src.main_run_fi
+```
 
 ###### Testing
 To perform testing on the saved models in `data.saved_models`, use `src.main_testing.py`. 
