@@ -76,4 +76,5 @@ To generate plots from the data in the JSON files, you can use `src.main_metrics
 
 Please note that a more stable version is currently in progress and will be released for the camera-ready version.
 
-
+### Acknowledgemnts
+LOBCAST was developed by [Matteo Prata](https://github.com/matteoprata), [Giuseppe Masi](https://github.com/giuseppemasi99), [Leonardo Berti](https://github.com/LeonardoBerti00), [Andrea Coletta](https://github.com/Andrea94c), [Irene Cannistraci](https://github.com/icannistraci). 
