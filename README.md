@@ -15,7 +15,7 @@ LOBCAST is a Python-based open-source framework developed for stock market trend
 #### Installation 
 1. Download the LOBCAST source code, either directly from GitHub or with git:
     ```
-    git clone https://github.com/xxx/xxx
+    [git clone https://github.com/matteoprata/LOBCAST](https://github.com/matteoprata/LOBCAST/)
     ```
 2. Install the required dependencies:
     ```
