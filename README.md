@@ -1,15 +1,19 @@
-# LOBCAST for Stock Trend Forcasting 
+# LOBCAST for Stock Price Trend Forecasting
 
-LOBCAST is a Python-based open-source framework developed for stock market trend forecasting using Limit Order Book (LOB) data. The framework enables users to test deep learning models for the task of Stock Price Trend Prediction (SPTP).
+LOBCAST is a Python-based open-source framework developed for stock market trend forecasting using Limit Order Book (LOB) data. The framework enables users to test deep learning models for the task of Stock Price Trend Prediction (SPTP). It is the official repository for [LOB-Based Deep Learning Models for Stock Price Trend Prediction: A Benchmark Study](https://arxiv.org/abs/2308.01915).
+
+
 
 ### Key Features
 - Data pre-processing functionalities including **normalization**, **splitting**, and **labeling**.
-- Comprehensive training environment for deep learning models implemented in PyTorch Lightning.
+- Implementation of 15 SOTA deep learning models for LOB data located in the src/models DIR. 
+- Comprehensive training and testing environment for deep learning models using LOB data implemented in PyTorch Lightning.
 - Integration with the hyperparameter tuning framework WANDB for efficient model performance optimization.
 - Generation of detailed reports for trained models, including performance metrics such as F1, Accuracy, Recall, etc.
 - Support for backtesting and profit analysis using the Backtesting.py external library.
 - Future support for training and testing with different LOB representations.
 - Planned support for testing adversarial perturbations to evaluate the robustness of representations.
+
 
 ### Getting Started
 #### Installation 
@@ -47,7 +51,7 @@ The above example will sequentially launch training for:
 The trained models will be saved in the `data.saved_models` directory with the name of the simulation input of experiment_fi function. 
 If no name is provided, the current date and time will be used as the folder name.
 
-Make sure to have the FI-2010 dataset (https://etsin.fairdata.fi/dataset/73eb48d7-4dbc-4a10-a52a-da745b47a649/data) downloaded in `data.FI-2010.BenchmarkDatasets`. Now you can run the execution plan as:
+Make sure to have the [FI-2010 dataset](https://etsin.fairdata.fi/dataset/73eb48d7-4dbc-4a10-a52a-da745b47a649/data) downloaded in `data.FI-2010.BenchmarkDatasets`. Now you can run the execution plan as:
 ```
 python -m src.main_run_fi
 ```
@@ -74,7 +78,7 @@ The results of the analysis will be saved in .json files, which include the foll
 ###### Plotting
 To generate plots from the data in the JSON files, you can use `src.main_metrics_plots.py`. This will help in visualizing the results as mentioned in the paper.
 
-Please note that a more stable version is currently in progress and will be released for the camera-ready version.
+Please note that a more stable version is currently in progress and will be released soon.
 
 ### Acknowledgments
 LOBCAST was developed by [Matteo Prata](https://github.com/matteoprata), [Giuseppe Masi](https://github.com/giuseppemasi99), [Leonardo Berti](https://github.com/LeonardoBerti00), [Andrea Coletta](https://github.com/Andrea94c), [Irene Cannistraci](https://github.com/icannistraci). 
