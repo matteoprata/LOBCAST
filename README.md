@@ -1,6 +1,6 @@
 # LOBCAST for Stock Price Trend Forecasting
 
-🟢🟢 🚀 _Get ready for LOBCAST v2.0 – Unleashing automation for the SPTP task, and a huge leap in efficiency!_ 🌟  🟢🟢 
+🟢 🚀 _Get ready for LOBCAST v2.0 – Unleashing automation for the SPTP task, and a huge leap in efficiency!_ 🌟  🟢
 
 📌 _Scheduled for release on 01-11-2023 #LOBCASTv2_
 
