@@ -8,7 +8,7 @@ LOBCAST is a Python-based open-source framework developed for stock market trend
 
 
 
-### Key Features
+## Key Features
 - Data pre-processing functionalities including **normalization**, **splitting**, and **labeling**.
 - Implementation of 15 SOTA deep learning models for LOB data located in the src/models DIR. 
 - Comprehensive training and testing environment for deep learning models using LOB data implemented in PyTorch Lightning.
@@ -19,8 +19,8 @@ LOBCAST is a Python-based open-source framework developed for stock market trend
 - Planned support for testing adversarial perturbations to evaluate the robustness of representations.
 
 
-### Getting Started
-#### Installation 
+## Getting Started
+### Installation 
 1. Download the LOBCAST source code, either directly from GitHub or with git:
     ```
     git clone https://github.com/matteoprata/LOBCAST
@@ -30,8 +30,8 @@ LOBCAST is a Python-based open-source framework developed for stock market trend
     pip install -r requirements.txt
     ```
 
-#### Execution
-###### Training
+### Execution
+#### Training
 To train the models, provide an execution plan in `src.main_run_fi.py` for tests over FI-2010 dataset or in `src.main_run_lob.py` for tests over LOBSTER data. 
 Here's an example execution plan:
 
@@ -60,7 +60,7 @@ Make sure to have the [FI-2010 dataset](https://etsin.fairdata.fi/dataset/73eb48
 python -m src.main_run_fi
 ```
 
-###### Testing
+#### Testing
 To perform testing on the saved models in `data.saved_models`, use `src.main_testing.py`. 
 The results of the analysis will be saved in .json files, which include the following statistics:
 
@@ -79,10 +79,24 @@ The results of the analysis will be saved in .json files, which include the foll
 [...]
 ```
 
-###### Plotting
+#### Plotting
 To generate plots from the data in the JSON files, you can use `src.main_metrics_plots.py`. This will help in visualizing the results as mentioned in the paper.
 
 Please note that a more stable version is currently in progress and will be released soon.
 
-### Acknowledgments
+## Reference
+If you find the code useful for your research, please consider citing
+```bib
+@misc{prata2023lobbased,
+      title={LOB-Based Deep Learning Models for Stock Price Trend Prediction: A Benchmark Study}, 
+      author={Matteo Prata and Giuseppe Masi and Leonardo Berti and Viviana Arrigoni and Andrea Coletta and Irene Cannistraci and Svitlana Vyetrenko and Paola Velardi and Novella Bartolini},
+      year={2023},
+      eprint={2308.01915},
+      archivePrefix={arXiv},
+      primaryClass={q-fin.TR}
+}
+```
+
+
+## Acknowledgments
 LOBCAST was developed by [Matteo Prata](https://github.com/matteoprata), [Giuseppe Masi](https://github.com/giuseppemasi99), [Leonardo Berti](https://github.com/LeonardoBerti00), [Andrea Coletta](https://github.com/Andrea94c), [Irene Cannistraci](https://github.com/icannistraci), Viviana Arrigoni. 
