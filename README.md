@@ -2,7 +2,7 @@
 
 🟢 🚀 _Get ready for LOBCAST 2.0 – Unleashing automation for the SPTP task, a huge leap in efficiency!_ 🌟  🟢
 
-📌 _Scheduled for release on 01-11-2023 #LOBCASTv2_
+📌 _Scheduled for late 2023 #LOBCASTv2_
 
 LOBCAST is a Python-based open-source framework developed for stock market trend forecasting using Limit Order Book (LOB) data. The framework enables users to test deep learning models for the task of Stock Price Trend Prediction (SPTP). It is the official repository for [LOB-Based Deep Learning Models for Stock Price Trend Prediction: A Benchmark Study](https://arxiv.org/abs/2308.01915).
 
