@@ -473,7 +473,7 @@ def add_lob_labels_rolling(df: pd.DataFrame, rolling_tu: int, ratio_rolling_wind
 
     Args:
         df (pd.DataFrame): [description]
-        rolling_tu (int): how big is the window to compute the rolling mean
+        rolling_tu (int): how big is the observation_length to compute the rolling mean
         ratio_rolling_window (int) : the seconds to compute mean and std of mid-price ratio. Put -1 to disable it.
 
     Returns:

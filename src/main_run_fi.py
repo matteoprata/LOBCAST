@@ -37,13 +37,13 @@ def experiment_fi(execution_plan, run_name_prefix="FI-EXPERIMENTS"):
                     tlu.set_seeds(cf)
 
                     if mod == cst.Models.METALOB:
-                        cf.CHOSEN_DATASET = cst.DatasetFamily.META
+                        cf.DATASET_NAME = cst.DatasetFamily.META
                     else:
-                        cf.CHOSEN_DATASET = cst.DatasetFamily.FI
+                        cf.DATASET_NAME = cst.DatasetFamily.FI
 
-                    cf.CHOSEN_MODEL = mod
+                    cf.PREDICTION_MODEL = mod
                     cf.IS_WANDB = True
-                    cf.IS_TUNE_H_PARAMS = True
+                    cf.IS_HPARAM_SEARCH = True
 
                     tlu.run(cf)
 

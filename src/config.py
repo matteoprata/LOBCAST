@@ -10,18 +10,57 @@ from datetime import date, datetime
 np.set_printoptions(suppress=True)
 
 
-class Configuration:
+class ConfigExternal:
+    def __init__(self):
+
+        self.SEED: int = 0
+        self.IS_HPARAM_SEARCH: bool = False  # else preload from json file
+        self.IS_CPU: bool = False
+
+        self.DATASET_NAME: cst.DatasetFamily = cst.DatasetFamily.FI
+        self.STOCK_TRAIN_VAL: str = "AAPL"
+        self.STOCK_TEST: str = "AAPL"
+
+        self.N_TRENDS = 3
+        self.PREDICTION_MODEL: cst.Models = cst.Models. BINCTABL
+        self.PREDICTION_HORIZON_UNIT: cst.UnitHorizon = cst.UnitHorizon.EVENTS
+        self.PREDICTION_HORIZON_FUTURE: int = 5
+        self.PREDICTION_HORIZON_PAST: int = 10
+        self.OBSERVATION_PERIOD: int = 10
+        self.IS_SHUFFLE_TRAIN_SET = None
+
+        self.TRAIN_SET_PORTION = .8
+
+
+class ConfigTunable:
+    def __init__(self):
+        self.BATCH_SIZE = [64, 55]
+        self.LEARNING_RATE = [0.01]
+        self.EPOCHS_UB = [50]
+        self.OPTIMIZER = [cst.Optimizers.SGD.value]
+
+    def add_hyperparameters(self, params: dict):
+        root = "ext_"
+        for key, value in params.items():
+            self.__setattr__(root+str(key), value)
+
+    def __repr__(self):
+        return self.__dict__
+
+
+class Configuration(ConfigExternal, ConfigTunable):
     """ Represents the configuration file of the simulation, containing all variables of the simulation. """
     def __init__(self, run_name_prefix=None):
+        super().__init__()
+
+        self.add_hyperparameters({"BATCH_SIZE": [10]})  # TODO add based on chosen model
 
         self.IS_DEBUG = False
         self.IS_TEST_ONLY = False
 
         self.RUN_NAME_PREFIX = self.assign_prefix(prefix=run_name_prefix, is_debug=self.IS_DEBUG)
-
         self.setup_all_directories(self.RUN_NAME_PREFIX, self.IS_DEBUG, self.IS_TEST_ONLY)
 
-        self.SEED = 0
         self.RANDOM_GEN_DATASET = None
         self.VALIDATE_EVERY = 1
 
@@ -31,9 +70,7 @@ class Configuration:
         self.TRAIN_SPLIT_VAL = .8  # FI only
         self.META_TRAIN_VAL_TEST_SPLIT = (.7, .15, .15)  # META Only
 
-        self.CHOSEN_DATASET = cst.DatasetFamily.FI
         self.CHOSEN_PERIOD = cst.Periods.FI
-        self.CHOSEN_MODEL = cst.Models.METALOB
 
         self.CHOSEN_STOCKS = {
             cst.STK_OPEN.TRAIN: cst.Stocks.FI,
@@ -41,7 +78,6 @@ class Configuration:
         }
 
         self.IS_WANDB = 0
-        self.IS_TUNE_H_PARAMS = False
 
         self.SWEEP_METHOD = 'grid'  # 'bayes'
 
@@ -93,18 +129,18 @@ class Configuration:
         self.EARLY_STOPPING_METRIC = "{}_{}_{}".format(cst.ModelSteps.VALIDATION_EPOCH.value, self.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, cst.Metrics.F1.value)
 
         self.WANDB_SWEEP_NAME = self.cf_name_format().format(
-            self.CHOSEN_MODEL.name,
+            self.PREDICTION_MODEL.name,
             self.SEED,
             self.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name,
             self.CHOSEN_STOCKS[cst.STK_OPEN.TEST].name,
-            self.CHOSEN_DATASET.value,
+            self.DATASET_NAME.value,
             self.CHOSEN_PERIOD.name,
             self.HYPER_PARAMETERS[cst.LearningHyperParameter.BACKWARD_WINDOW],
             self.HYPER_PARAMETERS[cst.LearningHyperParameter.FORWARD_WINDOW],
             self.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON],
         )
 
-        if not self.IS_TUNE_H_PARAMS and not self.IS_WANDB:
+        if not self.IS_HPARAM_SEARCH and not self.IS_WANDB:
             self.WANDB_RUN_NAME = self.WANDB_SWEEP_NAME
 
     @staticmethod

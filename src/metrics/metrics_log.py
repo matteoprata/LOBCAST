@@ -30,11 +30,11 @@ class Metrics:
             compound_dict = {k: compound_dict[k] for k in keys_to_serialize}
 
             fname = self._config.cf_name_format('.json').format(
-                self._config.CHOSEN_MODEL.name,
+                self._config.PREDICTION_MODEL.name,
                 self._config.SEED,
                 self._config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name,
                 sym,
-                self._config.CHOSEN_DATASET.value,
+                self._config.DATASET_NAME.value,
                 self._config.CHOSEN_PERIOD.name,
                 self._config.HYPER_PARAMETERS[cst.LearningHyperParameter.BACKWARD_WINDOW],
                 self._config.HYPER_PARAMETERS[cst.LearningHyperParameter.FORWARD_WINDOW],

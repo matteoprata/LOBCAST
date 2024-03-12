@@ -153,7 +153,7 @@ class NNEngine(pl.LightningModule):
         self.config.METRICS_JSON.update_cfm(self.config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, cm)
 
         # PER STOCK PREDICTIONS
-        if self.config.CHOSEN_STOCKS[cst.STK_OPEN.TEST] == cst.Stocks.ALL and self.config.CHOSEN_MODEL not in [cst.Models.METALOB, cst.Models.MAJORITY]:
+        if self.config.CHOSEN_STOCKS[cst.STK_OPEN.TEST] == cst.Stocks.ALL and self.config.PREDICTION_MODEL not in [cst.Models.METALOB, cst.Models.MAJORITY]:
             # computing metrics per stock
 
             for si in self.config.CHOSEN_STOCKS[cst.STK_OPEN.TEST].value:
@@ -214,7 +214,7 @@ class NNEngine(pl.LightningModule):
         stock_names = np.array(stock_names)
         losses = np.array(losses)
 
-        if self.config.CHOSEN_MODEL == cst.Models.DEEPLOBATT:
+        if self.config.PREDICTION_MODEL == cst.Models.DEEPLOBATT:
             index = cst.HORIZONS_MAPPINGS_FI[self.config.HYPER_PARAMETERS[cst.LearningHyperParameter.FORWARD_WINDOW]]
             truths = truths[:, index]
             preds = preds[:, index]
@@ -235,7 +235,7 @@ class NNEngine(pl.LightningModule):
 
         if self.optimizer_name == cst.Optimizers.ADAM.value:
 
-            if self.config.CHOSEN_MODEL == cst.Models.ATNBoF:
+            if self.config.PREDICTION_MODEL == cst.Models.ATNBoF:
                 opt = torch.optim.Adam(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
                 sch = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=int((self.n_samples / self.n_batch_size) * self.n_epochs))
                 self.optimizer_obj = opt
@@ -261,7 +261,7 @@ class NNEngine(pl.LightningModule):
                 return self.optimizer_obj
 
         elif self.optimizer_name == cst.Optimizers.SGD.value:
-            if self.config.CHOSEN_MODEL == cst.Models.AXIALLOB or self.config.CHOSEN_MODEL == cst.Models.METALOB:
+            if self.config.PREDICTION_MODEL == cst.Models.AXIALLOB or self.config.PREDICTION_MODEL == cst.Models.METALOB:
                 opt = torch.optim.SGD(self.parameters(), lr=self.lr, momentum=self.momentum)
                 sch = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=int((self.n_samples / self.n_batch_size) * self.n_epochs))
                 self.optimizer_obj = opt
@@ -277,13 +277,13 @@ class NNEngine(pl.LightningModule):
     def update_lr(self, sum_loss):
         """ To run on train epoch end, to update the lr of needing models. """
 
-        if self.config.CHOSEN_MODEL == cst.Models.ATNBoF:
+        if self.config.PREDICTION_MODEL == cst.Models.ATNBoF:
             DROP_EPOCHS = [11, 51]
             if self.current_epoch in DROP_EPOCHS:
                 self.lr /= 0.1
                 self.__update_all_lr()
 
-        elif self.config.CHOSEN_MODEL == cst.Models.CTABL:
+        elif self.config.PREDICTION_MODEL == cst.Models.CTABL:
 
             if sum_loss > self.best_epoch_train_loss and self.current_epoch > 0:
                 self.no_improvement_count += 1
@@ -298,7 +298,7 @@ class NNEngine(pl.LightningModule):
 
                 self.__update_all_lr()
 
-        elif self.config.CHOSEN_MODEL == cst.Models.BINCTABL:
+        elif self.config.PREDICTION_MODEL == cst.Models.BINCTABL:
             DROP_EPOCHS = [11, 71]
             if self.current_epoch == DROP_EPOCHS[0]:
                 self.lr = 1e-4

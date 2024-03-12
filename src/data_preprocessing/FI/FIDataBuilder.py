@@ -4,39 +4,63 @@ from collections import Counter
 import src.constants as cst
 import numpy as np
 import tqdm
-
+import torch
 from pprint import pprint
+from torch.utils import data
 
 
-class FIDataBuilder:
+class FIDataset(data.Dataset):
     def __init__(
         self,
-        fi_data_dir,
+        dataset_path,
         dataset_type,
-        horizon=10,
-        window=100,
-        train_val_split=None,
-        chosen_model=None,
+        horizon,
+        observation_length,
+        train_val_split,
+        n_trends,
         auction=False,
         normalization_type=cst.NormalizationType.Z_SCORE,
     ):
+        assert horizon in [1, 2, 3, 5, 10]
 
-        assert horizon in (1, 2, 3, 5, 10)
-
+        self.fi_data_dir = dataset_path
         self.dataset_type = dataset_type
         self.train_val_split = train_val_split
-        self.chosen_model = chosen_model
-        self.fi_data_dir = fi_data_dir
         self.auction = auction
         self.normalization_type = normalization_type
         self.horizon = horizon
-        self.window = window
+        self.observation_length = observation_length
+        self.num_classes = n_trends
 
         # KEY call, generates the dataset
-        self.data, self.samples_x, self.samples_y = None, None, None
+        self.data, self.samples_X, self.samples_y = None, None, None
         self.__prepare_dataset()
 
-    def __read_dataset(self):
+        _, occs = self.__class_balancing(self.samples_y)
+        # LOSS_WEIGHTS_DICT = {m: 1e6 for m in cst.Models}
+        LOSS_WEIGHT = 1e6
+        self.loss_weights = torch.Tensor(LOSS_WEIGHT / occs)
+
+        self.samples_X = torch.from_numpy(self.samples_X).type(torch.FloatTensor)  # torch.Size([203800, 40])
+        self.samples_y = torch.from_numpy(self.samples_y).type(torch.LongTensor)   # torch.Size([203800])
+        self.x_shape = (self.observation_length, self.samples_X.shape[1])          # shape of a single sample
+
+    def __len__(self):
+        """ Denotes the total number of samples. """
+        return self.samples_X.shape[0] - self.observation_length
+
+    def __getitem__(self, index):
+        """ Generates samples of data. """
+        sample = self.samples_X[index: index + self.observation_length], self.samples_y[index + self.observation_length - 1]
+        return sample
+
+    @staticmethod
+    def __class_balancing(y):
+        ys_occurrences = collections.Counter(y)
+        occs = np.array([ys_occurrences[k] for k in sorted(ys_occurrences)])
+        return ys_occurrences, occs
+
+    def __parse_dataset(self):
         """ Reads the dataset from the FI files. """
 
         AUCTION = 'Auction' if self.auction else 'NoAuction'
@@ -57,84 +81,45 @@ class FIDataBuilder:
         # if it is testing time, we open the 3 test files
         if self.dataset_type == cst.DatasetType.TRAIN or self.dataset_type == cst.DatasetType.VALIDATION:
 
-            F_NAME = DIR + \
-                     '/{}_Dst_{}_{}_CF_7'.format(DATASET_TYPE, AUCTION, NORMALIZATION) + \
-                     F_EXTENSION
-
+            F_NAME = DIR + '/{}_Dst_{}_{}_CF_7'.format(DATASET_TYPE, AUCTION, NORMALIZATION) + F_EXTENSION
             out_df = np.loadtxt(F_NAME)
 
             n_samples_train = int(np.floor(out_df.shape[1] * self.train_val_split))
             if self.dataset_type == cst.DatasetType.TRAIN:
                 out_df = out_df[:, :n_samples_train]
+
             elif self.dataset_type == cst.DatasetType.VALIDATION:
                 out_df = out_df[:, n_samples_train:]
 
         else:
-
-            F_NAMES = [
-                DIR + \
-                '/{}_Dst_{}_{}_CF_{}'.format(DATASET_TYPE, AUCTION, NORMALIZATION, i) + \
-                F_EXTENSION
-                for i in range(7, 10)
-            ]
-
-            out_df = np.hstack(
-                [np.loadtxt(F_NAME) for F_NAME in F_NAMES]
-            )
+            F_NAMES = [DIR + '/{}_Dst_{}_{}_CF_{}'.format(DATASET_TYPE, AUCTION, NORMALIZATION, i) + F_EXTENSION for i in range(7, 10)]
+            out_df = np.hstack([np.loadtxt(F_NAME) for F_NAME in F_NAMES])
 
         self.data = out_df
 
-    def __prepareX(self):
+    def __prepare_X(self):
         """ we only consider the first 40 features, i.e. the 10 levels of the LOB"""
-        self.samples_x = self.data[:40, :].transpose()
+        LOB_TEN_LEVEL_FEATURES = 40
+        self.samples_X = self.data[:LOB_TEN_LEVEL_FEATURES, :].transpose()
 
-    def __prepareY(self):
+    def __prepare_y(self):
         """ gets the labels """
         # the last five elements in self.data contain the labels
         # they are based on the possible horizon values [1, 2, 3, 5, 10]
-        if self.chosen_model == cst.Models.DEEPLOBATT:
-            self.samples_y = self.data[-5:, :].transpose()
-            # self.samples_y.shape = (n_samples, 5)
-        else:
-            self.samples_y = self.data[cst.HORIZONS_MAPPINGS_FI[self.horizon], :]
-            # self.samples_y.shape = (n_samples,)
-
+        self.samples_y = self.data[cst.HORIZONS_MAPPINGS_FI[self.horizon], :]
         self.samples_y -= 1
-
-    # def __snapshotting(self):
-    #     # This is not used
-    #     """ This creates 4 X n_levels X window_size_backward -> prediction. """
-    #     print("Snapshotting... (__data has", self.data.shape[0], "rows)")
-    #
-    #     n_tot = self.samples_x.shape[0] - self.window
-    #     X = np.array([self.samples_x[st:st + self.window] for st in tqdm.tqdm(range(0, n_tot))])
-    #     Y = np.array([self.samples_y[st + self.window - 1] for st in tqdm.tqdm(range(0, n_tot))])
-    #
-    #     self.samples_x, self.samples_y = np.asarray(X), np.asarray(Y)
-
 
     def __prepare_dataset(self):
         """ Crucial call! """
 
-        self.__read_dataset()
+        self.__parse_dataset()
 
-        self.__prepareX()
-        self.__prepareY()
-        #  self.__snapshotting()
+        self.__prepare_X()
+        self.__prepare_y()
 
-        #occurrences = collections.Counter(self.samples_y)
-        #print("dataset type:", self.dataset_type, "- occurrences:", occurrences)
-        #if not self.dataset_type == co.DatasetType.TEST:
-            #self.__under_sampling()
+        print("> Dataset type:", self.dataset_type, " - normalization:", self.normalization_type)
+        occs, occs_vec = self.__class_balancing(self.samples_y)
 
-        print("dataset type:", self.dataset_type, " - normalization:", self.normalization_type)
+        perc = ["{}%".format(round(i, 2)) for i in (occs_vec / np.sum(occs_vec)) * 100]
+        print(">> balancing", occs, "or even", perc)
         print()
-
-    def get_data(self, first_half_split=1):
-        return self.data
-
-    def get_samples_x(self, first_half_split=1):
-        return self.samples_x
-
-    def get_samples_y(self, first_half_split=1):
-        return self.samples_y

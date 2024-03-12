@@ -20,9 +20,9 @@ def core_test(seed, model, dataset, src_data, out_data, horizon=None, win_back=N
 
     cf.IS_TEST_ONLY = True
 
-    cf.CHOSEN_DATASET = dataset
+    cf.DATASET_NAME = dataset
     if model == cst.Models.METALOB:
-        cf.CHOSEN_DATASET = cst.DatasetFamily.META
+        cf.DATASET_NAME = cst.DatasetFamily.META
         cf.TARGET_DATASET_META_MODEL = target_dataset_meta
         cf.JSON_DIRECTORY = out_data
 
@@ -38,19 +38,19 @@ def core_test(seed, model, dataset, src_data, out_data, horizon=None, win_back=N
 
     cf.CHOSEN_PERIOD = cst.Periods.FI if dataset == cst.DatasetFamily.FI else cst.Periods.JULY2021
     cf.IS_WANDB = 0
-    cf.IS_TUNE_H_PARAMS = False
+    cf.IS_HPARAM_SEARCH = False
 
-    cf.CHOSEN_MODEL = model
+    cf.PREDICTION_MODEL = model
 
     # set to cst.FI_Horizons.K10.value when lobster (unused)
 
     # OPEN DIR
     dir_name = "model={}-seed={}-trst={}-test={}-data={}-peri={}-bw={}-fw={}-fiw={}/".format(
-        cf.CHOSEN_MODEL.name,
+        cf.PREDICTION_MODEL.name,
         cf.SEED,
         cf.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name,
         cf.CHOSEN_STOCKS[cst.STK_OPEN.TEST].name,
-        cf.CHOSEN_DATASET.value,
+        cf.DATASET_NAME.value,
         cf.CHOSEN_PERIOD.name,
         cf.HYPER_PARAMETERS[cst.LearningHyperParameter.BACKWARD_WINDOW],
         cf.HYPER_PARAMETERS[cst.LearningHyperParameter.FORWARD_WINDOW],
@@ -70,7 +70,7 @@ def core_test(seed, model, dataset, src_data, out_data, horizon=None, win_back=N
     file_name = files[0]
 
     # Setting configuration parameters
-    model_params = HP_DICT_MODEL[cf.CHOSEN_MODEL].sweep
+    model_params = HP_DICT_MODEL[cf.PREDICTION_MODEL].sweep
 
     for param in cst.LearningHyperParameter:
         if param.value in model_params:

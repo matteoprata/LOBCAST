@@ -136,7 +136,7 @@ class LOBDataset(data.Dataset):
 
         y = np.concatenate(Ys, axis=0).astype(float)
 
-        if config.CHOSEN_MODEL == cst.Models.DEEPLOBATT:
+        if config.PREDICTION_MODEL == cst.Models.DEEPLOBATT:
             self.ys_occurrences = dict()
             for i, window in enumerate(cst.FI_Horizons):
                 if window.value is not None:
@@ -145,7 +145,7 @@ class LOBDataset(data.Dataset):
         else:
             self.ys_occurrences = collections.Counter(y)
             occs = np.array([self.ys_occurrences[c] for c in sorted(self.ys_occurrences)])
-            self.loss_weights = torch.Tensor(LOSS_WEIGHTS_DICT[config.CHOSEN_MODEL] / occs)
+            self.loss_weights = torch.Tensor(LOSS_WEIGHTS_DICT[config.PREDICTION_MODEL] / occs)
 
         self.y = torch.from_numpy(y).type(torch.LongTensor)
         self.stock_sym_name = Ss

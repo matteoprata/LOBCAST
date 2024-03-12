@@ -144,7 +144,7 @@ class LOBSTERDataBuilder:
     #     self.__data = ppu.add_midprices_columns(self.__data, self.window_size_forward, self.window_size_backward)
 
     def __label_dataset(self):
-        if self.config.CHOSEN_MODEL == cst.Models.DEEPLOBATT:
+        if self.config.PREDICTION_MODEL == cst.Models.DEEPLOBATT:
             for winsize in cst.FI_Horizons:
                 self.__data = ppu.add_lob_labels_march_2023(self.__data, winsize.value, self.window_size_backward, cst.ALPHA)
                 self.__data = self.__data.rename(columns={'y': f'y{winsize.value}'})
@@ -205,7 +205,7 @@ class LOBSTERDataBuilder:
         return self.__data_un_gathered.iloc[:, :]
 
     def get_Y_n(self):
-        if self.config.CHOSEN_MODEL == cst.Models.DEEPLOBATT:
+        if self.config.PREDICTION_MODEL == cst.Models.DEEPLOBATT:
             return np.asarray(self.__data[ppu.DataCols.PREDICTION.value].values.tolist())
         else:
             return self.__data[ppu.DataCols.PREDICTION.value]

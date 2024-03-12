@@ -28,3 +28,4 @@ HP_MLP_LOBSTER_FIXED = {
     cst.LearningHyperParameter.BATCH_SIZE.value: 64,
     cst.LearningHyperParameter.MLP_HIDDEN.value: 256,
 }
+

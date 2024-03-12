@@ -41,9 +41,9 @@ def experiment_lobster(execution_plan, dataset, PREFIX=None, is_debug=False, jso
 
                         tlu.set_seeds(cf)
 
-                        cf.CHOSEN_DATASET = dataset
+                        cf.DATASET_NAME = dataset
                         if mod == cst.Models.METALOB:
-                            cf.CHOSEN_DATASET = cst.DatasetFamily.META
+                            cf.DATASET_NAME = cst.DatasetFamily.META
                             cf.TARGET_DATASET_META_MODEL = target_dataset_meta
                             cf.JSON_DIRECTORY = json_dir
 
@@ -54,10 +54,10 @@ def experiment_lobster(execution_plan, dataset, PREFIX=None, is_debug=False, jso
                         cf.HYPER_PARAMETERS[cst.LearningHyperParameter.BACKWARD_WINDOW] = cst.WinSize.EVENTS1.value
                         cf.HYPER_PARAMETERS[cst.LearningHyperParameter.FORWARD_WINDOW] = window_forward.value
 
-                        cf.CHOSEN_MODEL = mod
+                        cf.PREDICTION_MODEL = mod
 
                         cf.IS_WANDB = int(not is_debug)
-                        cf.IS_TUNE_H_PARAMS = int(not is_debug)
+                        cf.IS_HPARAM_SEARCH = int(not is_debug)
 
                         tlu.run(cf)
 

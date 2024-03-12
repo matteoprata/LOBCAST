@@ -28,7 +28,7 @@ def pick_model(config: Configuration, data_module):
     net_architecture = None
     loss_weights = None
 
-    if config.CHOSEN_MODEL == cst.Models.MLP:
+    if config.PREDICTION_MODEL == cst.Models.MLP:
         net_architecture = MLP(
             num_features=np.prod(data_module.x_shape),  # 40 * wind
             num_classes=data_module.num_classes,
@@ -36,19 +36,19 @@ def pick_model(config: Configuration, data_module):
             p_dropout=config.HYPER_PARAMETERS[cst.LearningHyperParameter.P_DROPOUT],
         )
 
-    elif config.CHOSEN_MODEL == cst.Models.CNN1:
+    elif config.PREDICTION_MODEL == cst.Models.CNN1:
         net_architecture = CNN1(
             num_features=data_module.x_shape[1],
             num_classes=data_module.num_classes,
         )
 
-    elif config.CHOSEN_MODEL == cst.Models.CNN2:
+    elif config.PREDICTION_MODEL == cst.Models.CNN2:
         net_architecture = CNN2(
             num_features=data_module.x_shape[1],
             num_classes=data_module.num_classes,
         )
 
-    elif config.CHOSEN_MODEL == cst.Models.LSTM:
+    elif config.PREDICTION_MODEL == cst.Models.LSTM:
         net_architecture = LSTM(
             x_shape=data_module.x_shape[1],  # 40, wind is the time
             num_classes=data_module.num_classes,
@@ -58,7 +58,7 @@ def pick_model(config: Configuration, data_module):
             p_dropout=config.HYPER_PARAMETERS[cst.LearningHyperParameter.P_DROPOUT],
         )
 
-    elif config.CHOSEN_MODEL == cst.Models.CNNLSTM:
+    elif config.PREDICTION_MODEL == cst.Models.CNNLSTM:
         net_architecture = CNNLSTM(
             num_features=data_module.x_shape[1],
             num_classes=data_module.num_classes,
@@ -70,7 +70,7 @@ def pick_model(config: Configuration, data_module):
             p_dropout=config.HYPER_PARAMETERS[cst.LearningHyperParameter.P_DROPOUT],
         )
 
-    elif config.CHOSEN_MODEL == cst.Models.DAIN:
+    elif config.PREDICTION_MODEL == cst.Models.DAIN:
         net_architecture = DAIN(
             backward_window=data_module.x_shape[0],
             num_features=data_module.x_shape[1],
@@ -83,25 +83,25 @@ def pick_model(config: Configuration, data_module):
             scale_lr=1e-02
         )
 
-    elif config.CHOSEN_MODEL == cst.Models.DEEPLOB:
+    elif config.PREDICTION_MODEL == cst.Models.DEEPLOB:
         net_architecture = DeepLob(num_classes=data_module.num_classes)
 
-    elif config.CHOSEN_MODEL == cst.Models.TRANSLOB:
+    elif config.PREDICTION_MODEL == cst.Models.TRANSLOB:
         net_architecture = TransLob(seq_len=config.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_SNAPSHOTS])
         loss_weights = data_module.train_set.loss_weights
 
-    elif config.CHOSEN_MODEL == cst.Models.CTABL:
+    elif config.PREDICTION_MODEL == cst.Models.CTABL:
         net_architecture = CTABL(60, 40, 10, 10, 120, 5, 3, 1)
         loss_weights = data_module.train_set.loss_weights
 
-    elif config.CHOSEN_MODEL == cst.Models.BINCTABL:
+    elif config.PREDICTION_MODEL == cst.Models.BINCTABL:
         net_architecture = BiN_CTABL(60, 40, 10, 10, 120, 5, 3, 1)
         loss_weights = data_module.train_set.loss_weights
 
-    elif config.CHOSEN_MODEL == cst.Models.DEEPLOBATT:
+    elif config.PREDICTION_MODEL == cst.Models.DEEPLOBATT:
         net_architecture = DeepLobAtt()
 
-    elif config.CHOSEN_MODEL == cst.Models.DLA:
+    elif config.PREDICTION_MODEL == cst.Models.DLA:
         num_snapshots, num_features = data_module.x_shape
         net_architecture = DLA(
             num_snapshots=num_snapshots,
@@ -109,12 +109,12 @@ def pick_model(config: Configuration, data_module):
             hidden_size=config.HYPER_PARAMETERS[cst.LearningHyperParameter.RNN_HIDDEN]
         )
 
-    elif config.CHOSEN_MODEL == cst.Models.TLONBoF:
+    elif config.PREDICTION_MODEL == cst.Models.TLONBoF:
         num_snapshots, num_features = data_module.x_shape
         net_architecture = TLONBoF(window=num_snapshots, split_horizon=5, use_scaling=True)
         loss_weights = data_module.train_set.loss_weights
 
-    elif config.CHOSEN_MODEL == cst.Models.ATNBoF:
+    elif config.PREDICTION_MODEL == cst.Models.ATNBoF:
         num_snapshots, num_features = data_module.x_shape
         loss_weights = data_module.train_set.loss_weights
         net_architecture = ATNBoF(
@@ -126,7 +126,7 @@ def pick_model(config: Configuration, data_module):
             dropout=config.HYPER_PARAMETERS[cst.LearningHyperParameter.P_DROPOUT]
         )
 
-    elif config.CHOSEN_MODEL == cst.Models.AXIALLOB:
+    elif config.PREDICTION_MODEL == cst.Models.AXIALLOB:
         num_snapshots, num_features = data_module.x_shape
         net_architecture = AxialLOB(
             W=40,
@@ -139,7 +139,7 @@ def pick_model(config: Configuration, data_module):
             pool_stride=(1, 4)
         )
 
-    elif config.CHOSEN_MODEL == cst.Models.METALOB:
+    elif config.PREDICTION_MODEL == cst.Models.METALOB:
         net_architecture = MetaLOB(
             mlp_hidden=config.HYPER_PARAMETERS[cst.LearningHyperParameter.MLP_HIDDEN],
             chosen_models=[m for m in cst.MODELS_15 if m != cst.Models.DEEPLOBATT],
@@ -148,7 +148,7 @@ def pick_model(config: Configuration, data_module):
 
     engine = NNEngine(
         config=config,
-        model_type=config.CHOSEN_MODEL,
+        model_type=config.PREDICTION_MODEL,
         neural_architecture=net_architecture,
         optimizer=config.HYPER_PARAMETERS[cst.LearningHyperParameter.OPTIMIZER],
         lr=config.HYPER_PARAMETERS[cst.LearningHyperParameter.LEARNING_RATE],
@@ -157,7 +157,7 @@ def pick_model(config: Configuration, data_module):
         momentum=config.HYPER_PARAMETERS[cst.LearningHyperParameter.MOMENTUM],
         loss_weights=loss_weights,
         remote_log=config.WANDB_INSTANCE,
-        n_samples=len(data_module.train_set.x),
+        n_samples=len(data_module.train_set),
         n_epochs=config.HYPER_PARAMETERS[cst.LearningHyperParameter.EPOCHS_UB],
         n_batch_size=config.HYPER_PARAMETERS[cst.LearningHyperParameter.BATCH_SIZE],
     ).to(cst.DEVICE_TYPE)

@@ -73,7 +73,7 @@ class LearningHyperParameter(str, Enum):
     # LABELING_THRESHOLD = "labeling_threshold"
     LABELING_SIGMA_SCALER = "labeling_sigma_scaler"
     FI_HORIZON = 'fi_horizon_k'
-    NUM_SNAPSHOTS = 'num_snapshots'
+    NUM_SNAPSHOTS = 'observation_length'
     META_HIDDEN = 'meta_hidden'
 
 
@@ -608,3 +608,11 @@ def model_dataset(model, bias="FI"):
     if model in [Models.METALOB]:
         return "Meta"
     return bias
+
+
+class UnitHorizon(Enum):
+    SECONDS = "seconds"
+    HOURS = "hours"
+    MINUTES = "minutes"
+    DAYS = "days"
+    EVENTS = "events"

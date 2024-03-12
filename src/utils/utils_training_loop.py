@@ -77,17 +77,17 @@ def __run_training_loop(config: Configuration, model_params=None):
     def core(config, model_params):
 
         # if no hyperparameter tuning must be done, use the fixed parameters
-        if not config.IS_TUNE_H_PARAMS:
+        if not config.IS_HPARAM_SEARCH:
             assert model_params is None
 
-            if config.CHOSEN_DATASET == cst.DatasetFamily.FI:
-                model_params = HP_DICT_MODEL[config.CHOSEN_MODEL].fixed_fi
+            if config.DATASET_NAME == cst.DatasetFamily.FI:
+                model_params = HP_DICT_MODEL[config.PREDICTION_MODEL].fixed_fi
 
-            elif config.CHOSEN_DATASET == cst.DatasetFamily.LOB:
-                model_params = HP_DICT_MODEL[config.CHOSEN_MODEL].fixed_lob
+            elif config.DATASET_NAME == cst.DatasetFamily.LOB:
+                model_params = HP_DICT_MODEL[config.PREDICTION_MODEL].fixed_lob
 
-            elif config.CHOSEN_DATASET == cst.DatasetFamily.META:
-                model_params = HP_DICT_MODEL[config.CHOSEN_MODEL].fixed
+            elif config.DATASET_NAME == cst.DatasetFamily.META:
+                model_params = HP_DICT_MODEL[config.PREDICTION_MODEL].fixed
 
         print("Setting model parameters", model_params)
 
@@ -125,7 +125,7 @@ def __run_training_loop(config: Configuration, model_params=None):
         nn.testing_mode = cst.ModelSteps.TESTING
         trainer.test(nn, dataloaders=data_module.test_dataloader(), ckpt_path="best")
 
-        if not config.IS_TUNE_H_PARAMS:
+        if not config.IS_HPARAM_SEARCH:
             config.METRICS_JSON.close()
 
     try:
@@ -143,7 +143,7 @@ def run(config: Configuration):
         """ LOG on WANDB console. """
 
         run_name = None
-        if not config.IS_TUNE_H_PARAMS:
+        if not config.IS_HPARAM_SEARCH:
             config.dynamic_config_setup()
             run_name = config.WANDB_SWEEP_NAME
 
@@ -151,14 +151,14 @@ def run(config: Configuration):
             # log simulation details in WANDB console
 
             wandb_instance.log_code("src/")
-            wandb_instance.log({"model": config.CHOSEN_MODEL.name})
+            wandb_instance.log({"model": config.PREDICTION_MODEL.name})
             wandb_instance.log({"seed": config.SEED})
             wandb_instance.log({"stock_train": config.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name})
             wandb_instance.log({"stock_test": config.CHOSEN_STOCKS[cst.STK_OPEN.TEST].name})
             wandb_instance.log({"period": config.CHOSEN_PERIOD.name})
             wandb_instance.log({"alpha": cst.ALPHA})
 
-            if config.CHOSEN_DATASET in [cst.DatasetFamily.FI, cst.DatasetFamily.META]:
+            if config.DATASET_NAME in [cst.DatasetFamily.FI, cst.DatasetFamily.META]:
                 wandb_instance.log({"fi-k": config.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON]})
 
             wandb_instance.log({"back-win": config.HYPER_PARAMETERS[cst.LearningHyperParameter.BACKWARD_WINDOW]})
@@ -168,7 +168,7 @@ def run(config: Configuration):
             config.WANDB_INSTANCE = wandb_instance
 
             params_dict = wandb_instance.config  # chosen parameters from WANDB search
-            if not config.IS_TUNE_H_PARAMS:
+            if not config.IS_HPARAM_SEARCH:
                 params_dict = None
 
             __run_training_loop(config, params_dict)
@@ -176,7 +176,7 @@ def run(config: Configuration):
     # 🐝 STEP: initialize sweep by passing in cf
     config.dynamic_config_setup()  # initializes the simulation
 
-    if config.IS_TUNE_H_PARAMS:
+    if config.IS_HPARAM_SEARCH:
         sweep_id = wandb.sweep(
             sweep={
                 'command': ["${env}", "python3", "${program}", "${args}"],
@@ -185,7 +185,7 @@ def run(config: Configuration):
                 'method':  config.SWEEP_METHOD,
                 'metric':  config.SWEEP_METRIC,
                 'parameters': {
-                    **HP_DICT_MODEL[config.CHOSEN_MODEL].sweep
+                    **HP_DICT_MODEL[config.PREDICTION_MODEL].sweep
                 }
             },
             project=cst.PROJECT_NAME
@@ -202,37 +202,3 @@ def set_seeds(config: Configuration):
     np.random.seed(config.SEED)
     random.seed(config.SEED)
     config.RANDOM_GEN_DATASET = np.random.RandomState(config.SEED)
-
-
-def experiment_preamble(run_name_prefix, servers):
-    """
-    Returns the run_name_prefix, server name, server id and number of servers.
-    This function is used to run the same code on different machines identified by their hostname.
-    Each machine will execute the model defined in the execution plan.
-    """
-
-    if run_name_prefix is None:
-        parser = argparse.ArgumentParser(description='Stock Price Experiment FI:')
-        parser.add_argument('-run_name_prefix', '--run_name_prefix', default=None)
-        args = vars(parser.parse_args())
-        run_name_prefix = args["run_name_prefix"]
-
-    hostname = socket.gethostname()
-
-    n_servers = len(cst.server2hostname) if servers is None else len(servers)
-    servers = cst.server2hostname if servers is None else servers  # list of server
-    servers_hostname = [cst.server2hostname[s] for s in servers]   # list of hostnames
-
-    if hostname in servers_hostname:
-        server_name = cst.hostname2server[hostname]
-        server_id = servers_hostname.index(hostname)
-
-    elif cst.Servers.ANY in servers:
-        server_name = cst.Servers.ANY
-        server_id = 0
-
-    else:
-        raise "This SERVER is not handled for the experiment."
-
-    print("Running on server", server_name.name)
-    return run_name_prefix, server_name, server_id, n_servers

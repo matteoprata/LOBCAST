@@ -11,7 +11,7 @@ from src.config import Configuration
 from src.utils.utils_generic import write_data, read_data
 
 DIR_LOBSTER_FINAL_JSONS = "all_models_25_04_23/jsons/"
-DIR_OHLC = "data/ohlc_stocks/"
+DIR_OHLC = "../data/ohlc_stocks/"
 
 
 def load_predictions(model, stock, seed, period, horizon):
@@ -85,7 +85,7 @@ class DLstrategy2(Strategy):
 
 def run_backtest(cf, seed):
     PICKLE_NAME = "backtesting_mat.mat"
-    PICKLE_DIR = "data/"
+    PICKLE_DIR = "../data/"
 
     if os.path.exists(PICKLE_DIR+PICKLE_NAME):
         Returns = read_data(PICKLE_DIR+PICKLE_NAME)

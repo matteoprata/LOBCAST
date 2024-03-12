@@ -26,19 +26,19 @@ def launch_test_FI(seeds_set):
             set_seeds(cf)
 
             cf.IS_TEST_ONLY = True
-            cf.CHOSEN_DATASET = cst.DatasetFamily.FI
+            cf.DATASET_NAME = cst.DatasetFamily.FI
 
             cf.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN] = cst.Stocks.FI
             cf.CHOSEN_STOCKS[cst.STK_OPEN.TEST] = cst.Stocks.FI
             cf.CHOSEN_PERIOD = cst.Periods.FI
             cf.IS_WANDB = 0
-            cf.IS_TUNE_H_PARAMS = False
+            cf.IS_HPARAM_SEARCH = False
 
-            cf.CHOSEN_MODEL = cst.Models.MAJORITY
+            cf.PREDICTION_MODEL = cst.Models.MAJORITY
             cf.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON] = k.value
 
             # Setting configuration parameters
-            model_params = HP_DICT_MODEL[cf.CHOSEN_MODEL].fixed
+            model_params = HP_DICT_MODEL[cf.PREDICTION_MODEL].fixed
             for param in cst.LearningHyperParameter:
                 if param.value in model_params:
                     cf.HYPER_PARAMETERS[param] = model_params[param.value]
@@ -73,7 +73,7 @@ def launch_test_FI(seeds_set):
                 dataset_type=cst.DatasetType.TEST,
                 horizon=cf.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON],
                 window=cf.HYPER_PARAMETERS[cst.LearningHyperParameter.NUM_SNAPSHOTS],
-                chosen_model=cf.CHOSEN_MODEL
+                chosen_model=cf.PREDICTION_MODEL
             )
             truths = databuilder_test.samples_y[100:]
             truths = truths[int(len(truths)*.15):]
@@ -98,15 +98,15 @@ def launch_test_LOBSTER(seeds, kset, period, json_dir):
             set_seeds(cf)
 
             cf.IS_TEST_ONLY = True
-            cf.CHOSEN_DATASET = cst.DatasetFamily.LOB
+            cf.DATASET_NAME = cst.DatasetFamily.LOB
 
             cf.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN] = cst.Stocks.ALL
             cf.CHOSEN_STOCKS[cst.STK_OPEN.TEST] = cst.Stocks.ALL
             cf.CHOSEN_PERIOD = period
             cf.IS_WANDB = 0
-            cf.IS_TUNE_H_PARAMS = False
+            cf.IS_HPARAM_SEARCH = False
 
-            cf.CHOSEN_MODEL = cst.Models.MAJORITY
+            cf.PREDICTION_MODEL = cst.Models.MAJORITY
             cf.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON] = 10
             cf.HYPER_PARAMETERS[cst.LearningHyperParameter.FORWARD_WINDOW] = wf.value
             cf.HYPER_PARAMETERS[cst.LearningHyperParameter.BACKWARD_WINDOW] = wb.value
@@ -114,14 +114,14 @@ def launch_test_LOBSTER(seeds, kset, period, json_dir):
             cf.JSON_DIRECTORY = json_dir
 
             # Setting configuration parameters
-            model_params = HP_DICT_MODEL[cf.CHOSEN_MODEL].fixed
+            model_params = HP_DICT_MODEL[cf.PREDICTION_MODEL].fixed
             for param in cst.LearningHyperParameter:
                 if param.value in model_params:
                     cf.HYPER_PARAMETERS[param] = model_params[param.value]
 
             # def load_predictions_from_jsons(in_dir, models, seed, horizon, trst="FI", test="FI", peri="FI", bw=None, fw=None, is_raw=False, n_instances=139487):
             logits, _ = MetaDataBuilder.load_predictions_from_jsons(jsons_dir,
-                                                                    cf.CHOSEN_DATASET.value,
+                                                                    cf.DATASET_NAME.value,
                                                                     cst.MODELS_15,
                                                                     cf.SEED,
                                                                     cf.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON],

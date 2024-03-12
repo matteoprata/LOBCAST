@@ -38,25 +38,25 @@ class NBoF(pl.LightningModule):
 
     def forward(self, x):
         batch_size = x.shape[0]
-        # x.shape = [batch_size, num_snapshots, num_features]
+        # x.shape = [batch_size, observation_length, num_features]
 
         inputs = torch.zeros(batch_size, self.num_rbf_neurons, self.num_snapshots, device=cst.DEVICE_TYPE)
         for k, (v, w) in enumerate(zip(self.V, self.W)):
             # v.shape = [40]
             v = v.unsqueeze(0).unsqueeze(0)
             v = v.repeat(batch_size, self.num_snapshots, 1)
-            # v.shape = [batch_size, num_snapshots, num_features]
+            # v.shape = [batch_size, observation_length, num_features]
 
             i = (x - v) * w
-            # i.shape = [batch_size, num_snapshots, num_features]
+            # i.shape = [batch_size, observation_length, num_features]
 
             inputs[:, k, :] = - torch.linalg.norm(i, dim=2, ord=2)
-            # inputs[k].shape = [batch_size, num_snapshots]
+            # inputs[k].shape = [batch_size, observation_length]
 
-        # inputs.shape = [batch_size, num_rbf_neurons, num_snapshots]
+        # inputs.shape = [batch_size, num_rbf_neurons, observation_length]
 
         phi = self.softmax(inputs)
-        # phi.shape = [batch_size, num_rbf_neurons, num_snapshots]
+        # phi.shape = [batch_size, num_rbf_neurons, observation_length]
 
         s = torch.mean(phi, dim=2)
         # s.shape = [batch_size, num_rbf_neurons]

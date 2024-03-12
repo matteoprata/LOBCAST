@@ -577,7 +577,7 @@ def FI_plots():
                                 test_src=test_src, time_period=time_period)
     print(INFER[0])
     for im, m in enumerate(LIST_MODELS):
-        print("MODEL {} VALUE {:e}".format(m, INFER[0][im]))
+        print("PREDICTION_MODEL {} VALUE {:e}".format(m, INFER[0][im]))
 
     # 1: PLOT 2
     # 1: PLOT 2
