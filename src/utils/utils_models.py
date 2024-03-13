@@ -33,7 +33,7 @@ def get_tuned_parameters(config: Configuration, params):
     return values
 
 
-def pick_model(config: Configuration, data_module):
+def pick_model(config, data_module):
     loss_weights = None
 
     num_features = data_module.x_shape[0] * data_module.x_shape[1]  # 40 * wind

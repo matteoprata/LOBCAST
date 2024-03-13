@@ -114,7 +114,7 @@ def prepare_data_lob(config: Configuration):
     return lob_dm
 
 
-def pick_dataset(config: L):
+def pick_dataset(config):
 
     if config.DATASET_NAME == cst.DatasetFamily.LOB:
         return prepare_data_lob(config)

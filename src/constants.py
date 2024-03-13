@@ -335,7 +335,7 @@ NUM_CLASSES = 3
 DEVICE_TYPE = 'cuda' if torch.cuda.is_available() else 'cpu'
 NUM_GPUS = None if DEVICE_TYPE == 'cpu' else torch.cuda.device_count()
 
-PROJECT_NAME = "LOB-CLASSIFIERS-({})"
+PROJECT_NAME = "LOBCAST-({})"
 DIR_EXPERIMENTS = "data/experiments/" + PROJECT_NAME
 DIR_SAVED_MODEL = "data/saved_models/" + PROJECT_NAME
 

@@ -2,7 +2,7 @@
 import src.constants as cst
 from enum import Enum
 from typing import List, Union
-from src.config import Configuration
+from src.config import LOBCASTSetupRun
 import src.utils.utils_training_loop as tru
 import argparse
 from src.utils.utils_dataset import pick_dataset
@@ -28,33 +28,7 @@ class Instance:
 from pytorch_lightning import Trainer
 
 
-class LOBCASTSetup(Settings):
-    def __init__(self):
-        super().__init__()
 
-        parse_cl_arguments(self)
-
-        # read from
-        self.TUNABLE = ConfigHPTunable()
-        self.TUNED   = ConfigHPTuned()
-
-        # add parameters from model
-        for key, value in self.PREDICTION_MODEL.tunable_parameters.items():
-            self.TUNABLE.add_hyperparameter(key, value)
-
-        # add the same parameters in the TUNED object
-        for key, _ in self.TUNABLE.__dict__.items():
-            self.TUNED.add_hyperparameter(key, None)
-
-        self.do_search()
-
-        print(self.TUNED.__dict__)
-        # exit()
-
-    def do_search(self):
-        # for now, it only assigned the first element in a list of possible values
-        for key, value in self.TUNABLE.__dict__.items():
-            self.TUNED.__setattr__(key, value[0])
 
 
 def run_instance():
@@ -63,7 +37,7 @@ def run_instance():
     # parse_cl_arguments(cf)
     # print("parsed cf")
     # tru.run(cf)
-    cf = LOBCASTSetup()
+    cf = LOBCASTSetupRun()
 
     # assign hps of the specific model to the config file
     data_module = pick_dataset(cf)     # load the data
@@ -120,18 +94,7 @@ def run(instances):
                     sys.exit()
 
 
-def parse_cl_arguments(configuration: Settings):
-    """ Parses the arguments for the command line. """
 
-    parser = argparse.ArgumentParser(description='LOBCAST single execution arguments:')
-
-    for k, v in configuration.__dict__.items():
-        parser.add_argument(f'--{k}', default=v, type=type(v))
-
-    args = vars(parser.parse_args())
-
-    for k, v in args.items():
-        configuration.__setattr__(k, v)
 
 
 if __name__ == '__main__':

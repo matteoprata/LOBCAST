@@ -13,7 +13,6 @@ from pytorch_lightning import seed_everything
 
 import src.constants as cst
 import src.models.model_callbacks as cbk
-from src.config import Configuration
 
 # MODELS
 # MODELS
@@ -69,7 +68,7 @@ HP_DICT_MODEL = {
 }
 
 
-def __run_training_loop(config: Configuration, model_params=None):
+def __run_training_loop(config, model_params=None):
     """ Set the model hps and lunch the training loop. """
 
     def core(config, model_params):
@@ -134,10 +133,10 @@ def __run_training_loop(config: Configuration, model_params=None):
         exit(1)
 
 
-def run(config: Configuration):
+def run(config):
     """ Build a WANDB sweep from a configuration object. """
 
-    def _wandb_exe(config: Configuration):
+    def _wandb_exe(config):
         """ LOG on WANDB console. """
 
         run_name = None
@@ -194,7 +193,7 @@ def run(config: Configuration):
         _wandb_exe(config)
 
 
-def set_seeds(config: Configuration):
+def set_seeds(config):
     """ Sets the random seed to all the random generators. """
     seed_everything(config.SEED)
     np.random.seed(config.SEED)

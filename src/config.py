@@ -6,6 +6,9 @@ from src.constants import LearningHyperParameter
 import src.constants as cst
 from src.metrics.metrics_log import Metrics
 from datetime import date, datetime
+import argparse
+import torch
+from enum import Enum
 
 np.set_printoptions(suppress=True)
 
@@ -15,25 +18,26 @@ class Settings:
 
         self.SEED: int = 0
         self.IS_HPARAM_SEARCH: bool = False  # else preload from json file
-        self.IS_CPU: bool = False
 
         self.DATASET_NAME: cst.DatasetFamily = cst.DatasetFamily.FI
-        self.STOCK_TRAIN_VAL: str = "AAPL"
-        self.STOCK_TEST: str = "AAPL"
+        self.STOCK_TRAIN_VAL: str = "FI"
+        self.STOCK_TEST: str = "FI"
 
         self.N_TRENDS = 3
-        self.PREDICTION_MODEL = cst.ModelsClass.MLP.value
+        self.PREDICTION_MODEL = cst.ModelsClass.MLP
         self.PREDICTION_HORIZON_UNIT: cst.UnitHorizon = cst.UnitHorizon.EVENTS
         self.PREDICTION_HORIZON_FUTURE: int = 5
         self.PREDICTION_HORIZON_PAST: int = 10
         self.OBSERVATION_PERIOD: int = 10
-        self.IS_SHUFFLE_TRAIN_SET = None
+        self.IS_SHUFFLE_TRAIN_SET = True
 
         self.TRAIN_SET_PORTION = .8
 
-        self.MODE = 'train'
+        self.IS_TEST = False
         self.MODEL_PATH: str = ""
-        self.DEVICE = ""
+
+        self.DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
+        self.N_GPUs = None if self.DEVICE == 'cpu' else torch.cuda.device_count()
 
 
 class ConfigHP:
@@ -60,27 +64,95 @@ class ConfigHPTunable(ConfigHP):
         self.OPTIMIZER = ["SGD"]
 
 
+class LOBCASTSetupRun(Settings):
+    def __init__(self):
+        super().__init__()
+
+        self.parse_cl_arguments()
+
+        # read from
+        self.TUNABLE = ConfigHPTunable()
+        self.TUNED = ConfigHPTuned()
+
+        # add parameters from model
+        for key, value in self.PREDICTION_MODEL.value.tunable_parameters.items():
+            self.TUNABLE.add_hyperparameter(key, value)
+
+        # add the same parameters in the TUNED object
+        for key, _ in self.TUNABLE.__dict__.items():
+            self.TUNED.add_hyperparameter(key, None)
+
+        self.do_search()
+
+        self.RUN_NAME_PREFIX = self.run_name_prefix()
+        self.setup_all_directories(self.RUN_NAME_PREFIX, self.IS_TEST)
+
+        print(self.RUN_NAME_PREFIX)
+        exit()
+
+    def do_search(self):
+        # for now, it only assigned the first element in a list of possible values
+        for key, value in self.TUNABLE.__dict__.items():
+            self.TUNED.__setattr__(key, value[0])
+
+    @staticmethod
+    def cf_name_format(ext=""):
+        return "MOD={}-SEED={}-TRS={}-TES={}-DS={}-HU={}-HP={}-HF={}-OB={}" + ext
+
+    def run_name_prefix(self):
+        return self.cf_name_format().format(
+            self.PREDICTION_MODEL.name,
+            self.SEED,
+            self.STOCK_TRAIN_VAL,
+            self.STOCK_TEST,
+            self.DATASET_NAME.value,
+            self.PREDICTION_HORIZON_UNIT.name,
+            self.PREDICTION_HORIZON_PAST,
+            self.PREDICTION_HORIZON_FUTURE,
+            self.OBSERVATION_PERIOD,
+        )
+
+    def parse_cl_arguments(self):
+        """ Parses the arguments for the command line. """
+
+        parser = argparse.ArgumentParser(description='LOBCAST single execution arguments:')
+
+        for k, v in self.__dict__.items():
+            type_var = str if isinstance(v, Enum) else type(v)
+            var = v.name if isinstance(v, Enum) else v
+            parser.add_argument(f'--{k}', default=var, type=type_var)
+
+        args = vars(parser.parse_args())
+
+        for k, v in self.__dict__.items():
+            value = v.__class__[args[k]] if isinstance(v, Enum) else args[k]
+            self.__setattr__(k, value)
+
+    @staticmethod
+    def setup_all_directories(fname, is_test):
+        """
+        Creates two folders:
+            (1) data.experiments.LOBCAST-(fname) for the jsons with the stats
+            (2) data.saved_models.LOBCAST-(fname) for the models
+        """
+
+        if not is_test:
+            cst.PROJECT_NAME = cst.PROJECT_NAME.format(fname)
+            cst.DIR_SAVED_MODEL = cst.DIR_SAVED_MODEL.format(fname) + "/"
+            cst.DIR_EXPERIMENTS = cst.DIR_EXPERIMENTS.format(fname) + "/"
+
+            # create the paths for the simulation if they do not exist already
+            paths = ["data", cst.DIR_SAVED_MODEL, cst.DIR_EXPERIMENTS]
+            for p in paths:
+                if not os.path.exists(p):
+                    os.makedirs(p)
+
+
+
 class Configuration(Settings):
     """ Represents the configuration file of the simulation, containing all variables of the simulation. """
     def __init__(self, run_name_prefix=None):
         super().__init__()
-
-        self.TUNABLE = ConfigHPTunable()
-        self.TUNED = ConfigHPTuned()
-
-        # assigns values to
-        for key, value in self.PREDICTION_MODEL.tunable_parameters.items():
-            self.TUNABLE.add_hyperparameter(key, value)
-
-        for key, _ in self.TUNABLE.__dict__.items():
-            self.TUNED.add_hyperparameter(key, None)
-
-        # DO TUNING
-        for key, value in self.TUNABLE.__dict__.items():
-            self.TUNED.__setattr__(key, value[0])
-
-        print(self.TUNED.__dict__)
-        # exit()
 
         self.IS_DEBUG = False
         self.IS_TEST_ONLY = False

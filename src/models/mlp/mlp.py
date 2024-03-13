@@ -14,7 +14,8 @@ CONFIG = {
 
 
 class LOBCAST_module:
-    def __init__(self, model, tunable_parameters: dict):
+    def __init__(self, name, model, tunable_parameters: dict):
+        self.name = name
         self.model = model
         self.tunable_parameters = tunable_parameters
 
@@ -68,4 +69,4 @@ class MLP(LOBCAST_model):
         return out
 
 
-MLP_lm = LOBCAST_module(MLP, CONFIG)
+MLP_lm = LOBCAST_module("MLP", MLP, CONFIG)
