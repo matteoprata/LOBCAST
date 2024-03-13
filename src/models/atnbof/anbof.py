@@ -1,9 +1,9 @@
 import torch
 import torch.nn as nn
-from src.models.atnbof.resnet import ResNetPreprocessing
-from src.models.atnbof.attention import Attention
-from src.models.atnbof.selfattention import SelfAttention
-from src.models.atnbof.nbof import NBoF
+from src.models.models_classes import ResNetPreprocessing
+from src.models.models_classes import Attention
+from src.models.models_classes import SelfAttention
+from src.models.models_classes import NBoF
 
 
 class ANBoF(nn.Module):
@@ -58,8 +58,8 @@ class ANBoF(nn.Module):
 
     def get_parameters(self):
         bn_params, other_params = self.resnet_block.get_parameters()
-        other_params.extend(list(self.quantization_block.parameters()))
-        other_params.extend(list(self.attention_block.parameters()))
+        other_params.extend(list(self.quantization_block.hps()))
+        other_params.extend(list(self.attention_block.hps()))
         other_params.extend(list(self.classifier.parameters()))
         return bn_params, other_params
 

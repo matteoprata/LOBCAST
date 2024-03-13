@@ -8,6 +8,8 @@ import argparse
 from src.utils.utils_dataset import pick_dataset
 from src.utils.utils_models import pick_model
 
+from src.config import Settings, ConfigHPTunable, ConfigHPTuned
+
 
 class Instance:
     def __init__(self, model: cst.Models, horizons: List[int], seeds: List[int]):
@@ -26,14 +28,44 @@ class Instance:
 from pytorch_lightning import Trainer
 
 
-def run_instance():
-    cf: Configuration = Configuration()
-    print("created cf")
-    parse_cl_arguments(cf)
-    print("parsed cf")
-    # tru.run(cf)
+class LOBCASTSetup(Settings):
+    def __init__(self):
+        super().__init__()
 
-    # assign parameters of the specific model to the config file
+        parse_cl_arguments(self)
+
+        # read from
+        self.TUNABLE = ConfigHPTunable()
+        self.TUNED   = ConfigHPTuned()
+
+        # add parameters from model
+        for key, value in self.PREDICTION_MODEL.tunable_parameters.items():
+            self.TUNABLE.add_hyperparameter(key, value)
+
+        # add the same parameters in the TUNED object
+        for key, _ in self.TUNABLE.__dict__.items():
+            self.TUNED.add_hyperparameter(key, None)
+
+        self.do_search()
+
+        print(self.TUNED.__dict__)
+        # exit()
+
+    def do_search(self):
+        # for now, it only assigned the first element in a list of possible values
+        for key, value in self.TUNABLE.__dict__.items():
+            self.TUNED.__setattr__(key, value[0])
+
+
+def run_instance():
+    # cf: Configuration = Configuration()
+    # print("created cf")
+    # parse_cl_arguments(cf)
+    # print("parsed cf")
+    # tru.run(cf)
+    cf = LOBCASTSetup()
+
+    # assign hps of the specific model to the config file
     data_module = pick_dataset(cf)     # load the data
     nn = pick_model(cf, data_module)   # load the model
 
@@ -88,25 +120,18 @@ def run(instances):
                     sys.exit()
 
 
-def parse_cl_arguments(configuration: Configuration):
+def parse_cl_arguments(configuration: Settings):
     """ Parses the arguments for the command line. """
 
     parser = argparse.ArgumentParser(description='LOBCAST single execution arguments:')
 
-    parser.add_argument('-seed',   '--SEED', default=configuration.SEED, type=int)
-    parser.add_argument('-wf',     '--WINDOW_FUTURE', default=configuration.SEED, type=int)
-    parser.add_argument('-wp',     '--WINDOW_PAST', default=configuration.SEED, type=int)
-    parser.add_argument('-wunit',  '--WINDOW_UNIT', default=configuration.SEED, type=int)
-    parser.add_argument('-model',  '--PREDICTION_MODEL', default=configuration.SEED, type=int)
-    parser.add_argument('-search', '--IS_HPARAM_SEARCH', default=configuration.SEED, type=int)
-    parser.add_argument('-stock',  '--STOCK', default=configuration.SEED, type=int)
-    parser.add_argument('-cpu',    '--IS_CPU', default=configuration.SEED, type=int)
+    for k, v in configuration.__dict__.items():
+        parser.add_argument(f'--{k}', default=v, type=type(v))
 
     args = vars(parser.parse_args())
 
-    print("Setting parameters...")
-
-    configuration.SEED = args["SEED"]
+    for k, v in args.items():
+        configuration.__setattr__(k, v)
 
 
 if __name__ == '__main__':
@@ -128,6 +153,6 @@ if __name__ == '__main__':
 # horizon -
 # seed
 # dataset name (whole period, just to split)
-# is_hyper_search  (else read parameters from json)
+# is_hyper_search  (else read hps from json)
 # chosen stock
 #

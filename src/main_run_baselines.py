@@ -37,7 +37,7 @@ def launch_test_FI(seeds_set):
             cf.PREDICTION_MODEL = cst.Models.MAJORITY
             cf.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON] = k.value
 
-            # Setting configuration parameters
+            # Settings configuration hps
             model_params = HP_DICT_MODEL[cf.PREDICTION_MODEL].fixed
             for param in cst.LearningHyperParameter:
                 if param.value in model_params:
@@ -113,7 +113,7 @@ def launch_test_LOBSTER(seeds, kset, period, json_dir):
             cf.TARGET_DATASET_META_MODEL = cst.DatasetFamily.LOB
             cf.JSON_DIRECTORY = json_dir
 
-            # Setting configuration parameters
+            # Settings configuration hps
             model_params = HP_DICT_MODEL[cf.PREDICTION_MODEL].fixed
             for param in cst.LearningHyperParameter:
                 if param.value in model_params:

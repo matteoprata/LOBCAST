@@ -10,7 +10,7 @@ from datetime import date, datetime
 np.set_printoptions(suppress=True)
 
 
-class ConfigExternal:
+class Settings:
     def __init__(self):
 
         self.SEED: int = 0
@@ -22,7 +22,7 @@ class ConfigExternal:
         self.STOCK_TEST: str = "AAPL"
 
         self.N_TRENDS = 3
-        self.PREDICTION_MODEL: cst.Models = cst.Models. BINCTABL
+        self.PREDICTION_MODEL = cst.ModelsClass.MLP.value
         self.PREDICTION_HORIZON_UNIT: cst.UnitHorizon = cst.UnitHorizon.EVENTS
         self.PREDICTION_HORIZON_FUTURE: int = 5
         self.PREDICTION_HORIZON_PAST: int = 10
@@ -31,29 +31,56 @@ class ConfigExternal:
 
         self.TRAIN_SET_PORTION = .8
 
+        self.MODE = 'train'
+        self.MODEL_PATH: str = ""
+        self.DEVICE = ""
 
-class ConfigTunable:
-    def __init__(self):
-        self.BATCH_SIZE = [64, 55]
-        self.LEARNING_RATE = [0.01]
-        self.EPOCHS_UB = [50]
-        self.OPTIMIZER = [cst.Optimizers.SGD.value]
 
+class ConfigHP:
     def add_hyperparameters(self, params: dict):
-        root = "ext_"
         for key, value in params.items():
-            self.__setattr__(root+str(key), value)
+            self.__setattr__(key, value)
+
+    def add_hyperparameter(self, key, value):
+        self.__setattr__(key, value)
 
     def __repr__(self):
         return self.__dict__
 
 
-class Configuration(ConfigExternal, ConfigTunable):
+class ConfigHPTuned(ConfigHP):
+    pass
+
+
+class ConfigHPTunable(ConfigHP):
+    def __init__(self):
+        self.BATCH_SIZE = [64, 55]
+        self.LEARNING_RATE = [0.01]
+        self.EPOCHS_UB = [50]
+        self.OPTIMIZER = ["SGD"]
+
+
+class Configuration(Settings):
     """ Represents the configuration file of the simulation, containing all variables of the simulation. """
     def __init__(self, run_name_prefix=None):
         super().__init__()
 
-        self.add_hyperparameters({"BATCH_SIZE": [10]})  # TODO add based on chosen model
+        self.TUNABLE = ConfigHPTunable()
+        self.TUNED = ConfigHPTuned()
+
+        # assigns values to
+        for key, value in self.PREDICTION_MODEL.tunable_parameters.items():
+            self.TUNABLE.add_hyperparameter(key, value)
+
+        for key, _ in self.TUNABLE.__dict__.items():
+            self.TUNED.add_hyperparameter(key, None)
+
+        # DO TUNING
+        for key, value in self.TUNABLE.__dict__.items():
+            self.TUNED.__setattr__(key, value[0])
+
+        print(self.TUNED.__dict__)
+        # exit()
 
         self.IS_DEBUG = False
         self.IS_TEST_ONLY = False

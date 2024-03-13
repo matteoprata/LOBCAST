@@ -45,7 +45,7 @@ def prepare_data_fi(config: Configuration):
 
     fi_dm = DataModule(
         fi_train, fi_val, fi_test,
-        config.BATCH_SIZE,
+        config.TUNED.BATCH_SIZE,
         config.IS_SHUFFLE_TRAIN_SET
     )
     return fi_dm
@@ -114,7 +114,7 @@ def prepare_data_lob(config: Configuration):
     return lob_dm
 
 
-def pick_dataset(config: Configuration):
+def pick_dataset(config: L):
 
     if config.DATASET_NAME == cst.DatasetFamily.LOB:
         return prepare_data_lob(config)

@@ -36,19 +36,19 @@ def compute_metrics(ys, predictions, model_step, loss_vals, si):
     cok = cohen_kappa_score(ys, predictions)
 
     val_dict = {
-        model_step.value + f"_{si}_" + cst.Metrics.F1.value: float(f1score),
-        model_step.value + f"_{si}_" + cst.Metrics.F1_W.value: float(f1score_w),
-
-        model_step.value + f"_{si}_" + cst.Metrics.PRECISION.value: float(precision),
-        model_step.value + f"_{si}_" + cst.Metrics.PRECISION_W.value: float(precision_w),
-
-        model_step.value + f"_{si}_" + cst.Metrics.RECALL.value: float(recall),
-        model_step.value + f"_{si}_" + cst.Metrics.RECALL_W.value: float(recall_w),
-
-        model_step.value + f"_{si}_" + cst.Metrics.ACCURACY.value: float(accuracy),
-        model_step.value + f"_{si}_" + cst.Metrics.MCC.value: float(mcc),
-        model_step.value + f"_{si}_" + cst.Metrics.COK.value: float(cok),
-        # single
-        model_step.value + f"_" + cst.Metrics.LOSS.value: float(np.sum(loss_vals)),
+        model_step.value + "_" + cst.Metrics.F1.value: float(f1score),
+        model_step.value + "_" + cst.Metrics.F1_W.value: float(f1score_w),
+                           "_" +
+        model_step.value + "_" + cst.Metrics.PRECISION.value: float(precision),
+        model_step.value + "_" + cst.Metrics.PRECISION_W.value: float(precision_w),
+                           "_" +
+        model_step.value + "_" + cst.Metrics.RECALL.value: float(recall),
+        model_step.value + "_" + cst.Metrics.RECALL_W.value: float(recall_w),
+                           "_" +
+        model_step.value + "_" + cst.Metrics.ACCURACY.value: float(accuracy),
+        model_step.value + "_" + cst.Metrics.MCC.value: float(mcc),
+        model_step.value + "_" + cst.Metrics.COK.value: float(cok),
+        # single           "_  +
+        model_step.value + "_" + cst.Metrics.LOSS.value: float(np.sum(loss_vals)),
     }
     return val_dict

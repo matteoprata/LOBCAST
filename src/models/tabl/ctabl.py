@@ -1,7 +1,6 @@
 # Temporal Attention augmented Bilinear Network for Financial Time-Series Data Analysis
 # Source: https://ieeexplore.ieee.org/abstract/document/8476227
 
-import pytorch_lightning as pl
 from torch import nn
 import torch
 from src.models.tabl.bl_layer import BL_layer

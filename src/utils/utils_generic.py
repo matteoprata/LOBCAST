@@ -3,8 +3,18 @@ import pickle
 import os
 import json
 import platform, socket, re, uuid, psutil, logging
-import src.constants as cst
 import matplotlib.pyplot as plt
+
+import inspect
+
+
+def get_class_arguments(obj):
+    signature = inspect.signature(obj)
+    parameters = signature.parameters
+    arguments = [param.name for param in parameters.values()]  # list of arguments
+    return arguments
+
+import src.constants as cst
 
 
 def read_data(fname):

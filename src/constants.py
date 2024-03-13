@@ -183,6 +183,33 @@ class Models(str, Enum):
     MAJORITY = "Majority"
 
 
+from src.models.models_classes import *
+# to use in the future
+
+
+class ModelsClass(Enum):
+    MLP = mlp.MLP_lm
+    BINCTABL = bin_tabl
+    CTABL = ctabl
+
+    CNN1 = cnn1
+    CNNLSTM = cnnlstm
+    ATNBoF = atnbof
+
+    CNN2 = cnn2
+    TLONBoF = tlonbof
+    DLA = dla
+
+    LSTM = lstm
+    DEEPLOBATT = deeplobatt
+    DEEPLOB = deeplob
+
+    DAIN = dain
+    AXIALLOB = axiallob
+    TRANSLOB = translob
+
+
+
 class DatasetFamily(str, Enum):
     FI = "FI"
     LOB = "Lobster"

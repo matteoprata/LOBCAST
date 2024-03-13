@@ -1,13 +1,10 @@
 
 import sys
 
-import argparse
 import random
 import numpy as np
 import wandb
 import traceback
-import socket
-
 
 # TORCH
 from pytorch_lightning import Trainer
@@ -18,6 +15,7 @@ import src.constants as cst
 import src.models.model_callbacks as cbk
 from src.config import Configuration
 
+# MODELS
 # MODELS
 from src.models.mlp.mlp_param_search import HP_MLP, HP_MLP_FI_FIXED, HP_MLP_LOBSTER_FIXED
 from src.models.tabl.tabl_param_search import HP_TABL, HP_TABL_FI_FIXED, HP_TABL_LOBSTER_FIXED
@@ -43,11 +41,11 @@ from collections import namedtuple
 HPSearchTypes  = namedtuple('HPSearchTypes', ("sweep", "fixed_fi", "fixed_lob"))
 HPSearchTypes2 = namedtuple('HPSearchTypes', ("sweep", "fixed"))
 
-# MAPS every model to 3 dictionaries of parameters:
+# MAPS every model to 3 dictionaries of hps:
 #
 # HPSearchTypes.sweep:     for the hyperparameters sweep
-# HPSearchTypes.fixed_fi:  fixed parameters for the FI dataset
-# HPSearchTypes.fixed_lob: fixed parameters for the LOBSTER dataset
+# HPSearchTypes.fixed_fi:  fixed hps for the FI dataset
+# HPSearchTypes.fixed_lob: fixed hps for the LOBSTER dataset
 #
 HP_DICT_MODEL = {
     cst.Models.MLP:  HPSearchTypes(HP_MLP, HP_MLP_FI_FIXED, HP_MLP_LOBSTER_FIXED),
@@ -72,11 +70,11 @@ HP_DICT_MODEL = {
 
 
 def __run_training_loop(config: Configuration, model_params=None):
-    """ Set the model parameters and lunch the training loop. """
+    """ Set the model hps and lunch the training loop. """
 
     def core(config, model_params):
 
-        # if no hyperparameter tuning must be done, use the fixed parameters
+        # if no hyperparameter tuning must be done, use the fixed hps
         if not config.IS_HPARAM_SEARCH:
             assert model_params is None
 
@@ -89,7 +87,7 @@ def __run_training_loop(config: Configuration, model_params=None):
             elif config.DATASET_NAME == cst.DatasetFamily.META:
                 model_params = HP_DICT_MODEL[config.PREDICTION_MODEL].fixed
 
-        print("Setting model parameters", model_params)
+        print("Settings model hps", model_params)
 
         # SET hyperparameter in the config object
         for param in cst.LearningHyperParameter:
@@ -167,7 +165,7 @@ def run(config: Configuration):
             config.WANDB_RUN_NAME = wandb_instance.name
             config.WANDB_INSTANCE = wandb_instance
 
-            params_dict = wandb_instance.config  # chosen parameters from WANDB search
+            params_dict = wandb_instance.config  # chosen hps from WANDB search
             if not config.IS_HPARAM_SEARCH:
                 params_dict = None
 
@@ -184,7 +182,7 @@ def run(config: Configuration):
                 'name':    config.WANDB_SWEEP_NAME,
                 'method':  config.SWEEP_METHOD,
                 'metric':  config.SWEEP_METRIC,
-                'parameters': {
+                'hps': {
                     **HP_DICT_MODEL[config.PREDICTION_MODEL].sweep
                 }
             },

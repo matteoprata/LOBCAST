@@ -1,5 +1,4 @@
-import src.config as co
-import pytorch_lightning as pl
+
 import torch
 from torch import nn
 import src.constants as cst

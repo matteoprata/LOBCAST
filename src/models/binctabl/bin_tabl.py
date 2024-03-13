@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch
 from src.models.binctabl.bin_nn import BiN
 from src.models.tabl.bl_layer import BL_layer
-from src.models.tabl.tabl_layer import TABL_layer
+from src.models.tabl.ctabl import TABL_layer
 
 
 class BiN_BTABL(nn.Module):

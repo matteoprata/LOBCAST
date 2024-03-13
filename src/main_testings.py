@@ -69,7 +69,7 @@ def core_test(seed, model, dataset, src_data, out_data, horizon=None, win_back=N
 
     file_name = files[0]
 
-    # Setting configuration parameters
+    # Settings configuration hps
     model_params = HP_DICT_MODEL[cf.PREDICTION_MODEL].sweep
 
     for param in cst.LearningHyperParameter:
