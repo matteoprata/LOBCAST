@@ -37,16 +37,15 @@ def run_single(cf):
 
 
 def main():
-    # create a wandb sweep
     cf = LOBCASTSetupRun()
 
     if cf.SETTINGS.IS_WANDB:
-
         def wandb_lunch(cf):  # runs multiple instances
             with wandb.init() as wandb_instance:
                 cf.end_setup(wandb_instance)
                 run_single(cf)
-
+                
+        # create a wandb sweep
         sweep_id = wandb.sweep(
             sweep={
                 # 'command': ["${env}", "python3", "${program}", "${args}"],
@@ -61,6 +60,7 @@ def main():
 
         # create a wandb agent
         wandb.agent(sweep_id, function=lambda: wandb_lunch(cf), count=cst.WANDB_SWEEP_MAX_RUNS)
+    
     else:
         cf.end_setup()
         run_single(cf)
