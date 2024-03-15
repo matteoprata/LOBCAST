@@ -105,17 +105,6 @@ def sample_line(index):
     return MARKERS[index]
 
 
-def get_upper_diagonal_windows(windows: list = cst.WinSize):
-    backwards, forwards = list(), list()
-    for backward_window in windows:
-        for forward_window in windows:
-            if backward_window.value is not None and forward_window.value is not None:
-                if backward_window.value >= forward_window.value:
-                    backwards.append(backward_window)
-                    forwards.append(forward_window)
-    return backwards, forwards
-
-
 def make_dir(path):
     if not os.path.exists(path):
         os.makedirs(path)

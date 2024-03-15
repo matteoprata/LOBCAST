@@ -8,7 +8,7 @@ from src.models.lobcast_model import LOBCAST_model, LOBCAST_module
 
 
 CONFIG = {
-    "temp": [249],
+    "temp": {'values': [249]},
 }
 
 

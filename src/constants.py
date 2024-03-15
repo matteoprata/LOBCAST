@@ -3,92 +3,14 @@ import torch
 import numpy as np
 
 
-'''
-Backward: 1      Forward: 1      Alfa: 1e-06
-train:   0.18    0.63    0.19
-val:     0.19    0.62    0.19
-test:    0.21    0.59    0.2
-
-Backward: 1      Forward: 2      Alfa: 1e-06
-train:   0.24    0.5     0.25
-val:     0.25    0.5     0.25
-test:    0.27    0.47    0.27
-
-Backward: 1      Forward: 3      Alfa: 1e-06
-train:   0.28    0.43    0.29
-val:     0.28    0.43    0.29
-test:    0.3     0.4     0.3
-
-Backward: 1      Forward: 5      Alfa: 1e-06
-train:   0.32    0.36    0.33
-val:     0.32    0.35    0.33
-test:    0.34    0.33    0.33
-
-Backward: 1      Forward: 10     Alfa: 1e-06
-train:   0.37    0.25    0.38
-val:     0.37    0.25    0.38
-test:    0.38    0.23    0.38
-
-'''
-
-
-'''
-################### NFLX ###################
-Backward: 1      Forward: 5      Alfa: 2.5e-05
-train:   0.33    0.33    0.34
-val:     0.31    0.37    0.32
-test:    0.37    0.26    0.37
-'''
-
-'''
-################### SOFI ###################
-Backward: 1      Forward: 5      Alfa: 0.00011
-train:   0.35    0.32    0.34
-val:     0.35    0.31    0.34
-test:    0.36    0.3     0.35
-'''
-
-ALPHA_NFLX = 25e-6
-ALPHA_SOFI = 11e-5
-ALPHA = 1e-6
-
-
-class LearningHyperParameter(str, Enum):
-    OPTIMIZER = "optimizer_name"
-    LEARNING_RATE = "lr"
-    WEIGHT_DECAY = "weight_decay"
-    EPS = "eps"
-    MOMENTUM = "momentum"
-    EPOCHS_UB = "epochs"
-    IS_SHUFFLE_TRAIN_SET = "is_shuffle"
-    BATCH_SIZE = "batch_size"
-    MLP_HIDDEN = "hidden_mlp"
-    RNN_HIDDEN = "rnn_hidden"
-    RNN_N_HIDDEN = "rnn_n_hidden"
-    DAIN_LAYER_MODE = "dain_layer_mode"
-    NUM_RBF_NEURONS = "num_rbf_neurons"
-    P_DROPOUT = "p_dropout"
-    BACKWARD_WINDOW = "window_size_backward"
-    FORWARD_WINDOW = "window_size_forward"
-    # LABELING_THRESHOLD = "labeling_threshold"
-    LABELING_SIGMA_SCALER = "labeling_sigma_scaler"
-    FI_HORIZON = 'fi_horizon_k'
-    NUM_SNAPSHOTS = 'observation_length'
-    META_HIDDEN = 'meta_hidden'
-
-
-class STK_OPEN(str, Enum):
-    """ The modalities associated to a list of stocks. """
-    # TODO rename
-    TRAIN = "train_mod"
-    TEST = "test_mod"
-
 
 class Optimizers(Enum):
     ADAM = "Adam"
     RMSPROP = "RMSprop"
     SGD = "SGD"
 
+class LearningHyperParameter:
+    pass
 
 class Metrics(Enum):
     LOSS = 'loss'
@@ -121,27 +43,6 @@ class NormalizationType(Enum):
     NONE = 2
     MINMAX = 3
     DECPRE = 4
-
-
-class WinSize(Enum):
-    SEC10 = 10
-    SEC20 = 20
-    SEC30 = 30
-    SEC50 = 50
-    SEC100 = 100
-
-    EVENTS1 = 1
-    EVENTS2 = 2
-    EVENTS3 = 3
-    EVENTS5 = 5
-    EVENTS10 = 10
-
-    # MIN01 = 60
-    # MIN05 = 60 * 5
-    # MIN10 = 60 * 10
-    # MIN20 = 60 * 20
-
-    NONE = None
 
 
 class FI_Horizons(Enum):
@@ -190,22 +91,8 @@ from src.models.models_classes import *
 
 class ModelsClass(Enum):
     MLP = mlp.MLP_lm
-    BINCTABL = bin_tabl.BiN_CTABL_ml
     CNN1 = cnn1.CNN_lm
     CNN2 = cnn2.CNN2_ml
-
-    CTABL = ctabl
-    CNNLSTM = cnnlstm
-    ATNBoF = atnbof
-    TLONBoF = tlonbof
-    DLA = dla
-    LSTM = lstm
-    DEEPLOBATT = deeplobatt
-    DEEPLOB = deeplob
-    DAIN = dain
-    AXIALLOB = axiallob
-    TRANSLOB = translob
-
 
 
 class DatasetFamily(str, Enum):
@@ -229,56 +116,6 @@ HORIZONS_MAPPINGS_LOBSTER = {
     50: -2,
     100: -1
 }
-
-
-def map_id_win(win):
-    if win in [WinSize.EVENTS1, FI_Horizons.K1]:
-        return 0
-    elif win in [WinSize.EVENTS2, FI_Horizons.K2]:
-        return 1
-    elif win in [WinSize.EVENTS3, FI_Horizons.K3]:
-        return 2
-    elif win in [WinSize.EVENTS5, FI_Horizons.K5]:
-        return 3
-    elif win in [WinSize.EVENTS10, FI_Horizons.K10]:
-        return 4
-
-
-class Stocks(list, Enum):
-    SOFI = ["SOFI"]
-    NFLX = ["NFLX"]
-    CSCO = ["CSCO"]
-    WING = ["WING"]
-    SHLS = ["SHLS"]
-    LSTR = ["LSTR"]
-    FI = ["FI"]
-    ALL = ["SOFI", "NFLX", "CSCO", "WING", "SHLS", "LSTR"]
-
-
-class Periods(dict, Enum):
-    MARCH2020 = {
-        'first_day': '2020-03-02', 'last_day': '2020-04-03',
-        'train': ('2020-03-02', '2020-03-20'),
-        'val': ('2020-03-23', '2020-03-27'),
-        'test': ('2020-03-30', '2020-04-03'),
-    }
-
-    JULY2021 = {
-        'first_day': '2021-07-01', 'last_day': '2021-08-06',
-        'train': ('2021-07-01', '2021-07-08'),  # 'train': ('2021-07-01', '2021-07-22'),
-        'val':   ('2021-07-09', '2021-07-12'),  # 'val': ('2021-07-23', '2021-07-29'),
-        'test':  ('2021-07-13', '2021-07-15'),  # 'test': ('2021-07-30', '2021-08-06'),
-    }
-
-    FEBRUARY2022 = {
-        'first_day': '2022-02-01', 'last_day': '2022-02-28',
-        'train': ('2022-02-01', '2022-02-07'),
-        'val': ('2022-02-08', '2022-02-11'),
-        'test': ('2022-02-14', '2022-02-16'),
-    }
-
-    FI = {}
-
 
 class Granularity(Enum):
     """ The possible Granularity to build the OHLC old_data from lob """
@@ -330,9 +167,6 @@ class ExpIndependentVariables(Enum):
 N_LOB_LEVELS = 10
 NUM_CLASSES = 3
 
-DEVICE_TYPE = 'cuda' if torch.cuda.is_available() else 'cpu'
-NUM_GPUS = None if DEVICE_TYPE == 'cpu' else torch.cuda.device_count()
-
 PROJECT_NAME = "LOBCAST-({})"
 VERSION = 2
 DIR_EXPERIMENTS = "data/experiments/" + PROJECT_NAME
@@ -347,21 +181,6 @@ DATA_PICKLES = "data/pickles/"
 WANDB_SWEEP_MAX_RUNS = 20
 
 
-class Servers(Enum):
-    ANY = 0
-    ALIEN1 = 1
-    ALIEN2 = 2
-    FISSO1 = 3
-
-
-hostname2server = {
-    'any': Servers.ANY,
-    'novella-Alienware-h2': Servers.ALIEN1,
-    'novella-Alienware-x15-R1': Servers.ALIEN2,
-    'novella-pc': Servers.FISSO1
-}
-
-server2hostname = {v: k for k, v in hostname2server.items()}
 
 DECLARED_PERF = {
     # F1 PRECISION RECALL ACCURACY MCC
@@ -537,64 +356,8 @@ FI_2010_PERF = [[65.74377179, 56.14452946, 53.15137661, 50.31746373, 51.47770519
                   [56.92774699, 51.43929883, 49.10522107, 54.06993253, 50.95347016],
                   [82.57120726, 71.95823014, 76.7334157 , 79.60485128, 79.23628572]]
 
-# LOBSTER_JULY_PERF = [[48.25227797, 56.18452407, 58.22355265, 59.23443022, 55.39248188],
-#                      [49.63839944, 58.00871409, 60.29796907, 60.62009442, 56.02019579],
-#                      [52.50797566, 57.70744634, 60.23634193, 60.13117262, 56.67051702],
-#                      [55.33279756, 60.71586914, 62.1936955 , 62.17906741, 57.84894123],
-#                      [54.9734162 , 60.41654582, 62.67363393, 62.22340311, 57.40612576],
-#                      [47.72452985, 56.61416299, 59.14995541, 60.00280448, 56.0512674 ],
-#                      [51.83302159, 58.11894161, 59.89830414, 60.05484327, 55.31208034],
-#                      [49.90113329, 55.91208795, 58.8963473 , 58.75261477, 54.041783  ],
-#                      [53.80612441, 57.77913512, 60.66730062, 60.30672049, 55.78203722],
-#                      [52.50035168, 57.9657403 , 60.05693988, 59.90070666, 55.98582226],
-#                      [56.95137544, 62.40156297, 63.93490814, 63.49880684, 59.11217048],
-#                      [54.76970002, 61.0935584 , 62.62186232, 62.76511042, 59.01475136],
-#                      [51.23755834, 58.60629038, 61.2933899 , 60.3004019 , 57.05265239],
-#                      [49.75273464, 53.07585724, 54.63441582, 57.16119287, 50.87468015],
-#                      [54.04858666, 60.72775997, 62.5974736 , 62.35708977, 57.76763044]]
-
-# WEIGHTED
-LOBSTER_JULY_PERF = [[60.11047428, 60.75883992, 60.49401491, 59.17928698, 53.78360401],
-                     [61.02505454, 62.4022689 , 62.45860611, 60.55873397, 54.54530985],
-                     [62.91423034, 62.27166227, 62.44185993, 60.06461996, 54.97427781],
-                     [63.12637956, 64.55029448, 64.184854  , 62.13010309, 55.95206386],
-                     [64.83925729, 64.63819641, 64.74699468, 62.17003128, 55.64899231],
-                     [59.21136751, 61.01965478, 61.2416941 , 59.94617996, 54.89830137],
-                     [62.35127879, 62.56038328, 62.1080386 , 59.98450912, 53.44201768],
-                     [61.05826857, 60.61549693, 61.17792632, 58.68578003, 52.37339388],
-                     [62.03643652, 62.05236074, 62.74265109, 60.2395226 , 53.77742118],
-                     [60.81292444, 62.10410679, 62.16567115, 59.83217683, 54.03786051],
-                     [64.48558723, 66.00659904, 65.77162651, 63.44952825, 57.48771536],
-                     [64.28288243, 65.09283957, 64.65595818, 62.71706234, 57.32329692],
-                     [62.15089043, 63.03551681, 63.40065404, 60.22598694, 55.18553642],
-                     [60.15844815, 58.32381671, 57.08584885, 57.09404231, 48.56630942],
-                     [64.0353057 , 64.81642668, 64.62420283, 62.30420307, 56.17647777],
-                     [62.18260287, 60.7267662 , 59.94937708, 58.32111319, 54.32811527],
-                     [62.02177144, 60.59479102, 59.74870857, 58.02517253, 53.41501285],]
-
-
-LOBSTER_FEB_PERF = [[60.11047428, 60.75883992, 60.49401491, 59.17928698, 53.78360401],
-                     [61.02505454, 62.4022689 , 62.45860611, 60.55873397, 54.54530985],
-                     [62.91423034, 62.27166227, 62.44185993, 60.06461996, 54.97427781],
-                     [63.12637956, 64.55029448, 64.184854  , 62.13010309, 55.95206386],
-                     [64.83925729, 64.63819641, 64.74699468, 62.17003128, 55.64899231],
-                     [59.21136751, 61.01965478, 61.2416941 , 59.94617996, 54.89830137],
-                     [62.35127879, 62.56038328, 62.1080386 , 59.98450912, 53.44201768],
-                     [61.05826857, 60.61549693, 61.17792632, 58.68578003, 52.37339388],
-                     [62.03643652, 62.05236074, 62.74265109, 60.2395226 , 53.77742118],
-                     [60.81292444, 62.10410679, 62.16567115, 59.83217683, 54.03786051],
-                     [64.48558723, 66.00659904, 65.77162651, 63.44952825, 57.48771536],
-                     [64.28288243, 65.09283957, 64.65595818, 62.71706234, 57.32329692],
-                     [62.15089043, 63.03551681, 63.40065404, 60.22598694, 55.18553642],
-                     [60.15844815, 58.32381671, 57.08584885, 57.09404231, 48.56630942],
-                     [64.0353057 , 64.81642668, 64.62420283, 62.30420307, 56.17647777],
-                     [62.18260287, 60.7267662 , 59.94937708, 58.32111319, 54.32811527],
-                     [62.02177144, 60.59479102, 59.74870857, 58.02517253, 53.41501285],]
-
 
 FI_2010_PERF = np.array(FI_2010_PERF) / 100            # NORMALIZED
-LOBSTER_JULY_PERF = np.array(LOBSTER_JULY_PERF) / 100  # NORMALIZED
-LOBSTER_FEB_PERF = np.array(LOBSTER_FEB_PERF) / 100    # NORMALIZED
 
 # metrics_name = ['F1 Score (%)', 'Precision (%)', 'Recall (%)', 'Accuracy (%)', 'MCC']
 
@@ -628,12 +391,6 @@ TRAINABLE_16 = [m for m in MODELS_YEAR_DICT if m in TRAINABLE_16]
 
 MODELS_17 = list(set(list(Models)))
 MODELS_17 = [m for m in MODELS_YEAR_DICT if m in MODELS_17]
-
-
-def model_dataset(model, bias="FI"):
-    if model in [Models.METALOB]:
-        return "Meta"
-    return bias
 
 
 class UnitHorizon(Enum):

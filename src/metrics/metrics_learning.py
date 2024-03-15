@@ -1,4 +1,3 @@
-import pandas as pd
 import torch
 
 from sklearn.metrics import classification_report

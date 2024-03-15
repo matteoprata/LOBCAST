@@ -8,17 +8,21 @@ import torch
 import numpy as np
 import torch.nn as nn
 import src.constants as cst
-from src.config import Configuration
 from src.metrics.metrics_learning import compute_metrics
 
 
 class LOBCAST_NNEngine(pl.LightningModule):
-    def __init__(self, neural_architecture, loss_weights, hps, metrics_log):
+    def __init__(self, neural_architecture, loss_weights, hps, metrics_log, wandb_log):
         super().__init__()
         self.neural_architecture = neural_architecture
         self.loss_weights = loss_weights
         self.hps = hps
         self.metrics_log = metrics_log
+        self.wandb_log = wandb_log
+
+    def log_wandb(self, metrics):
+        if self.wandb_log:
+            self.wandb_log.log(metrics)
 
     def forward(self, batch):
         # time x features - 40 x 100 in general
@@ -74,6 +78,7 @@ class LOBCAST_NNEngine(pl.LightningModule):
         LOG_EVERY_EPOCH = 1
         if self.current_epoch % LOG_EVERY_EPOCH == 0:
             self.metrics_log.add_metric(self.current_epoch, stp_type, eval_dict)
+            self.log_wandb({f"{stp_type}_{k}": v for k, v in eval_dict.items()})
             # TODO option dump logits
 
     def training_epoch_end(self, training_step_outputs):

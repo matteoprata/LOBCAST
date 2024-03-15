@@ -2,7 +2,7 @@
 import numpy as np
 import os
 
-from src.constants import LearningHyperParameter
+# from src.constants import LearningHyperParameter
 import src.constants as cst
 from src.metrics.metrics_log import Metrics
 from datetime import date, datetime
@@ -51,10 +51,12 @@ class Settings:
         self.DIR_EXPERIMENTS = ""
 
         self.SWEEP_METHOD = 'bayes'
+        self.IS_WANDB = False
 
     def check_parameters_validity(self):
         CONSTRAINTS = []
         CONSTRAINTS += [not self.IS_TEST_ONLY or os.path.exists(self.TEST_MODEL_PATH)]  # if test, then test file should exist
+        CONSTRAINTS += [not self.IS_TEST_ONLY or not self.IS_WANDB]  # if test, then test file should exist
 
         if not all(CONSTRAINTS):
             raise ValueError("Constraint not met! Check your parameters.")
@@ -88,16 +90,28 @@ class LOBCASTSetupRun:  # TOGLIERE questa ISA
         super().__init__()
 
         self.SETTINGS = Settings()
-        self.parse_cl_arguments(self.SETTINGS)
+        self.__parse_cl_arguments(self.SETTINGS)
         self.SETTINGS.check_parameters_validity()
         self.__seed_everything(self.SETTINGS.SEED)
 
         # TIME TO SET PARAMS
         self.TUNABLE_H_PRAM = ConfigHPTunable()
         self.TUNED_H_PRAM = ConfigHPTuned()
-        self.setup_parameters()
+        self.__setup_parameters()
 
-    def set_tuning_parameters(self, tuning_parameters=None):
+    def end_setup(self, wandb_instance=None):
+        tuning_parameters = None if wandb_instance is None else wandb_instance.config
+        self.__set_tuning_parameters(tuning_parameters)
+
+        # self.RUN_NAME_PREFIX = self.run_name_prefix(self.SETTINGS)
+        self.DATE_TIME = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
+        self.__setup_all_directories(self.DATE_TIME, self.SETTINGS)
+        # print("RUNNING:\n>>", self.RUN_NAME_PREFIX)
+
+        self.METRICS = Metrics(self.SETTINGS.__dict__, self.TUNED_H_PRAM.__dict__)
+        self.WANDB_INSTANCE = wandb_instance
+
+    def __set_tuning_parameters(self, tuning_parameters=None):
 
         def assign_first_param():
             # for now, it only assigned the first element in a list of possible values
@@ -125,14 +139,7 @@ class LOBCASTSetupRun:  # TOGLIERE questa ISA
         print(self.TUNABLE_H_PRAM.__dict__)
         print(self.TUNED_H_PRAM.__dict__)
 
-        # self.RUN_NAME_PREFIX = self.run_name_prefix(self.SETTINGS)
-        self.DATE_TIME = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
-        self.setup_all_directories(self.DATE_TIME, self.SETTINGS)
-        # print("RUNNING:\n>>", self.RUN_NAME_PREFIX)
-
-        self.METRICS = Metrics(self.SETTINGS.__dict__, self.TUNED_H_PRAM.__dict__)
-
-    def setup_parameters(self):
+    def __setup_parameters(self):
         # add parameters from model
         for key, value in self.SETTINGS.PREDICTION_MODEL.value.tunable_parameters.items():
             self.TUNABLE_H_PRAM.add_hyperparameter(key, value)
@@ -148,27 +155,27 @@ class LOBCASTSetupRun:  # TOGLIERE questa ISA
         random.seed(seed)
         # self.RANDOM_GEN_DATASET = np.random.RandomState(seed)
 
-    @staticmethod
-    def cf_name_format(ext=""):
-        return "MOD={}-SEED={}-TRS={}-TES={}-DS={}-HU={}-HP={}-HF={}-OB={}" + ext
+    # @staticmethod
+    # def cf_name_format(ext=""):
+    #     return "MOD={}-SEED={}-TRS={}-TES={}-DS={}-HU={}-HP={}-HF={}-OB={}" + ext
+    #
+    # def run_name_prefix(self, settings):
+    #     return self.cf_name_format().format(
+    #         settings.PREDICTION_MODEL.name,
+    #         settings.SEED,
+    #         settings.STOCK_TRAIN_VAL,
+    #         settings.STOCK_TEST,
+    #         settings.DATASET_NAME.value,
+    #         settings.PREDICTION_HORIZON_UNIT.name,
+    #         settings.PREDICTION_HORIZON_PAST,
+    #         settings.PREDICTION_HORIZON_FUTURE,
+    #         settings.OBSERVATION_PERIOD,
+    #     )
 
-    def run_name_prefix(self, settings):
-        return self.cf_name_format().format(
-            settings.PREDICTION_MODEL.name,
-            settings.SEED,
-            settings.STOCK_TRAIN_VAL,
-            settings.STOCK_TEST,
-            settings.DATASET_NAME.value,
-            settings.PREDICTION_HORIZON_UNIT.name,
-            settings.PREDICTION_HORIZON_PAST,
-            settings.PREDICTION_HORIZON_FUTURE,
-            settings.OBSERVATION_PERIOD,
-        )
-
-    def parse_cl_arguments(self, settings):
+    def __parse_cl_arguments(self, settings):
         """ Parses the arguments for the command line. """
 
-        parser = argparse.ArgumentParser(description='LOBCAST single execution arguments:')
+        parser = argparse.ArgumentParser(description='LOBCAST execution arguments:')
 
         # every field in the settings, can be set crom cl
         for k, v in settings.__dict__.items():
@@ -176,7 +183,7 @@ class LOBCASTSetupRun:  # TOGLIERE questa ISA
             var = v.name if isinstance(v, Enum) else v
             parser.add_argument(f'--{k}', default=var, type=type_var)
 
-        args = vars(parser.parse_args())
+        args = vars(parser.parse_args())  # TODO FIX BOOL
 
         # every field in the settings, is set based on the parsed values, enums are parsed by NAME
         for k, v in settings.__dict__.items():
@@ -184,7 +191,7 @@ class LOBCASTSetupRun:  # TOGLIERE questa ISA
             settings.__setattr__(k, value)
 
     @staticmethod
-    def setup_all_directories(fname, settings):
+    def __setup_all_directories(fname, settings):
         """
         Creates two folders:
             (1) data.experiments.LOBCAST-(fname) for the jsons with the stats
@@ -201,130 +208,3 @@ class LOBCASTSetupRun:  # TOGLIERE questa ISA
         for p in paths:
             if not os.path.exists(p):
                 os.makedirs(p)
-
-
-class Configuration(Settings):
-    pass
-    # """ Represents the configuration file of the simulation, containing all variables of the simulation. """
-    # def __init__(self, run_name_prefix=None):
-    #     super().__init__()
-    #
-    #     self.IS_DEBUG = False
-    #     self.IS_TEST_ONLY = False
-    #
-    #     self.RUN_NAME_PREFIX = self.assign_prefix(prefix=run_name_prefix, is_debug=self.IS_DEBUG)
-    #     self.setup_all_directories(self.RUN_NAME_PREFIX, self.IS_DEBUG, self.IS_TEST_ONLY)
-    #
-    #     self.RANDOM_GEN_DATASET = None
-    #     self.VALIDATE_EVERY = 1
-    #
-    #     self.IS_DATA_PRELOAD = True
-    #     self.INSTANCES_LOWER_BOUND = 1000  # under-sampling must have at least INSTANCES_LOWER_BOUND instances
-    #
-    #     self.TRAIN_SPLIT_VAL = .8  # FI only
-    #     self.META_TRAIN_VAL_TEST_SPLIT = (.7, .15, .15)  # META Only
-    #
-    #     self.CHOSEN_PERIOD = cst.Periods.FI
-    #
-    #     self.CHOSEN_STOCKS = {
-    #         cst.STK_OPEN.TRAIN: cst.Stocks.FI,
-    #         cst.STK_OPEN.TEST: cst.Stocks.FI
-    #     }
-    #
-    #     self.IS_WANDB = 0
-    #
-    #     self.SWEEP_METHOD = 'grid'  # 'bayes'
-    #
-    #     self.WANDB_INSTANCE = None
-    #     self.WANDB_RUN_NAME = None
-    #     self.WANDB_SWEEP_NAME = None
-    #
-    #     self.SWEEP_METRIC = {
-    #         'goal': 'maximize',
-    #         'name': None
-    #     }
-    #
-    #     self.TARGET_DATASET_META_MODEL = cst.DatasetFamily.LOB
-    #     self.JSON_DIRECTORY = ""
-    #
-    #     self.EARLY_STOPPING_METRIC = None
-    #
-    #     self.METRICS_JSON = Metrics(self)
-    #     self.HYPER_PARAMETERS = {lp: None for lp in LearningHyperParameter}
-    #
-    #     self.HYPER_PARAMETERS[LearningHyperParameter.BATCH_SIZE] = 128
-    #     self.HYPER_PARAMETERS[LearningHyperParameter.LEARNING_RATE] = 0.01
-    #     self.HYPER_PARAMETERS[LearningHyperParameter.EPOCHS_UB] = 100
-    #     self.HYPER_PARAMETERS[LearningHyperParameter.OPTIMIZER] = cst.Optimizers.SGD.value
-    #     self.HYPER_PARAMETERS[LearningHyperParameter.WEIGHT_DECAY] = 0.0
-    #     self.HYPER_PARAMETERS[LearningHyperParameter.EPS] = 1e-08  # default value for ADAM
-    #     self.HYPER_PARAMETERS[LearningHyperParameter.MOMENTUM] = 0.9
-    #
-    #     self.HYPER_PARAMETERS[LearningHyperParameter.NUM_SNAPSHOTS] = 100
-    #     # LOB way to label to measure percentage change LOB = HORIZON
-    #     self.HYPER_PARAMETERS[LearningHyperParameter.BACKWARD_WINDOW] = cst.WinSize.NONE.value
-    #     self.HYPER_PARAMETERS[LearningHyperParameter.FORWARD_WINDOW] = cst.WinSize.NONE.value
-    #     self.HYPER_PARAMETERS[LearningHyperParameter.IS_SHUFFLE_TRAIN_SET] = True
-    #     self.HYPER_PARAMETERS[LearningHyperParameter.LABELING_SIGMA_SCALER] = .9
-    #     self.HYPER_PARAMETERS[LearningHyperParameter.FI_HORIZON] = cst.FI_Horizons.K10.value  # in FI = FORWARD_WINDOW  = k in papers
-    #
-    #     self.HYPER_PARAMETERS[LearningHyperParameter.MLP_HIDDEN] = 128
-    #     self.HYPER_PARAMETERS[LearningHyperParameter.RNN_HIDDEN] = 32
-    #     self.HYPER_PARAMETERS[LearningHyperParameter.META_HIDDEN] = 16
-    #
-    #     self.HYPER_PARAMETERS[LearningHyperParameter.RNN_N_HIDDEN] = 1
-    #     self.HYPER_PARAMETERS[LearningHyperParameter.DAIN_LAYER_MODE] = 'full'
-    #     self.HYPER_PARAMETERS[LearningHyperParameter.P_DROPOUT] = 0
-    #     self.HYPER_PARAMETERS[LearningHyperParameter.NUM_RBF_NEURONS] = 16
-    #
-    # def dynamic_config_setup(self):
-    #     # sets the name of the metric to optimize
-    #     self.SWEEP_METRIC['name'] = "{}_{}_{}".format(cst.ModelSteps.VALIDATION_MODEL.value, self.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, cst.Metrics.F1.value)
-    #     self.EARLY_STOPPING_METRIC = "{}_{}_{}".format(cst.ModelSteps.VALIDATION.value, self.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, cst.Metrics.F1.value)
-    #
-    #     self.WANDB_SWEEP_NAME = self.cf_name_format().format(
-    #         self.PREDICTION_MODEL.name,
-    #         self.SEED,
-    #         self.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name,
-    #         self.CHOSEN_STOCKS[cst.STK_OPEN.TEST].name,
-    #         self.DATASET_NAME.value,
-    #         self.CHOSEN_PERIOD.name,
-    #         self.HYPER_PARAMETERS[cst.LearningHyperParameter.BACKWARD_WINDOW],
-    #         self.HYPER_PARAMETERS[cst.LearningHyperParameter.FORWARD_WINDOW],
-    #         self.HYPER_PARAMETERS[cst.LearningHyperParameter.FI_HORIZON],
-    #     )
-    #
-    #     if not self.IS_HPARAM_SEARCH and not self.IS_WANDB:
-    #         self.WANDB_RUN_NAME = self.WANDB_SWEEP_NAME
-    #
-    # @staticmethod
-    # def cf_name_format(ext=""):
-    #     return "model={}-seed={}-trst={}-test={}-data={}-peri={}-bw={}-fw={}-fiw={}" + ext
-    #
-    # @staticmethod
-    # def setup_all_directories(prefix, is_debug, is_test):
-    #     """
-    #     Creates two folders:
-    #         (1) data.experiments.LOB-CLASSIFIERS-(PREFIX) for the jsons with the stats
-    #         (2) data.saved_models.LOB-CLASSIFIERS-(PREFIX) for the models
-    #     """
-    #
-    #     if not is_test:
-    #         cst.PROJECT_NAME = cst.PROJECT_NAME.format(prefix)
-    #         cst.DIR_SAVED_MODEL = cst.DIR_SAVED_MODEL.format(prefix) + "/"
-    #         cst.DIR_EXPERIMENTS = cst.DIR_EXPERIMENTS.format(prefix) + "/"
-    #
-    #         # create the paths for the simulation if they do not exist already
-    #         paths = ["data", cst.DIR_SAVED_MODEL, cst.DIR_EXPERIMENTS]
-    #         for p in paths:
-    #             if not os.path.exists(p):
-    #                 os.makedirs(p)
-    #
-    # @staticmethod
-    # def assign_prefix(prefix, is_debug):
-    #     if is_debug:
-    #         return "debug"
-    #     elif prefix is not None:
-    #         return prefix
-    #     else:
-    #         return datetime.now().strftime("%Y-%m-%d+%H-%M-%S")
