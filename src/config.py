@@ -36,18 +36,26 @@ class Settings:
         self.OBSERVATION_PERIOD: int = 100
         self.IS_SHUFFLE_TRAIN_SET = True
 
+        self.EPOCHS_UB = 5
+
         self.TRAIN_SET_PORTION = .8
 
-        self.IS_TEST = False
-        self.MODEL_PATH: str = ""
+        self.IS_TEST_ONLY = False
+        self.TEST_MODEL_PATH: str = "data/saved_models/LOBCAST-(15-03-2024_20-23-49)/epoch=2-validation_f1=0.27.ckpt"
 
         self.DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.N_GPUs = None if self.DEVICE == 'cpu' else torch.cuda.device_count()
         self.N_CPUs = multiprocessing.cpu_count()
 
         self.PROJECT_NAME = ""
-        self.DIR_SAVED_MODEL = ""
         self.DIR_EXPERIMENTS = ""
+
+    def check_parameters_validity(self):
+        CONSTRAINTS = []
+        CONSTRAINTS += [not self.IS_TEST_ONLY or os.path.exists(self.TEST_MODEL_PATH)]  # if test, then test file should exist
+
+        if not all(CONSTRAINTS):
+            raise ValueError("Constraint not met! Check your parameters.")
 
 
 class ConfigHP:
@@ -70,7 +78,6 @@ class ConfigHPTunable(ConfigHP):
     def __init__(self):
         self.BATCH_SIZE = [64, 55]
         self.LEARNING_RATE = [0.01]
-        self.EPOCHS_UB = [3]
         self.OPTIMIZER = ["SGD"]
 
 
@@ -79,8 +86,9 @@ class LOBCASTSetupRun:  # TOGLIERE questa ISA
         super().__init__()
 
         self.SETTINGS = Settings()
-
         self.parse_cl_arguments(self.SETTINGS)
+        self.SETTINGS.check_parameters_validity()
+
         self.seed_everything(self.SETTINGS.SEED)
 
         # read from
@@ -91,9 +99,11 @@ class LOBCASTSetupRun:  # TOGLIERE questa ISA
         self.choose_parameters()  # TODO lancerà più esecuzioni, bisognerà tornare qui
         # at this point this
 
+        self.METRICS = Metrics(self.SETTINGS.__dict__, self.TUNED_H_PRAM.__dict__)
         self.RUN_NAME_PREFIX = self.run_name_prefix(self.SETTINGS)
-        self.setup_all_directories(self.RUN_NAME_PREFIX, self.SETTINGS)
+        self.DATE_TIME = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
 
+        self.setup_all_directories(self.DATE_TIME, self.SETTINGS)
         print("RUNNING:\n>>", self.RUN_NAME_PREFIX)
 
     def setup_parameters(self):
@@ -151,7 +161,7 @@ class LOBCASTSetupRun:  # TOGLIERE questa ISA
         # every field in the settings, is set based on the parsed values, enums are parsed by NAME
         for k, v in settings.__dict__.items():
             value = v.__class__[args[k]] if isinstance(v, Enum) else args[k]
-            self.__setattr__(k, value)
+            settings.__setattr__(k, value)
 
     @staticmethod
     def setup_all_directories(fname, settings):
@@ -163,11 +173,11 @@ class LOBCASTSetupRun:  # TOGLIERE questa ISA
 
         # TODO consider using dates
         settings.PROJECT_NAME = cst.PROJECT_NAME.format(fname)
-        settings.DIR_SAVED_MODEL = cst.DIR_SAVED_MODEL.format(fname) + "/"
+        # settings.DIR_SAVED_MODEL = cst.DIR_SAVED_MODEL.format(fname) + "/"
         settings.DIR_EXPERIMENTS = cst.DIR_EXPERIMENTS.format(fname) + "/"
 
         # create the paths for the simulation if they do not exist already
-        paths = ["data", cst.DIR_SAVED_MODEL, cst.DIR_EXPERIMENTS]
+        paths = ["data", settings.DIR_EXPERIMENTS]
         for p in paths:
             if not os.path.exists(p):
                 os.makedirs(p)

@@ -2,7 +2,7 @@
 import numpy as np
 
 import src.constants as cst
-from src.config import Configuration
+from src.config import Configuration, LOBCASTSetupRun
 from src.data_preprocessing.META.METADataset import MetaDataset
 from src.data_preprocessing.META.METADataBuilder import MetaDataBuilder
 
@@ -14,39 +14,41 @@ from src.data_preprocessing.DataModule import DataModule
 from src.data_preprocessing.LOB.LOBDataset import LOBDataset
 
 
-def prepare_data_fi(config: Configuration):
+def prepare_data_fi(config: LOBCASTSetupRun):
+    fi_train, fi_val, fi_test = None, None, None
 
-    fi_train = FIDataset(
-        cst.DATA_SOURCE + cst.DATASET_FI,
-        dataset_type=cst.DatasetType.TRAIN,
-        horizon=config.PREDICTION_HORIZON_FUTURE,
-        observation_length=config.OBSERVATION_PERIOD,
-        train_val_split=config.TRAIN_SET_PORTION,
-        n_trends=config.N_TRENDS
-    )
+    if not config.SETTINGS.IS_TEST_ONLY:
+        fi_train = FIDataset(
+            cst.DATA_SOURCE + cst.DATASET_FI,
+            dataset_type=cst.DatasetType.TRAIN,
+            horizon=config.SETTINGS.PREDICTION_HORIZON_FUTURE,
+            observation_length=config.SETTINGS.OBSERVATION_PERIOD,
+            train_val_split=config.SETTINGS.TRAIN_SET_PORTION,
+            n_trends=config.SETTINGS.N_TRENDS
+        )
 
-    fi_val = FIDataset(
-        cst.DATA_SOURCE + cst.DATASET_FI,
-        dataset_type=cst.DatasetType.VALIDATION,
-        horizon=config.PREDICTION_HORIZON_FUTURE,
-        observation_length=config.OBSERVATION_PERIOD,
-        train_val_split=config.TRAIN_SET_PORTION,
-        n_trends=config.N_TRENDS
-    )
+        fi_val = FIDataset(
+            cst.DATA_SOURCE + cst.DATASET_FI,
+            dataset_type=cst.DatasetType.VALIDATION,
+            horizon=config.SETTINGS.PREDICTION_HORIZON_FUTURE,
+            observation_length=config.SETTINGS.OBSERVATION_PERIOD,
+            train_val_split=config.SETTINGS.TRAIN_SET_PORTION,
+            n_trends=config.SETTINGS.N_TRENDS
+        )
 
     fi_test = FIDataset(
         cst.DATA_SOURCE + cst.DATASET_FI,
         dataset_type=cst.DatasetType.TEST,
-        observation_length=config.OBSERVATION_PERIOD,
-        horizon=config.PREDICTION_HORIZON_FUTURE,
-        train_val_split=config.TRAIN_SET_PORTION,
-        n_trends=config.N_TRENDS
+        observation_length=config.SETTINGS.OBSERVATION_PERIOD,
+        horizon=config.SETTINGS.PREDICTION_HORIZON_FUTURE,
+        train_val_split=config.SETTINGS.TRAIN_SET_PORTION,
+        n_trends=config.SETTINGS.N_TRENDS
     )
 
     fi_dm = DataModule(
         fi_train, fi_val, fi_test,
         config.TUNED_H_PRAM.BATCH_SIZE,
-        config.IS_SHUFFLE_TRAIN_SET
+        config.SETTINGS.IS_SHUFFLE_TRAIN_SET
     )
     return fi_dm
 
@@ -116,8 +118,8 @@ def prepare_data_lob(config: Configuration):
 
 def pick_dataset(config):
 
-    if config.DATASET_NAME == cst.DatasetFamily.LOB:
+    if config.SETTINGS.DATASET_NAME == cst.DatasetFamily.LOB:
         return prepare_data_lob(config)
 
-    elif config.DATASET_NAME == cst.DatasetFamily.FI:
+    elif config.SETTINGS.DATASET_NAME == cst.DatasetFamily.FI:
         return prepare_data_fi(config)

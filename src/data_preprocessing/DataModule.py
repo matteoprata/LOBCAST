@@ -17,7 +17,7 @@ class DataModule(pl.LightningDataModule):
         self.batch_size = batch_size
         self.is_shuffle_train = is_shuffle_train
 
-        self.x_shape = self.train_set.x_shape
+        self.x_shape = self.test_set.x_shape
         self.num_classes = cst.NUM_CLASSES
         self.pin_memory = True if cst.DEVICE_TYPE == 'cuda' else False
 

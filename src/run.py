@@ -9,15 +9,6 @@ from src.utils.utils_models import pick_model
 from src.metrics.metrics_log import Metrics
 from src.config import Settings, ConfigHPTunable, ConfigHPTuned
 from src.models.model_callbacks import callback_save_model
-
-
-class Instance:
-    def __init__(self, model: cst.Models, horizons, seeds):
-        self.model = model
-        self.horizons = horizons
-        self.seeds = seeds
-
-
 from pytorch_lightning import Trainer
 
 
@@ -25,11 +16,8 @@ def run_instance():
 
     cf = LOBCASTSetupRun()
 
-    # assign hps of the specific model to the config file
-    data_module = pick_dataset(cf)     # load the data
-
-    metrics_log = Metrics(cf.SETTINGS.__dict__, cf.TUNED_H_PRAM.__dict__)
-    nn = pick_model(cf, data_module, metrics_log)
+    data_module = pick_dataset(cf)
+    nets_module = pick_model  (cf, data_module, cf.METRICS)
 
     target_halt_metric = "{}_{}".format(cst.ModelSteps.VALIDATION.value, cst.Metrics.F1.value)
 
@@ -37,22 +25,31 @@ def run_instance():
         accelerator=cf.SETTINGS.DEVICE,
         devices=cf.SETTINGS.N_GPUs,
         check_val_every_n_epoch=3,
-        max_epochs=cf.TUNED_H_PRAM.EPOCHS_UB,
+        max_epochs=cf.SETTINGS.EPOCHS_UB,
         callbacks=[
-            callback_save_model(cf.SETTINGS.DIR_SAVED_MODEL, target_halt_metric, top_k=3)
+            callback_save_model(cf.SETTINGS.DIR_EXPERIMENTS, target_halt_metric, top_k=3)
         ],
     )
 
-    trainer.fit(nn, data_module)
+    model_path = cf.SETTINGS.TEST_MODEL_PATH if cf.SETTINGS.IS_TEST_ONLY else "best"
 
-    metrics_log.dump_metrics(cf.SETTINGS.DIR_EXPERIMENTS, "metrics_train.json")
-    metrics_log.reset_stats()
+    if not cf.SETTINGS.IS_TEST_ONLY:
+        trainer.fit(nets_module, data_module)
+        cf.METRICS.dump_metrics(cf.SETTINGS.DIR_EXPERIMENTS, "metrics_train.json")
+        cf.METRICS.reset_stats()
 
-    trainer.validate(nn, data_module, ckpt_path="best")
-    trainer.test(nn, data_module, ckpt_path="best")
+        trainer.validate(nets_module, data_module, ckpt_path=model_path)
 
-    metrics_log.dump_metrics(cf.SETTINGS.DIR_EXPERIMENTS, "metrics_best.json")
+    trainer.test(nets_module, data_module, ckpt_path=model_path)
+    cf.METRICS.dump_metrics(cf.SETTINGS.DIR_EXPERIMENTS, "metrics_best.json")
 
+
+
+# class Instance:
+#     def __init__(self, model: cst.Models, horizons, seeds):
+#         self.model = model
+#         self.horizons = horizons
+#         self.seeds = seeds
 
 # def run(instances):
 #     for instance in instances:
@@ -92,9 +89,6 @@ def run_instance():
 #                 except KeyboardInterrupt:
 #                     print("There was a problem running on", server_name.name, "LOB experiment on {}, with K+={}".format(mod, window_forward))
 #                     sys.exit()
-
-
-
 
 
 if __name__ == '__main__':
