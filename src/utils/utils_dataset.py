@@ -45,7 +45,7 @@ def prepare_data_fi(config: Configuration):
 
     fi_dm = DataModule(
         fi_train, fi_val, fi_test,
-        config.TUNED.BATCH_SIZE,
+        config.TUNED_H_PRAM.BATCH_SIZE,
         config.IS_SHUFFLE_TRAIN_SET
     )
     return fi_dm

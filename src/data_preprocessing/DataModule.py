@@ -7,7 +7,7 @@ import src.constants as cst
 class DataModule(pl.LightningDataModule):
     """ Splits the datasets in TRAIN, VALIDATION_MODEL, TEST. """
 
-    def __init__(self, train_set, val_set, test_set, batch_size,  is_shuffle_train=True):
+    def __init__(self, train_set, val_set, test_set, batch_size, is_shuffle_train=True):
         super().__init__()
 
         self.train_set = train_set
@@ -19,7 +19,6 @@ class DataModule(pl.LightningDataModule):
 
         self.x_shape = self.train_set.x_shape
         self.num_classes = cst.NUM_CLASSES
-
         self.pin_memory = True if cst.DEVICE_TYPE == 'cuda' else False
 
     def setup(self, stage=None):

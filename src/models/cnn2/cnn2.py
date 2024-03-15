@@ -4,10 +4,17 @@
 import pytorch_lightning as pl
 from torch import nn
 
+from src.models.lobcast_model import LOBCAST_model, LOBCAST_module
 
-class CNN2(pl.LightningModule):
-    def __init__(self, num_features, num_classes, temp=249):
-        super().__init__()
+
+CONFIG = {
+    "temp": [249],
+}
+
+
+class CNN2(LOBCAST_model):
+    def __init__(self, input_dim, output_dim,  temp=249):
+        super().__init__(input_dim, output_dim)
 
         # Convolution 1
         self.conv1 = nn.Conv2d(in_channels=1, out_channels=16, kernel_size=(10, 42), padding=(0, 2))
@@ -24,7 +31,7 @@ class CNN2(pl.LightningModule):
         self.bn3 = nn.BatchNorm1d(32)
         self.prelu3 = nn.PReLU()
 
-        # Convolution 4 
+        # Convolution 4
         self.conv4 = nn.Conv1d(in_channels=32, out_channels=32, kernel_size=(6,))  # 1
         self.bn4 = nn.BatchNorm1d(32)
         self.prelu4 = nn.PReLU()
@@ -35,11 +42,11 @@ class CNN2(pl.LightningModule):
         self.prelu5 = nn.PReLU()
 
         # Fully connected 1
-        self.fc1 = nn.Linear(temp*32, 32)
+        self.fc1 = nn.Linear(temp * 32, 32)
         self.prelu6 = nn.PReLU()
 
         # Fully connected 2
-        self.fc2 = nn.Linear(32, num_classes)
+        self.fc2 = nn.Linear(32, output_dim)
 
     def forward(self, x):
         # Adding the channel dimension
@@ -96,3 +103,6 @@ class CNN2(pl.LightningModule):
         # print('After fc2:', out.shape)
 
         return out
+
+
+CNN2_ml = LOBCAST_module("CNN2", CNN2, CONFIG)

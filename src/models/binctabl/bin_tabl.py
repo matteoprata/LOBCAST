@@ -42,9 +42,24 @@ class BiN_BTABL(nn.Module):
                 w *= (desired / (1e-8 + norm))
 
 
-class BiN_CTABL(nn.Module):
-    def __init__(self, d2, d1, t1, t2, d3, t3, d4, t4):
-        super().__init__()
+from src.models.lobcast_model import LOBCAST_model, LOBCAST_module
+
+
+CONFIG = {
+    "d2":[60],
+    "d1":[40],
+    "t1":[10],
+    "t2":[10],
+    "d3":[120],
+    "t3":[5],
+    "d4":[3],
+    "t4":[1],
+}
+
+
+class BiN_CTABL(LOBCAST_model):
+    def __init__(self, a, b, d2, d1, t1, t2, d3, t3, d4, t4):
+        super().__init__(a, b)
 
         self.BiN = BiN(d2, d1, t1, t2)
         self.BL = BL_layer(d2, d1, t1, t2)
@@ -82,3 +97,6 @@ class BiN_CTABL(nn.Module):
                 norm = torch.linalg.matrix_norm(w)
                 desired = torch.clamp(norm, min=0.0, max=10.0)
                 w *= (desired / (1e-8 + norm))
+
+
+BiN_CTABL_ml = LOBCAST_module("BINCTABL", BiN_CTABL, CONFIG)

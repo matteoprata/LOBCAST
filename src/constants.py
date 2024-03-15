@@ -92,7 +92,7 @@ class Optimizers(Enum):
 
 class Metrics(Enum):
     LOSS = 'loss'
-
+    CM = 'cm'
     F1 = 'f1'
     F1_W = 'f1_w'
 
@@ -109,8 +109,7 @@ class Metrics(Enum):
 
 class ModelSteps(Enum):
     TRAINING = "training"
-    VALIDATION_EPOCH = "validation-epoch-last"  # final validation
-    VALIDATION_MODEL = "validation-model"       # intermediate validation
+    VALIDATION = "validation"  # final validation
     TESTING = "testing"
 
 
@@ -189,21 +188,18 @@ from src.models.models_classes import *
 
 class ModelsClass(Enum):
     MLP = mlp.MLP_lm
-    BINCTABL = bin_tabl
-    CTABL = ctabl
+    BINCTABL = bin_tabl.BiN_CTABL_ml
+    CNN1 = cnn1.CNN_lm
+    CNN2 = cnn2.CNN2_ml
 
-    CNN1 = cnn1
+    CTABL = ctabl
     CNNLSTM = cnnlstm
     ATNBoF = atnbof
-
-    CNN2 = cnn2
     TLONBoF = tlonbof
     DLA = dla
-
     LSTM = lstm
     DEEPLOBATT = deeplobatt
     DEEPLOB = deeplob
-
     DAIN = dain
     AXIALLOB = axiallob
     TRANSLOB = translob

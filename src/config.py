@@ -9,12 +9,17 @@ from datetime import date, datetime
 import argparse
 import torch
 from enum import Enum
+from pytorch_lightning import seed_everything
 
+import random
 np.set_printoptions(suppress=True)
+import multiprocessing
 
 
 class Settings:
     def __init__(self):
+
+        # cli params have the priority
 
         self.SEED: int = 0
         self.IS_HPARAM_SEARCH: bool = False  # else preload from json file
@@ -28,7 +33,7 @@ class Settings:
         self.PREDICTION_HORIZON_UNIT: cst.UnitHorizon = cst.UnitHorizon.EVENTS
         self.PREDICTION_HORIZON_FUTURE: int = 5
         self.PREDICTION_HORIZON_PAST: int = 10
-        self.OBSERVATION_PERIOD: int = 10
+        self.OBSERVATION_PERIOD: int = 100
         self.IS_SHUFFLE_TRAIN_SET = True
 
         self.TRAIN_SET_PORTION = .8
@@ -38,6 +43,11 @@ class Settings:
 
         self.DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.N_GPUs = None if self.DEVICE == 'cpu' else torch.cuda.device_count()
+        self.N_CPUs = multiprocessing.cpu_count()
+
+        self.PROJECT_NAME = ""
+        self.DIR_SAVED_MODEL = ""
+        self.DIR_EXPERIMENTS = ""
 
 
 class ConfigHP:
@@ -60,93 +70,107 @@ class ConfigHPTunable(ConfigHP):
     def __init__(self):
         self.BATCH_SIZE = [64, 55]
         self.LEARNING_RATE = [0.01]
-        self.EPOCHS_UB = [50]
+        self.EPOCHS_UB = [3]
         self.OPTIMIZER = ["SGD"]
 
 
-class LOBCASTSetupRun(Settings):
+class LOBCASTSetupRun:  # TOGLIERE questa ISA
     def __init__(self):
         super().__init__()
 
-        self.parse_cl_arguments()
+        self.SETTINGS = Settings()
+
+        self.parse_cl_arguments(self.SETTINGS)
+        self.seed_everything(self.SETTINGS.SEED)
 
         # read from
-        self.TUNABLE = ConfigHPTunable()
-        self.TUNED = ConfigHPTuned()
+        self.TUNABLE_H_PRAM = ConfigHPTunable()
+        self.TUNED_H_PRAM = ConfigHPTuned()
 
+        self.setup_parameters()
+        self.choose_parameters()  # TODO lancerà più esecuzioni, bisognerà tornare qui
+        # at this point this
+
+        self.RUN_NAME_PREFIX = self.run_name_prefix(self.SETTINGS)
+        self.setup_all_directories(self.RUN_NAME_PREFIX, self.SETTINGS)
+
+        print("RUNNING:\n>>", self.RUN_NAME_PREFIX)
+
+    def setup_parameters(self):
         # add parameters from model
-        for key, value in self.PREDICTION_MODEL.value.tunable_parameters.items():
-            self.TUNABLE.add_hyperparameter(key, value)
+        for key, value in self.SETTINGS.PREDICTION_MODEL.value.tunable_parameters.items():
+            self.TUNABLE_H_PRAM.add_hyperparameter(key, value)
 
-        # add the same parameters in the TUNED object
-        for key, _ in self.TUNABLE.__dict__.items():
-            self.TUNED.add_hyperparameter(key, None)
+        # set to default, add the same parameters in the TUNED_H_PRAM object
+        for key, _ in self.TUNABLE_H_PRAM.__dict__.items():
+            self.TUNED_H_PRAM.add_hyperparameter(key, None)
 
-        self.do_search()
-
-        self.RUN_NAME_PREFIX = self.run_name_prefix()
-        self.setup_all_directories(self.RUN_NAME_PREFIX, self.IS_TEST)
-
-        print(self.RUN_NAME_PREFIX)
-        exit()
-
-    def do_search(self):
+    def choose_parameters(self):
         # for now, it only assigned the first element in a list of possible values
-        for key, value in self.TUNABLE.__dict__.items():
-            self.TUNED.__setattr__(key, value[0])
+        for key, value in self.TUNABLE_H_PRAM.__dict__.items():
+            value = value[0] if type(value) == list else value
+            self.TUNED_H_PRAM.__setattr__(key, value)
+
+    def seed_everything(self, seed):
+        """ Sets the random seed to all the random generators. """
+        seed_everything(seed)
+        np.random.seed(seed)
+        random.seed(seed)
+        # self.RANDOM_GEN_DATASET = np.random.RandomState(seed)
 
     @staticmethod
     def cf_name_format(ext=""):
         return "MOD={}-SEED={}-TRS={}-TES={}-DS={}-HU={}-HP={}-HF={}-OB={}" + ext
 
-    def run_name_prefix(self):
+    def run_name_prefix(self, settings):
         return self.cf_name_format().format(
-            self.PREDICTION_MODEL.name,
-            self.SEED,
-            self.STOCK_TRAIN_VAL,
-            self.STOCK_TEST,
-            self.DATASET_NAME.value,
-            self.PREDICTION_HORIZON_UNIT.name,
-            self.PREDICTION_HORIZON_PAST,
-            self.PREDICTION_HORIZON_FUTURE,
-            self.OBSERVATION_PERIOD,
+            settings.PREDICTION_MODEL.name,
+            settings.SEED,
+            settings.STOCK_TRAIN_VAL,
+            settings.STOCK_TEST,
+            settings.DATASET_NAME.value,
+            settings.PREDICTION_HORIZON_UNIT.name,
+            settings.PREDICTION_HORIZON_PAST,
+            settings.PREDICTION_HORIZON_FUTURE,
+            settings.OBSERVATION_PERIOD,
         )
 
-    def parse_cl_arguments(self):
+    def parse_cl_arguments(self, settings):
         """ Parses the arguments for the command line. """
 
         parser = argparse.ArgumentParser(description='LOBCAST single execution arguments:')
 
-        for k, v in self.__dict__.items():
+        # every field in the settings, can be set crom cl
+        for k, v in settings.__dict__.items():
             type_var = str if isinstance(v, Enum) else type(v)
             var = v.name if isinstance(v, Enum) else v
             parser.add_argument(f'--{k}', default=var, type=type_var)
 
         args = vars(parser.parse_args())
 
-        for k, v in self.__dict__.items():
+        # every field in the settings, is set based on the parsed values, enums are parsed by NAME
+        for k, v in settings.__dict__.items():
             value = v.__class__[args[k]] if isinstance(v, Enum) else args[k]
             self.__setattr__(k, value)
 
     @staticmethod
-    def setup_all_directories(fname, is_test):
+    def setup_all_directories(fname, settings):
         """
         Creates two folders:
             (1) data.experiments.LOBCAST-(fname) for the jsons with the stats
             (2) data.saved_models.LOBCAST-(fname) for the models
         """
 
-        if not is_test:
-            cst.PROJECT_NAME = cst.PROJECT_NAME.format(fname)
-            cst.DIR_SAVED_MODEL = cst.DIR_SAVED_MODEL.format(fname) + "/"
-            cst.DIR_EXPERIMENTS = cst.DIR_EXPERIMENTS.format(fname) + "/"
+        # TODO consider using dates
+        settings.PROJECT_NAME = cst.PROJECT_NAME.format(fname)
+        settings.DIR_SAVED_MODEL = cst.DIR_SAVED_MODEL.format(fname) + "/"
+        settings.DIR_EXPERIMENTS = cst.DIR_EXPERIMENTS.format(fname) + "/"
 
-            # create the paths for the simulation if they do not exist already
-            paths = ["data", cst.DIR_SAVED_MODEL, cst.DIR_EXPERIMENTS]
-            for p in paths:
-                if not os.path.exists(p):
-                    os.makedirs(p)
-
+        # create the paths for the simulation if they do not exist already
+        paths = ["data", cst.DIR_SAVED_MODEL, cst.DIR_EXPERIMENTS]
+        for p in paths:
+            if not os.path.exists(p):
+                os.makedirs(p)
 
 
 class Configuration(Settings):
@@ -225,7 +249,7 @@ class Configuration(Settings):
     def dynamic_config_setup(self):
         # sets the name of the metric to optimize
         self.SWEEP_METRIC['name'] = "{}_{}_{}".format(cst.ModelSteps.VALIDATION_MODEL.value, self.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, cst.Metrics.F1.value)
-        self.EARLY_STOPPING_METRIC = "{}_{}_{}".format(cst.ModelSteps.VALIDATION_EPOCH.value, self.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, cst.Metrics.F1.value)
+        self.EARLY_STOPPING_METRIC = "{}_{}_{}".format(cst.ModelSteps.VALIDATION.value, self.CHOSEN_STOCKS[cst.STK_OPEN.TRAIN].name, cst.Metrics.F1.value)
 
         self.WANDB_SWEEP_NAME = self.cf_name_format().format(
             self.PREDICTION_MODEL.name,
