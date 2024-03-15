@@ -2,29 +2,29 @@ import pytorch_lightning as pl
 import src.constants as cst
 
 
-def callback_save_model(config, run_name):
-    monitor_var = config.EARLY_STOPPING_METRIC
+def callback_save_model(path, metric, top_k=3):
     check_point_callback = pl.callbacks.ModelCheckpoint(
-        monitor=monitor_var,
+        monitor=metric,
         verbose=True,
-        save_top_k=1,
+        save_top_k=top_k,
         mode='max',
-        dirpath=cst.DIR_SAVED_MODEL + config.WANDB_SWEEP_NAME,
-        filename=config.WANDB_SWEEP_NAME + "-run=" + run_name + "-{epoch}-{" + monitor_var + ':.2f}'
+        dirpath=path,
+        filename='{epoch}-{' + metric + ':.2f}'
     )
     return check_point_callback
 
 
-def early_stopping(config):
-    """ Stops if models stops improving. """
-    monitor_var = config.EARLY_STOPPING_METRIC
-    return pl.callbacks.EarlyStopping(
-        monitor=monitor_var,
-        min_delta=0.01,
-        patience=8,
-        verbose=True,
-        mode='max',
-        # |v stops when if after epoch 1, the
-        # check_on_train_epoch_end=True,
-        # divergence_threshold=1/3,
-    )
+# TODO avoid early stopping
+# def early_stopping(config):
+#     """ Stops if models stops improving. """
+#     monitor_var = config.EARLY_STOPPING_METRIC
+#     return pl.callbacks.EarlyStopping(
+#         monitor=monitor_var,
+#         min_delta=0.01,
+#         patience=8,
+#         verbose=True,
+#         mode='max',
+#         # |v stops when if after epoch 1, the
+#         # check_on_train_epoch_end=True,
+#         # divergence_threshold=1/3,
+#     )

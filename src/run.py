@@ -8,6 +8,7 @@ from src.utils.utils_dataset import pick_dataset
 from src.utils.utils_models import pick_model
 from src.metrics.metrics_log import Metrics
 from src.config import Settings, ConfigHPTunable, ConfigHPTuned
+from src.models.model_callbacks import callback_save_model
 
 
 class Instance:
@@ -28,21 +29,30 @@ def run_instance():
     data_module = pick_dataset(cf)     # load the data
 
     metrics_log = Metrics(cf.SETTINGS.__dict__, cf.TUNED_H_PRAM.__dict__)
-    nn = pick_model(cf, data_module, metrics_log)   # load the model
+    nn = pick_model(cf, data_module, metrics_log)
+
+    target_halt_metric = "{}_{}".format(cst.ModelSteps.VALIDATION.value, cst.Metrics.F1.value)
 
     trainer = Trainer(
-        accelerator=cst.DEVICE_TYPE,
-        devices=cst.NUM_GPUS,
-        check_val_every_n_epoch=5,
+        accelerator=cf.SETTINGS.DEVICE,
+        devices=cf.SETTINGS.N_GPUs,
+        check_val_every_n_epoch=3,
         max_epochs=cf.TUNED_H_PRAM.EPOCHS_UB,
         callbacks=[
+            callback_save_model(cf.SETTINGS.DIR_SAVED_MODEL, target_halt_metric, top_k=3)
         ],
     )
 
-    trainer .fit(nn, data_module)
-    trainer.test(nn, data_module)
+    trainer.fit(nn, data_module)
 
-    metrics_log.dump(cf.SETTINGS.DIR_EXPERIMENTS)
+    metrics_log.dump_metrics(cf.SETTINGS.DIR_EXPERIMENTS, "metrics_train.json")
+    metrics_log.reset_stats()
+
+    trainer.validate(nn, data_module, ckpt_path="best")
+    trainer.test(nn, data_module, ckpt_path="best")
+
+    metrics_log.dump_metrics(cf.SETTINGS.DIR_EXPERIMENTS, "metrics_best.json")
+
 
 # def run(instances):
 #     for instance in instances:
