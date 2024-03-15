@@ -50,6 +50,8 @@ class Settings:
         self.PROJECT_NAME = ""
         self.DIR_EXPERIMENTS = ""
 
+        self.SWEEP_METHOD = 'bayes'
+
     def check_parameters_validity(self):
         CONSTRAINTS = []
         CONSTRAINTS += [not self.IS_TEST_ONLY or os.path.exists(self.TEST_MODEL_PATH)]  # if test, then test file should exist
@@ -76,9 +78,9 @@ class ConfigHPTuned(ConfigHP):
 
 class ConfigHPTunable(ConfigHP):
     def __init__(self):
-        self.BATCH_SIZE = [64, 55]
-        self.LEARNING_RATE = [0.01]
-        self.OPTIMIZER = ["SGD"]
+        self.BATCH_SIZE = {"values": [64, 55]}   # {"min": 0.0001, "max": 0.1} or {"values": [11]}
+        self.LEARNING_RATE = {"min": 0.0001, "max": 0.1}
+        self.OPTIMIZER = {"values": ["SGD"]}
 
 
 class LOBCASTSetupRun:  # TOGLIERE questa ISA
@@ -88,23 +90,47 @@ class LOBCASTSetupRun:  # TOGLIERE questa ISA
         self.SETTINGS = Settings()
         self.parse_cl_arguments(self.SETTINGS)
         self.SETTINGS.check_parameters_validity()
+        self.__seed_everything(self.SETTINGS.SEED)
 
-        self.seed_everything(self.SETTINGS.SEED)
-
-        # read from
+        # TIME TO SET PARAMS
         self.TUNABLE_H_PRAM = ConfigHPTunable()
         self.TUNED_H_PRAM = ConfigHPTuned()
-
         self.setup_parameters()
-        self.choose_parameters()  # TODO lancerà più esecuzioni, bisognerà tornare qui
-        # at this point this
+
+    def set_tuning_parameters(self, tuning_parameters=None):
+
+        def assign_first_param():
+            # for now, it only assigned the first element in a list of possible values
+            for key, value in self.TUNABLE_H_PRAM.__dict__.items():
+                if 'values' in value.keys():
+                    value = value['values'][0]
+                elif 'min' in value.keys() and 'max' in value.keys():
+                    value = value['min']
+                else:
+                    raise ValueError("Hyper parameters are wrongly specified.")
+                self.TUNED_H_PRAM.__setattr__(key, value)
+
+        def assign_wandb_param(tuning_parameters):
+            # for now, it only assigned the first element in a list of possible values
+            for key, value in tuning_parameters.items():
+                self.TUNED_H_PRAM.__setattr__(key, value)
+
+        if tuning_parameters is None:
+            assign_first_param()
+        else:
+            assign_wandb_param(tuning_parameters)
+
+        # at this point parameters are set
+        print("Running with parameters")
+        print(self.TUNABLE_H_PRAM.__dict__)
+        print(self.TUNED_H_PRAM.__dict__)
+
+        # self.RUN_NAME_PREFIX = self.run_name_prefix(self.SETTINGS)
+        self.DATE_TIME = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
+        self.setup_all_directories(self.DATE_TIME, self.SETTINGS)
+        # print("RUNNING:\n>>", self.RUN_NAME_PREFIX)
 
         self.METRICS = Metrics(self.SETTINGS.__dict__, self.TUNED_H_PRAM.__dict__)
-        self.RUN_NAME_PREFIX = self.run_name_prefix(self.SETTINGS)
-        self.DATE_TIME = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
-
-        self.setup_all_directories(self.DATE_TIME, self.SETTINGS)
-        print("RUNNING:\n>>", self.RUN_NAME_PREFIX)
 
     def setup_parameters(self):
         # add parameters from model
@@ -115,13 +141,7 @@ class LOBCASTSetupRun:  # TOGLIERE questa ISA
         for key, _ in self.TUNABLE_H_PRAM.__dict__.items():
             self.TUNED_H_PRAM.add_hyperparameter(key, None)
 
-    def choose_parameters(self):
-        # for now, it only assigned the first element in a list of possible values
-        for key, value in self.TUNABLE_H_PRAM.__dict__.items():
-            value = value[0] if type(value) == list else value
-            self.TUNED_H_PRAM.__setattr__(key, value)
-
-    def seed_everything(self, seed):
+    def __seed_everything(self, seed):
         """ Sets the random seed to all the random generators. """
         seed_everything(seed)
         np.random.seed(seed)

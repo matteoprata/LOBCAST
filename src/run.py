@@ -1,4 +1,6 @@
 
+import wandb
+
 import src.constants as cst
 
 from src.config import LOBCASTSetupRun
@@ -10,16 +12,15 @@ from src.metrics.metrics_log import Metrics
 from src.config import Settings, ConfigHPTunable, ConfigHPTuned
 from src.models.model_callbacks import callback_save_model
 from pytorch_lightning import Trainer
-
+import time
 
 def run_instance():
 
     cf = LOBCASTSetupRun()
+    cf.set_tuning_parameters()
 
     data_module = pick_dataset(cf)
     nets_module = pick_model  (cf, data_module, cf.METRICS)
-
-    target_halt_metric = "{}_{}".format(cst.ModelSteps.VALIDATION.value, cst.Metrics.F1.value)
 
     trainer = Trainer(
         accelerator=cf.SETTINGS.DEVICE,
@@ -27,7 +28,7 @@ def run_instance():
         check_val_every_n_epoch=3,
         max_epochs=cf.SETTINGS.EPOCHS_UB,
         callbacks=[
-            callback_save_model(cf.SETTINGS.DIR_EXPERIMENTS, target_halt_metric, top_k=3)
+            callback_save_model(cf.SETTINGS.DIR_EXPERIMENTS, cst.VALIDATION_METRIC, top_k=3)
         ],
     )
 
@@ -43,6 +44,31 @@ def run_instance():
     trainer.test(nets_module, data_module, ckpt_path=model_path)
     cf.METRICS.dump_metrics(cf.SETTINGS.DIR_EXPERIMENTS, "metrics_best.json")
 
+
+def run_wdb():
+
+    # create a wandb sweep
+    cf = LOBCASTSetupRun()
+
+    def run(cf):
+        with wandb.init() as wandb_instance:
+            cf.set_tuning_parameters(wandb_instance.config)
+            time.sleep(10)
+            # TODO TRAINING LOOP
+
+    sweep_id = wandb.sweep(
+        sweep={
+            # 'command': ["${env}", "python3", "${program}", "${args}"],
+            # 'program': "src/utils_training_loop.py",
+            'method': cf.SETTINGS.SWEEP_METHOD,
+            "metric": {"goal": "maximize", "name": cst.VALIDATION_METRIC},
+            'parameters': cf.TUNABLE_H_PRAM.__dict__
+        },
+        project=cst.PROJECT_NAME.format("v" + str(cst.VERSION))
+    )
+
+    # create a wandb agent
+    wandb.agent(sweep_id, function=lambda: run(cf), count=cst.WANDB_SWEEP_MAX_RUNS)
 
 
 # class Instance:
@@ -101,7 +127,8 @@ if __name__ == '__main__':
     # instances += [Instance(cst.Models.MLP , [10], [1])]
     # instances += [Instance(cst.Models.CNN2, [10], [1])]
 
-    run_instance()
+    # run_instance()
+    run_wdb()
 
 # ARGUMENTS SINGLE:
 #

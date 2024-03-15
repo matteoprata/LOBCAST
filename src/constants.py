@@ -113,6 +113,8 @@ class ModelSteps(Enum):
     TESTING = "testing"
 
 
+VALIDATION_METRIC = "{}_{}".format(ModelSteps.VALIDATION.value, Metrics.F1.value)
+
 class NormalizationType(Enum):
     Z_SCORE = 0
     DYNAMIC = 1
@@ -332,6 +334,7 @@ DEVICE_TYPE = 'cuda' if torch.cuda.is_available() else 'cpu'
 NUM_GPUS = None if DEVICE_TYPE == 'cpu' else torch.cuda.device_count()
 
 PROJECT_NAME = "LOBCAST-({})"
+VERSION = 2
 DIR_EXPERIMENTS = "data/experiments/" + PROJECT_NAME
 DIR_SAVED_MODEL = "data/saved_models/" + PROJECT_NAME
 
