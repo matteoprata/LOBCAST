@@ -8,8 +8,8 @@ import src.utils.utils_generic as utils_generic
 
 # subset of the arguments of a LOBCAST_model
 CONFIG = {
-    "hidden_layer_dim": {"values": [128]},
-    "p_dropout": {"values": [.4, .1]},
+    "hidden_layer_dim": {"values": [128, 3]},
+    "p_dropout": {"values": [.1]},
 }
 
 

@@ -167,17 +167,19 @@ class ExpIndependentVariables(Enum):
 N_LOB_LEVELS = 10
 NUM_CLASSES = 3
 
-PROJECT_NAME = "LOBCAST-({})"
-VERSION = 2
-DIR_EXPERIMENTS = "data/experiments/" + PROJECT_NAME
-DIR_SAVED_MODEL = "data/saved_models/" + PROJECT_NAME
+PROJECT_NAME = "LOBCAST"
+VERSION = 2.0
+
+PROJECT_NAME_VERSION = f"{PROJECT_NAME}-v{VERSION}"
+DIR_EXPERIMENTS = f"data/experiments/{PROJECT_NAME_VERSION}"
+DIR_SAVED_MODEL = f"data/saved_models/{PROJECT_NAME_VERSION}"
 
 DATA_SOURCE = "data/"
 DATASET_LOBSTER = "LOBSTER_6/unzipped/"
 DATASET_FI = "FI-2010/BenchmarkDatasets/"
 DATA_PICKLES = "data/pickles/"
 
-
+METRICS_RUNNING_FILE_NAME = "metrics_train.json"
 WANDB_SWEEP_MAX_RUNS = 20
 
 

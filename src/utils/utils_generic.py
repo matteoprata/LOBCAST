@@ -110,5 +110,14 @@ def make_dir(path):
         os.makedirs(path)
 
 
-if __name__ == '__main__':
-    print('mac:', get_sys_mac())
+def dict_to_string(dictionary):
+    rep = ""
+    for key, value in dictionary.items():
+        rep += f"{key}: {value}\n"
+    return rep
+
+
+def str_to_bool(string: str):
+    string = string.lower()
+    return string in ['true', '1', 't', 'y', 'yes']
+

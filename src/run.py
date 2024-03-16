@@ -16,7 +16,7 @@ def run_single(cf):
     trainer = Trainer(
         accelerator=cf.SETTINGS.DEVICE,
         devices=cf.SETTINGS.N_GPUs,
-        check_val_every_n_epoch=3,
+        check_val_every_n_epoch=cf.SETTINGS.VALIDATION_EVERY,
         max_epochs=cf.SETTINGS.EPOCHS_UB,
         callbacks=[
             callback_save_model(cf.SETTINGS.DIR_EXPERIMENTS, cst.VALIDATION_METRIC, top_k=3)
@@ -27,13 +27,13 @@ def run_single(cf):
 
     if not cf.SETTINGS.IS_TEST_ONLY:
         trainer.fit(nets_module, data_module)
-        cf.METRICS.dump_metrics(cf.SETTINGS.DIR_EXPERIMENTS, "metrics_train.json")
+        cf.METRICS.dump_metrics(cst.METRICS_RUNNING_FILE_NAME)
         cf.METRICS.reset_stats()
 
         trainer.validate(nets_module, data_module, ckpt_path=model_path)
 
     trainer.test(nets_module, data_module, ckpt_path=model_path)
-    cf.METRICS.dump_metrics(cf.SETTINGS.DIR_EXPERIMENTS, "metrics_best.json")
+    cf.METRICS.dump_metrics("metrics_best.json")
 
 
 def main():
@@ -44,26 +44,52 @@ def main():
 
         def wandb_lunch(cf):  # runs multiple instances
             with wandb.init() as wandb_instance:
-                cf.end_setup(wandb_instance)
+                cf.end_setup(wandb_instance.configuration, wandb_instance)
                 run_single(cf)
 
-        sweep_id = wandb.sweep(
-            sweep={
-                # 'command': ["${env}", "python3", "${program}", "${args}"],
-                # 'program': "src/utils_training_loop.py",
+        sweep_id = wandb.sweep(project=cst.PROJECT_NAME_VERSION,
+                               sweep={
                 'method': cf.SETTINGS.SWEEP_METHOD,
                 "metric": {"goal": "maximize", "name": cst.VALIDATION_METRIC},
                 'parameters': cf.TUNABLE_H_PRAM.__dict__,
-                'description': str({**cf.SETTINGS.__dict__, **cf.TUNABLE_H_PRAM.__dict__}),
-            },
-            project=cst.PROJECT_NAME.format("v" + str(cst.VERSION))
-        )
+                'description': str(cf.SETTINGS) + str(cf.TUNABLE_H_PRAM),
+            })
 
         # create a wandb agent
         wandb.agent(sweep_id, function=lambda: wandb_lunch(cf), count=cst.WANDB_SWEEP_MAX_RUNS)
     else:
-        cf.end_setup()
-        run_single(cf)
+        import itertools
+
+        def grid_search_configurations(tunable_variable, n_steps=3):
+            """ Given a set of parameters to tune in the form
+            {
+                p1: {"values": [v1, v2, v3]},
+                p2: {"max": 1, "min": 0}, ...
+            }
+            returns the configurations associated with a grid search in the form:
+            [ {p1:v1, p2:v1}, {p1:v1, v2}, ... ]
+            """
+            all_domains = []
+            for param_domains in tunable_variable.values():
+                # continuous variable
+                if 'min' in param_domains:
+                    step = (param_domains['max'] - param_domains['min']) / n_steps
+                    all_domains += [[param_domains['min'] + step * i for i in range(n_steps)]]
+                # discrete variable
+                elif 'values' in param_domains:
+                    all_domains += [param_domains['values']]
+            print(all_domains)
+            configurations_tuples = itertools.product(*all_domains)
+
+            # from tuples [(v1, v2, v3)] to [{p1: v1}, ...]
+            configurations_dicts = [{k: v for k, v in zip(tunable_variable.keys(), selected_values)} for selected_values in configurations_tuples]
+            return configurations_dicts
+
+        confs = grid_search_configurations(cf.TUNABLE_H_PRAM.__dict__)
+        for con in confs:
+            print("\n\n\n\n HOLA!")
+            cf.end_setup(con)
+            run_single(cf)
 
 
 if __name__ == '__main__':

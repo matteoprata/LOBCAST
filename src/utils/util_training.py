@@ -71,21 +71,24 @@ class LOBCAST_NNEngine(pl.LightningModule):
         var_name = "{}_{}".format(stp_type, cst.Metrics.F1.value)
         self.log(var_name, eval_dict[cst.Metrics.F1.value], prog_bar=True)
 
-        print("")
-        print("FINE", stp_type)
-        print(eval_dict)
-
-        LOG_EVERY_EPOCH = 1
-        if self.current_epoch % LOG_EVERY_EPOCH == 0:
-            self.metrics_log.add_metric(self.current_epoch, stp_type, eval_dict)
-            self.log_wandb({f"{stp_type}_{k}": v for k, v in eval_dict.items()})
-            # TODO option dump logits
+        print("\n")
+        print(f"END epoch {self.current_epoch} ({stp_type})")
+        print("Logging stats...")
+        self.metrics_log.add_metric(self.current_epoch, stp_type, eval_dict)
+        self.metrics_log.dump_metrics(cst.METRICS_RUNNING_FILE_NAME)
+        self.log_wandb({f"{stp_type}_{k}": v for k, v in eval_dict.items()})
+        print("Done.")
 
     def training_epoch_end(self, training_step_outputs):
         training_step_outputs = [batch["other"] for batch in training_step_outputs]
         self.evaluate_classifier(cst.ModelSteps.TRAINING.value, training_step_outputs)
 
     def validation_epoch_end(self, validation_step_outputs):
+        if self.current_epoch == 0:
+            # this to ignores stats of the sanity check run at the very beginning
+            print("Sanity check stats were not logged.")
+            return
+
         self.evaluate_classifier(cst.ModelSteps.VALIDATION.value, validation_step_outputs)
 
     def test_epoch_end(self, test_step_outputs):
