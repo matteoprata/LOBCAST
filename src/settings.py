@@ -9,6 +9,7 @@ np.set_printoptions(suppress=True)
 from src.utils.utils_generic import dict_to_string
 
 
+
 class Settings:
     def __init__(self):
 
@@ -61,3 +62,4 @@ class Settings:
 
     def __repr__(self):
         return dict_to_string(self.__dict__)
+

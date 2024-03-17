@@ -118,3 +118,4 @@ class LOBCAST_NNEngine(pl.LightningModule):
             return torch.optim.Adam(self.parameters(), lr=self.hps.LEARNING_RATE)
         elif self.hps.OPTIMIZER == "RMSPROP":
             return torch.optim.RMSprop(self.parameters(), lr=self.hps.LEARNING_RATE)
+

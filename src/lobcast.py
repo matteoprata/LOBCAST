@@ -16,6 +16,11 @@ from src.utils.utils_generic import str_to_bool
 from src.settings import Settings
 from src.hyper_parameters import ConfigHPTunable, ConfigHPTuned
 
+from src.models.model_callbacks import callback_save_model
+from src.utils.utils_dataset import pick_dataset
+from src.utils.utils_models import pick_model
+from pytorch_lightning import Trainer
+
 
 class LOBCAST:
     def __init__(self):
@@ -31,7 +36,10 @@ class LOBCAST:
         else:
             # settings new settings
             for k, v in setting_params.items():
-                self.SETTINGS.__setattr__(k, v)
+                if k in self.SETTINGS.__dict__.keys():
+                    self.SETTINGS.__setattr__(k, v)
+                else:
+                    raise KeyError(f"Unknown parameter: {k}.")
 
         self.SETTINGS.check_parameters_validity()
         # at this point parameters are set
@@ -113,3 +121,31 @@ class LOBCAST:
         for p in paths:
             if not os.path.exists(p):
                 os.makedirs(p)
+
+    def run(self):
+        """ Given a simulation, settings and hyper params, it runs the training loop. """
+        data_module = pick_dataset(self)
+        nets_module = pick_model(self, data_module, self.METRICS)
+
+        trainer = Trainer(
+            accelerator=self.SETTINGS.DEVICE,
+            devices=self.SETTINGS.N_GPUs,
+            check_val_every_n_epoch=self.SETTINGS.VALIDATION_EVERY,
+            max_epochs=self.SETTINGS.EPOCHS_UB,
+            callbacks=[
+                callback_save_model(self.SETTINGS.DIR_EXPERIMENTS, cst.VALIDATION_METRIC, top_k=3)
+            ],
+        )
+
+        model_path = self.SETTINGS.TEST_MODEL_PATH if self.SETTINGS.IS_TEST_ONLY else "best"
+
+        if not self.SETTINGS.IS_TEST_ONLY:
+            trainer.fit(nets_module, data_module)
+            self.METRICS.dump_metrics(cst.METRICS_RUNNING_FILE_NAME)
+            self.METRICS.reset_stats()
+
+            trainer.validate(nets_module, data_module, ckpt_path=model_path)
+
+        trainer.test(nets_module, data_module, ckpt_path=model_path)
+        self.METRICS.dump_metrics("metrics_best.json")
+        print('Completed.')
