@@ -8,6 +8,15 @@ import multiprocessing
 np.set_printoptions(suppress=True)
 from src.utils.utils_generic import dict_to_string
 
+from enum import Enum
+
+
+class SettingsExp(Enum):
+    SEED = "SEED"
+    PREDICTION_MODEL = "PREDICTION_MODEL"
+    PREDICTION_HORIZON_FUTURE = "PREDICTION_HORIZON_FUTURE"
+    PREDICTION_HORIZON_PAST = "PREDICTION_HORIZON_PAST"
+    OBSERVATION_PERIOD = "OBSERVATION_PERIOD"
 
 
 class Settings:
@@ -62,4 +71,7 @@ class Settings:
 
     def __repr__(self):
         return dict_to_string(self.__dict__)
+
+
+
 
