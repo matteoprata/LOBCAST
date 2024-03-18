@@ -48,7 +48,7 @@ class Settings:
         self.N_CPUs = multiprocessing.cpu_count()
 
         self.DIR_EXPERIMENTS = ""
-        self.SWEEP_METHOD = 'grid'
+        self.WANDB_SWEEP_METHOD = 'grid'
         self.IS_WANDB = False
 
     def check_parameters_validity(self):
@@ -64,14 +64,13 @@ class Settings:
         c4 = (not self.DATASET_NAME == cst.DatasetFamily.FI or self.PREDICTION_HORIZON_FUTURE in [1, 2, 3, 5, 10],
               f"FI-2010 Dataset can handle only {1, 2, 3, 5, 10} events in the future horizon, {self.PREDICTION_HORIZON_FUTURE} given.")
 
-        CONSTRAINTS += [c1, c2, c3, c4]
+        c5 = (not self.DATASET_NAME == cst.DatasetFamily.FI or self.N_TRENDS == 3,
+              f"FI-2010 Dataset can handle only 3 trends, {self.N_TRENDS} given.")
+
+        CONSTRAINTS += [c1, c2, c3, c4, c5]
         for constrain, description in CONSTRAINTS:
             if not constrain:
                 raise ValueError(f"Constraint not met! {description} Check your parameters.")
 
     def __repr__(self):
         return dict_to_string(self.__dict__)
-
-
-
-

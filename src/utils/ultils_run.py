@@ -5,10 +5,10 @@ import itertools
 
 def grid_search_configurations(tunable_variables, n_steps=3):
     """ Given a set of parameters to tune of the form
-        {
-            p1: {"values": [v1, v2, v3]},
-            p2: {"max": 1, "min": 0}, ...
-        }
+
+    { p1: {"values": [v1, v2, v3]},
+      p2: {"max": 1, "min": 0}, ... }
+
     returns the configurations associated with a grid search in the form:
     [ {p1:v1, p2:v1}, {p1:v1, v2}, ... ]
     """
@@ -40,7 +40,7 @@ def wandb_init(sim):
             sim.run()
 
     sweep_id = wandb.sweep(project=cst.PROJECT_NAME_VERSION, sweep={
-        'method': sim.SETTINGS.SWEEP_METHOD,
+        'method': sim.SETTINGS.WANDB_SWEEP_METHOD,
         "metric": {"goal": "maximize", "name": cst.VALIDATION_METRIC},
         'parameters': sim.TUNABLE_H_PRAM.__dict__,
         'description': str(sim.SETTINGS) + str(sim.TUNABLE_H_PRAM),
@@ -54,13 +54,17 @@ class ExecutionPlan:
         self.constraints = constraints
 
     def configurations(self):
+        """
+        Generate configurations based on the execution plan and constraints.
+        Returns: list: A list of dictionaries representing configurations for LOBCAST Settings,
+                       where keys are variable names and values are the corresponding values.
+        """
         all_domains = [list(dom) for dom in self.plan.values()]
         configurations_attempts = list(itertools.product(*all_domains))
 
         chosen_configurations = set()
         for fixed_var, fixed_value in self.constraints.items():
-            for configuration in configurations_attempts:  # [(1az)]
-                print(list(self.plan.keys()))
+            for configuration in configurations_attempts:
                 vf_index = list(self.plan.keys()).index(fixed_var)
                 if configuration[vf_index] == fixed_value:
                     chosen_configurations |= {configuration}

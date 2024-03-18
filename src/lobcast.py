@@ -30,27 +30,22 @@ class LOBCAST:
         self.TUNED_H_PRAM = ConfigHPTuned()
         self.__init_hyper_parameters()
 
-    def update_settings(self, setting_params=None):
-        if setting_params is None:
-            self.__parse_cl_arguments(self.SETTINGS)
-        else:
-            # settings new settings
-            for k, v in setting_params.items():
-                if k in self.SETTINGS.__dict__.keys():
-                    self.SETTINGS.__setattr__(k, v)
-                else:
-                    raise KeyError(f"Unknown parameter: {k}.")
+    def update_settings(self, setting_params):
+        # settings new settings
+        for key, value in setting_params.items():
+            self.SETTINGS.__setattr__(key, value)
 
         self.SETTINGS.check_parameters_validity()
         # at this point parameters are set
-        print("Running with settings:\n", self.SETTINGS.__dict__)
+        print("\nRunning with settings:\n", self.SETTINGS.__dict__)
 
     def update_hyper_parameters(self, tuning_parameters):
+        # coming from wandb or from local grid search
         for key, value in tuning_parameters.items():
             self.TUNED_H_PRAM.__setattr__(key, value)
 
         # at this point parameters are set
-        print("Running with parameters:\n", self.TUNED_H_PRAM.__dict__)
+        print("\nRunning with hyper parameters:\n", self.TUNED_H_PRAM.__dict__)
 
     def end_setup(self, wandb_instance=None):
         self.__seed_everything(self.SETTINGS.SEED)
@@ -60,7 +55,7 @@ class LOBCAST:
         self.__setup_all_directories(self.DATE_TIME, self.SETTINGS)
         # print("RUNNING:\n>>", self.RUN_NAME_PREFIX)
 
-        self.METRICS = Metrics(self.SETTINGS.DIR_EXPERIMENTS)
+        self.METRICS = Metrics(self.SETTINGS.DIR_EXPERIMENTS, self.sim_name_format())
         self.WANDB_INSTANCE = wandb_instance
 
     def __init_hyper_parameters(self):
@@ -76,29 +71,24 @@ class LOBCAST:
         """ Sets the random seed to all the random generators. """
         seed_everything(seed)
 
-    # @staticmethod
-    # def cf_name_format(ext=""):
-    #     return "MOD={}-SEED={}-TRS={}-TES={}-DS={}-HU={}-HP={}-HF={}-OB={}" + ext
-    #
-    # def run_name_prefix(self, settings):
-    #     return self.cf_name_format().format(
-    #         settings.PREDICTION_MODEL.name,
-    #         settings.SEED,
-    #         settings.STOCK_TRAIN_VAL,
-    #         settings.STOCK_TEST,
-    #         settings.DATASET_NAME.value,
-    #         settings.PREDICTION_HORIZON_UNIT.name,
-    #         settings.PREDICTION_HORIZON_PAST,
-    #         settings.PREDICTION_HORIZON_FUTURE,
-    #         settings.OBSERVATION_PERIOD,
-    #     )
+    def sim_name_format(self):
+        SIM_NAME = "MOD={}-SEED={}-DS={}-HU={}-HP={}-HF={}-OB={}"
+        return SIM_NAME.format(
+            self.SETTINGS.PREDICTION_MODEL.name,
+            self.SETTINGS.SEED,
+            self.SETTINGS.DATASET_NAME.value,
+            self.SETTINGS.PREDICTION_HORIZON_UNIT.name,
+            self.SETTINGS.PREDICTION_HORIZON_PAST,
+            self.SETTINGS.PREDICTION_HORIZON_FUTURE,
+            self.SETTINGS.OBSERVATION_PERIOD,
+        )
 
-    def __parse_cl_arguments(self, settings):
+    def parse_cl_arguments(self):
         """ Parses the arguments for the command line. """
         parser = argparse.ArgumentParser(description='LOBCAST arguments:')
 
         # every field in the settings, can be set crom cl
-        for k, v in settings.__dict__.items():
+        for k, v in self.SETTINGS.__dict__.items():
             var = v.name if isinstance(v, Enum) else v
             type_var = str if isinstance(v, Enum) else type(v)
             type_var = str_to_bool if type(v) == bool else type_var  # to parse bool
@@ -106,11 +96,14 @@ class LOBCAST:
 
         args = vars(parser.parse_args())
 
-        print("Setting CLI parameters.")
+        print("Gathering CLI values.")
+        setting_conf = dict()
         # every field in the settings, is set based on the parsed values, enums are parsed by NAME
-        for k, v in settings.__dict__.items():
+        for k, v in self.SETTINGS.__dict__.items():
             value = v.__class__[args[k]] if isinstance(v, Enum) else args[k]
-            settings.__setattr__(k, value)
+            setting_conf[k] = value
+
+        return setting_conf
 
     @staticmethod
     def __setup_all_directories(fname, settings):

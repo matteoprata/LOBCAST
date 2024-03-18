@@ -6,9 +6,10 @@ from collections import defaultdict
 
 
 class Metrics:
-    def __init__(self, path):
+    def __init__(self, path, fname_root):
         self.metrics = defaultdict(dict)  # dict logged every X epochs
         self.path = path
+        self.fname_root = fname_root
 
     def add_metric(self, epoch, dataset_type, eval_dict):
         self.metrics[dataset_type][epoch] = eval_dict
@@ -20,8 +21,8 @@ class Metrics:
         print("Dumping config at", self.path)
         merged = {**config, **h_parameters}
         merged = {k: (v if is_jsonable(v) else str(v)) for k, v in merged.items()}  # make string unserializable vals
-        write_json(merged, self.path + "config.json")
+        write_json(merged, self.path + self.fname_root + "config.json")
 
     def dump_metrics(self, fname):
         print("Dumping metrics at", self.path)
-        write_json(self.metrics, self.path + fname)
+        write_json(self.metrics, self.path + self.fname_root + fname)
