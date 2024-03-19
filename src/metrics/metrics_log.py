@@ -1,7 +1,5 @@
 
 from src.utils.utils_generic import write_json, is_jsonable
-from src.constants import Predictions
-import src.constants as cst
 from collections import defaultdict
 
 

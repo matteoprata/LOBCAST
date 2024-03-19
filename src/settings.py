@@ -36,7 +36,7 @@ class Settings:
         self.OBSERVATION_PERIOD: int = 100
         self.IS_SHUFFLE_TRAIN_SET = True
 
-        self.EPOCHS_UB = 15
+        self.EPOCHS_UB = 20
         self.TRAIN_SET_PORTION = .8
         self.VALIDATION_EVERY = 1
 

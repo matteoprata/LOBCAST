@@ -4,6 +4,8 @@ import argparse
 import os
 from datetime import datetime
 from enum import Enum
+from matplotlib.backends.backend_pdf import PdfPages
+from matplotlib.backends.backend_pdf import PdfPages
 
 import numpy as np
 from pytorch_lightning import seed_everything
@@ -20,6 +22,7 @@ from src.models.model_callbacks import callback_save_model
 from src.utils.utils_dataset import pick_dataset
 from src.utils.utils_models import pick_model
 from pytorch_lightning import Trainer
+from src.evaluation.eval_report import plot_metric_training, plot_metric_best, saved_metrics
 
 
 class LOBCAST:
@@ -127,7 +130,7 @@ class LOBCAST:
             max_epochs=self.SETTINGS.EPOCHS_UB,
             num_sanity_val_steps=0,
             callbacks=[
-                callback_save_model(self.SETTINGS.DIR_EXPERIMENTS, cst.VALIDATION_METRIC, top_k=3)
+                callback_save_model(self.SETTINGS.DIR_EXPERIMENTS, self.sim_name_format(), cst.VALIDATION_METRIC, top_k=3)
             ],
         )
 
@@ -144,4 +147,17 @@ class LOBCAST:
             trainer.validate(nets_module, data_module, ckpt_path=model_path)
         trainer.test(nets_module, data_module, ckpt_path=model_path)
         # self.METRICS.dump_metrics(cst.METRICS_BEST_FILE_NAME)
+        self.__plot_stats()
         print('Completed.')
+
+    def __plot_stats(self):
+        pdf_root = self.SETTINGS.DIR_EXPERIMENTS + self.sim_name_format()
+        pdf_best    = PdfPages(pdf_root + 'best_stats.pdf')
+        pdf_running = PdfPages(pdf_root + 'running_stats.pdf')
+
+        for m in saved_metrics:
+            plot_metric_best(pdf_root + cst.METRICS_BEST_FILE_NAME, m, pdf_best)
+            plot_metric_training(pdf_root + cst.METRICS_RUNNING_FILE_NAME, m, pdf_running)
+
+        pdf_best.close()
+        pdf_running.close()

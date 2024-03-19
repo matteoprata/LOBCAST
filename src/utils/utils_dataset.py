@@ -1,5 +1,5 @@
 import src.constants as cst
-from src.data_preprocessing.DataModule import DataModule
+from src.data_preprocessing.dataModule import DataModule
 from src.data_preprocessing.FI.FIDataBuilder import FIDataset
 
 
