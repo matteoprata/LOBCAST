@@ -28,6 +28,8 @@ class LOBCAST:
         self.SETTINGS = Settings()
         self.TUNABLE_H_PRAM = ConfigHPTunable()
         self.TUNED_H_PRAM = ConfigHPTuned()
+
+        # based on the settings
         self.__init_hyper_parameters()
 
     def update_settings(self, setting_params):
@@ -50,10 +52,8 @@ class LOBCAST:
     def end_setup(self, wandb_instance=None):
         self.__seed_everything(self.SETTINGS.SEED)
 
-        # self.RUN_NAME_PREFIX = self.run_name_prefix(self.SETTINGS)
         self.DATE_TIME = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
         self.__setup_all_directories(self.DATE_TIME, self.SETTINGS)
-        # print("RUNNING:\n>>", self.RUN_NAME_PREFIX)
 
         self.METRICS = Metrics(self.SETTINGS.DIR_EXPERIMENTS, self.sim_name_format())
         self.WANDB_INSTANCE = wandb_instance
@@ -125,6 +125,7 @@ class LOBCAST:
             devices=self.SETTINGS.N_GPUs,
             check_val_every_n_epoch=self.SETTINGS.VALIDATION_EVERY,
             max_epochs=self.SETTINGS.EPOCHS_UB,
+            num_sanity_val_steps=0,
             callbacks=[
                 callback_save_model(self.SETTINGS.DIR_EXPERIMENTS, cst.VALIDATION_METRIC, top_k=3)
             ],
@@ -137,8 +138,10 @@ class LOBCAST:
             self.METRICS.dump_metrics(cst.METRICS_RUNNING_FILE_NAME)
             self.METRICS.reset_stats()
 
+            # this flag is used when running simulation to know if final validation on best model is running
+            self.METRICS.is_best_model = True
+            # best model evaluation starts
             trainer.validate(nets_module, data_module, ckpt_path=model_path)
-
         trainer.test(nets_module, data_module, ckpt_path=model_path)
-        self.METRICS.dump_metrics("metrics_best.json")
+        # self.METRICS.dump_metrics(cst.METRICS_BEST_FILE_NAME)
         print('Completed.')

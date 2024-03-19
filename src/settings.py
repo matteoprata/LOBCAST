@@ -36,9 +36,9 @@ class Settings:
         self.OBSERVATION_PERIOD: int = 100
         self.IS_SHUFFLE_TRAIN_SET = True
 
-        self.EPOCHS_UB = 10
+        self.EPOCHS_UB = 15
         self.TRAIN_SET_PORTION = .8
-        self.VALIDATION_EVERY = 5
+        self.VALIDATION_EVERY = 1
 
         self.IS_TEST_ONLY = False
         self.TEST_MODEL_PATH: str = "data/saved_models/LOBCAST-(15-03-2024_20-23-49)/epoch=2-validation_f1=0.27.ckpt"

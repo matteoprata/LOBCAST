@@ -180,6 +180,7 @@ DATASET_FI = "FI-2010/BenchmarkDatasets/"
 DATA_PICKLES = "data/pickles/"
 
 METRICS_RUNNING_FILE_NAME = "metrics_train.json"
+METRICS_BEST_FILE_NAME = "metrics_best.json"
 WANDB_SWEEP_MAX_RUNS = 20
 
 
