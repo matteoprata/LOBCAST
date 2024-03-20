@@ -16,14 +16,14 @@ class Metrics:
     def reset_stats(self):
         self.metrics = defaultdict(dict)
 
-    def dump_info(self, config, h_parameters):
+    def dump_info(self, settings, h_parameters):
         print("Dumping config at", self.path)
-        merged = {**config, **h_parameters}
+        merged = {**settings, **h_parameters}
         merged = {k: (v if is_jsonable(v) else str(v)) for k, v in merged.items()}  # make string unserializable vals
-        write_json(merged, self.path + self.fname_root + "config.json")
+        write_json(merged, self.path + self.fname_root + "_" + "config.json")
         return merged
 
     def dump_metrics(self, fname):
         print("Dumping metrics at", self.path)
-        write_json(self.metrics, self.path + self.fname_root + fname)
+        write_json(self.metrics, self.path + self.fname_root + "_" + fname)
         return self.metrics

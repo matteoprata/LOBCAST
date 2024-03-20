@@ -26,7 +26,6 @@ def main():
 
     setting_conf = sim.parse_cl_arguments()
     sim.update_settings(setting_conf)
-
     run_simulation(sim)
 
 

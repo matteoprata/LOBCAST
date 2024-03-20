@@ -1,4 +1,5 @@
 import collections
+import os.path
 from collections import Counter
 
 import src.constants as cst
@@ -82,6 +83,16 @@ class FIDataset(data.Dataset):
         if self.dataset_type == cst.DatasetType.TRAIN or self.dataset_type == cst.DatasetType.VALIDATION:
 
             F_NAME = DIR + '/{}_Dst_{}_{}_CF_7'.format(DATASET_TYPE, AUCTION, NORMALIZATION) + F_EXTENSION
+
+            if not os.path.exists(F_NAME):
+                error =  "\n\nFile {} not found!".format(F_NAME)
+                error += "\n\n (1) Download the dataset in data, by running:\n{}".format(cst.DOWNLOAD_FI_COMMAND)
+                error += "\n (2) Unzip the file."
+                error += "\n (3) Run: mv data/published/ data/FI-2010"
+                error += "\n (4) Unzip data/FI-2010/BenchmarkDatasets/BenchmarkDatasets.zip in data/FI-2010/BenchmarkDatasets"
+                error += "\n"
+                raise FileNotFoundError(error)
+
             out_df = np.loadtxt(F_NAME)
 
             n_samples_train = int(np.floor(out_df.shape[1] * self.train_val_split))

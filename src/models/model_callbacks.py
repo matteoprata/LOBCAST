@@ -9,7 +9,7 @@ def callback_save_model(path, fname_root, metric, top_k=3):
         save_top_k=top_k,
         mode='max',
         dirpath=path,
-        filename=fname_root + '{epoch}-{' + metric + ':.2f}'
+        filename=fname_root + '_{epoch}-{' + metric + ':.2f}'
     )
     return check_point_callback
 

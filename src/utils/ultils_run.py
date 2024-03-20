@@ -2,6 +2,23 @@ import wandb
 import src.constants as cst
 import itertools
 
+def wandb_init(sim):
+    def wandb_lunch(sim):  # runs multiple instances
+        with wandb.init() as wandb_instance:
+            sim.update_hyper_parameters(wandb_instance.config)
+            sim.end_setup(wandb_instance)
+
+            wandb_instance.log({k: str(v) for k, v in sim.SETTINGS.__dict__.items()})
+            sim.run()
+
+    sweep_id = wandb.sweep(project=cst.PROJECT_NAME_VERSION, sweep={
+        'method': sim.SETTINGS.WANDB_SWEEP_METHOD,
+        "metric": {"goal": "maximize", "name": cst.VALIDATION_METRIC},
+        'parameters': sim.TUNABLE_H_PRAM.__dict__,
+        'description': str(sim.SETTINGS) + str(sim.TUNABLE_H_PRAM),
+    })
+    return sweep_id, wandb_lunch
+
 
 def grid_search_configurations(tunable_variables, n_steps=3):
     """ Given a set of parameters to tune of the form
@@ -28,24 +45,6 @@ def grid_search_configurations(tunable_variables, n_steps=3):
     # from tuples [(v1, v2, v3)] to [{p1: v1}, ...]
     configurations_dicts = [{k: v for k, v in zip(tunable_variables.keys(), selected_values)} for selected_values in configurations_tuples]
     return configurations_dicts
-
-
-def wandb_init(sim):
-    def wandb_lunch(sim):  # runs multiple instances
-        with wandb.init() as wandb_instance:
-            sim.update_hyper_parameters(wandb_instance.config)
-            sim.end_setup(wandb_instance)
-
-            wandb_instance.log({k: str(v) for k, v in sim.SETTINGS.__dict__.items()})
-            sim.run()
-
-    sweep_id = wandb.sweep(project=cst.PROJECT_NAME_VERSION, sweep={
-        'method': sim.SETTINGS.WANDB_SWEEP_METHOD,
-        "metric": {"goal": "maximize", "name": cst.VALIDATION_METRIC},
-        'parameters': sim.TUNABLE_H_PRAM.__dict__,
-        'description': str(sim.SETTINGS) + str(sim.TUNABLE_H_PRAM),
-    })
-    return sweep_id, wandb_lunch
 
 
 class ExecutionPlan:

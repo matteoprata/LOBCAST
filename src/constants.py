@@ -117,28 +117,6 @@ HORIZONS_MAPPINGS_LOBSTER = {
     100: -1
 }
 
-class Granularity(Enum):
-    """ The possible Granularity to build the OHLC old_data from lob """
-    Sec1 = "1S"
-    Sec5 = "5S"
-    Sec15 = "15S"
-    Sec30 = "30S"
-    Min1 = "1Min"
-    Min5 = "5Min"
-    Min15 = "15Min"
-    Min30 = "30Min"
-    Hour1 = "1H"
-    Hour2 = "2H"
-    Hour6 = "6H"
-    Hour12 = "12H"
-    Day1 = "1D"
-    Day2 = "2D"
-    Day5 = "7D"
-    Month1 = "30D"
-    Events1 = 1
-    Events10 = 10
-
-
 
 class OrderEvent(Enum):
     """ The possible kind of orders in the lob """
@@ -158,11 +136,15 @@ class DatasetType(Enum):
     VALIDATION = "val"
 
 
+DOWNLOAD_FI_COMMAND = ("wget --content-disposition \"https://download.fairdata.fi:443/download?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3MTEyMzAxODksImRhdGFzZXQiOiI3M2ViNDhkNy00ZGJjLTRhMTAtYTUyYS1kYTc0NWI0N2E2NDkiLCJwYWNrYWdlIjoiNzNlYjQ4ZDctNGRiYy00YTEwLWE1MmEtZGE3NDViNDdhNjQ5X2JoeXV4aWZqLnppcCIsImdlbmVyYXRlZF9ieSI6IjlmZGRmZmVlLWY4ZDItNDZkNS1hZmIwLWQyOTM0NzdlZjg2ZiIsInJhbmRvbV9zYWx0IjoiYjVkYzQxOTAifQ.bgDP51aFumRtPMbJUtUcjhpnu-O6nI6OYZlDbc3lrfQ\"")
+
+
 class ExpIndependentVariables(Enum):
     MODEL = 'model'
     K_FI = 'k'
     FORWARD_WIN = 'fw'
     BACKWARD_WIN = 'bw'
+
 
 N_LOB_LEVELS = 10
 NUM_CLASSES = 3

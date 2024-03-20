@@ -6,7 +6,7 @@ from src.utils.ultils_run import grid_search_configurations, ExecutionPlan, wand
 from src.settings import SettingsExp
 import src.constants as cst
 
-from src.batch_exp import setup01
+from src.batch_experiments import setup01
 from src.run import run_simulation
 
 

@@ -5,7 +5,6 @@ import os
 from datetime import datetime
 from enum import Enum
 from matplotlib.backends.backend_pdf import PdfPages
-from matplotlib.backends.backend_pdf import PdfPages
 
 import numpy as np
 from pytorch_lightning import seed_everything
@@ -19,8 +18,8 @@ from src.settings import Settings
 from src.hyper_parameters import ConfigHPTunable, ConfigHPTuned
 
 from src.models.model_callbacks import callback_save_model
-from src.utils.utils_dataset import pick_dataset
-from src.utils.utils_models import pick_model
+from src.data_preprocessing.utils_dataset import pick_dataset
+from src.models.utils_models import pick_model
 from pytorch_lightning import Trainer
 from src.evaluation.eval_report import plot_metric_training, plot_metric_best, saved_metrics
 
@@ -32,15 +31,16 @@ class LOBCAST:
         self.TUNABLE_H_PRAM = ConfigHPTunable()
         self.TUNED_H_PRAM = ConfigHPTuned()
 
-        # based on the settings
-        self.__init_hyper_parameters()
-
     def update_settings(self, setting_params):
         # settings new settings
         for key, value in setting_params.items():
             self.SETTINGS.__setattr__(key, value)
 
         self.SETTINGS.check_parameters_validity()
+
+        # based on the settings
+        self.__init_hyper_parameters()
+
         # at this point parameters are set
         print("\nRunning with settings:\n", self.SETTINGS.__dict__)
 
@@ -59,6 +59,7 @@ class LOBCAST:
         self.__setup_all_directories(self.DATE_TIME, self.SETTINGS)
 
         self.METRICS = Metrics(self.SETTINGS.DIR_EXPERIMENTS, self.sim_name_format())
+        self.METRICS.dump_info(self.SETTINGS.__dict__, self.TUNED_H_PRAM.__dict__)
         self.WANDB_INSTANCE = wandb_instance
 
     def __init_hyper_parameters(self):
@@ -120,8 +121,10 @@ class LOBCAST:
 
     def run(self):
         """ Given a simulation, settings and hyper params, it runs the training loop. """
+
         data_module = pick_dataset(self)
         nets_module = pick_model(self, data_module, self.METRICS)
+
 
         trainer = Trainer(
             accelerator=self.SETTINGS.DEVICE,
@@ -151,13 +154,13 @@ class LOBCAST:
         print('Completed.')
 
     def __plot_stats(self):
-        pdf_root = self.SETTINGS.DIR_EXPERIMENTS + self.sim_name_format()
-        pdf_best    = PdfPages(pdf_root + 'best_stats.pdf')
-        pdf_running = PdfPages(pdf_root + 'running_stats.pdf')
+        fnames_root = self.SETTINGS.DIR_EXPERIMENTS + self.sim_name_format()
+        pdf_best    = PdfPages(fnames_root + "_" + 'metrics_best_plots.pdf')
+        pdf_running = PdfPages(fnames_root + "_" + 'metrics_train_plots.pdf')
 
         for m in saved_metrics:
-            plot_metric_best(pdf_root + cst.METRICS_BEST_FILE_NAME, m, pdf_best)
-            plot_metric_training(pdf_root + cst.METRICS_RUNNING_FILE_NAME, m, pdf_running)
+            plot_metric_best(fnames_root + "_" + cst.METRICS_BEST_FILE_NAME, m, pdf_best)
+            plot_metric_training(fnames_root + "_" + cst.METRICS_RUNNING_FILE_NAME, m, pdf_running)
 
         pdf_best.close()
         pdf_running.close()

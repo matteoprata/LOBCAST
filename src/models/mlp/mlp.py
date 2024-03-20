@@ -1,14 +1,13 @@
+
 # Using Deep Learning to Detect Price Change Indications in Financial Markets
 # Source: https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8081663
 
 from torch import nn
 from src.models.lobcast_model import LOBCAST_model, LOBCAST_module
-import src.utils.utils_generic as utils_generic
 
 
-# subset of the arguments of a LOBCAST_model
 CONFIG = {
-    "hidden_layer_dim": {"values": [128, 3]},
+    "hidden_layer_dim": {"values": [128, 64]},
     "p_dropout": {"values": [.1]},
 }
 

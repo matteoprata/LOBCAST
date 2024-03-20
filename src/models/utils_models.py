@@ -17,7 +17,6 @@ def pick_model(sim, data_module, metrics_log):
     loss_weights = None
 
     num_features = data_module.x_shape
-    print(data_module.x_shape[0], data_module.x_shape[1])  # 10 x 40
     num_classes = data_module.num_classes
 
     args = get_class_arguments(sim.SETTINGS.PREDICTION_MODEL.value.model)[2:]

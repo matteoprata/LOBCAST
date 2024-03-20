@@ -20,8 +20,8 @@ class ConfigHPTuned(ConfigHP):
 
 class ConfigHPTunable(ConfigHP):
     def __init__(self):
-        self.BATCH_SIZE = {"values": [55]}         # {"min": 0.0001, "max": 0.1} or {"values": [11]}
-        self.LEARNING_RATE = {"values": [0.0001]}  # {"min": 0.0001, "max": 0.1}  # {"min": 0.0001, "max": 0.1}
+        self.BATCH_SIZE = {"values": [32, 64]}         # {"min": 0.0001, "max": 0.1} or {"values": [11]}
+        self.LEARNING_RATE = {"values": [0.0001, 0.001, 0.01]}  # {"min": 0.0001, "max": 0.1}  # {"min": 0.0001, "max": 0.1}
         self.OPTIMIZER = {"values": ["SGD"]}
 
 

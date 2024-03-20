@@ -7,7 +7,6 @@ import multiprocessing
 
 np.set_printoptions(suppress=True)
 from src.utils.utils_generic import dict_to_string
-
 from enum import Enum
 
 
@@ -36,7 +35,7 @@ class Settings:
         self.OBSERVATION_PERIOD: int = 100
         self.IS_SHUFFLE_TRAIN_SET = True
 
-        self.EPOCHS_UB = 20
+        self.EPOCHS_UB = 30
         self.TRAIN_SET_PORTION = .8
         self.VALIDATION_EVERY = 1
 
