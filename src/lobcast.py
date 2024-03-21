@@ -21,7 +21,7 @@ from src.models.model_callbacks import callback_save_model
 from src.data_preprocessing.utils_dataset import pick_dataset
 from src.models.utils_models import pick_model
 from pytorch_lightning import Trainer
-from src.evaluation.eval_report import plot_metric_training, plot_metric_best, saved_metrics
+from src.metrics.report import plot_metric_training, plot_metric_best, saved_metrics
 from src.utils.utils_generic import get_class_arguments
 
 
@@ -148,15 +148,14 @@ class LOBCAST:
 
         if not self.SETTINGS.IS_TEST_ONLY:
             trainer.fit(nets_module, data_module)
-            self.METRICS.dump_metrics(cst.METRICS_RUNNING_FILE_NAME)
             self.METRICS.reset_stats()
 
             # this flag is used when running simulation to know if final validation on best model is running
             self.METRICS.is_best_model = True
+
             # best model evaluation starts
             trainer.validate(nets_module, data_module, ckpt_path=model_path)
         trainer.test(nets_module, data_module, ckpt_path=model_path)
-        # self.METRICS.dump_metrics(cst.METRICS_BEST_FILE_NAME)
         self.__plot_stats()
         print('Completed.')
 
