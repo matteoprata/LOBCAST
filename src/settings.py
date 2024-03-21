@@ -48,7 +48,7 @@ class Settings:
 
         self.DIR_EXPERIMENTS = ""
         self.WANDB_SWEEP_METHOD = 'grid'
-        self.IS_WANDB = False
+        self.IS_WANDB = True
 
     def check_parameters_validity(self):
         CONSTRAINTS = []

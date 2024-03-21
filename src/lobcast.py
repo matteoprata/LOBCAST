@@ -22,6 +22,7 @@ from src.data_preprocessing.utils_dataset import pick_dataset
 from src.models.utils_models import pick_model
 from pytorch_lightning import Trainer
 from src.evaluation.eval_report import plot_metric_training, plot_metric_best, saved_metrics
+from src.utils.utils_generic import get_class_arguments
 
 
 class LOBCAST:
@@ -63,9 +64,15 @@ class LOBCAST:
         self.WANDB_INSTANCE = wandb_instance
 
     def __init_hyper_parameters(self):
-        # add parameters from model
-        for key, value in self.SETTINGS.PREDICTION_MODEL.value.tunable_parameters.items():
-            self.TUNABLE_H_PRAM.add_hyperparameter(key, value)
+        model_arguments = get_class_arguments(self.SETTINGS.PREDICTION_MODEL.value.model)[2:]
+        model_tunable = self.SETTINGS.PREDICTION_MODEL.value.tunable_parameters
+
+        # checks that HP are meaningful
+        for param, values in model_tunable.__dict__.items():
+            if not (param in model_arguments or param in self.TUNABLE_H_PRAM.__dict__):
+                raise KeyError(f"The declared hyper parameters \'{param}\' of model {self.SETTINGS.PREDICTION_MODEL.name} is never used. Remove it.")
+
+        self.TUNABLE_H_PRAM = model_tunable
 
         # set to default, add the same parameters in the TUNED_H_PRAM object
         for key, _ in self.TUNABLE_H_PRAM.__dict__.items():

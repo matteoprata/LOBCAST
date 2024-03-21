@@ -3,7 +3,7 @@ import pytorch_lightning as pl
 
 
 class LOBCAST_module:
-    def __init__(self, name, model, tunable_parameters: dict):
+    def __init__(self, name, model, tunable_parameters):
         self.name = name
         self.model = model
         self.tunable_parameters = tunable_parameters

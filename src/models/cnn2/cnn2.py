@@ -5,11 +5,7 @@ import pytorch_lightning as pl
 from torch import nn
 
 from src.models.lobcast_model import LOBCAST_model, LOBCAST_module
-
-
-CONFIG = {
-    "temp": {'values': [249]},
-}
+from src.hyper_parameters import ConfigHPTunable
 
 
 class CNN2(LOBCAST_model):
@@ -105,4 +101,10 @@ class CNN2(LOBCAST_model):
         return out
 
 
-CNN2_ml = LOBCAST_module("CNN2", CNN2, CONFIG)
+class HP(ConfigHPTunable):
+    def __init__(self):
+        super().__init__()
+        self.temp = {'values': [249]}
+
+
+CNN2_ml = LOBCAST_module("CNN2", CNN2, HP())
