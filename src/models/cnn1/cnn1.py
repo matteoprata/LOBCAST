@@ -5,16 +5,15 @@ import pytorch_lightning as pl
 from torch import nn
 
 from src.models.lobcast_model import LOBCAST_model, LOBCAST_module
-from src.hyper_parameters import ConfigHPTunable
+from src.hyper_parameters import HPTunable
 
 
 class CNN1(LOBCAST_model):
 
-    def __init__(self, input_dim, output_dim, temp):
+    def __init__(self, input_dim, output_dim):
         super().__init__(input_dim, output_dim)
 
         n_features = input_dim[1]
-        print(n_features, output_dim, temp)
 
         # Convolution 1
         self.conv1 = nn.Conv2d(in_channels=1, out_channels=16, kernel_size=(4, n_features), padding=(3, 0), dilation=(2, 1))
@@ -39,7 +38,7 @@ class CNN1(LOBCAST_model):
         self.maxpool2 = nn.MaxPool1d(kernel_size=2)
 
         # Fully connected 1
-        self.fc1 = nn.Linear(temp*32, 32)
+        self.fc1 = nn.Linear(26*32, 32)
         self.relu5 = nn.LeakyReLU()
 
         # Fully connected 2
@@ -96,10 +95,4 @@ class CNN1(LOBCAST_model):
         return out
 
 
-class HP(ConfigHPTunable):
-    def __init__(self):
-        super().__init__()
-        self.temp = {'values': [26]}
-
-
-CNN_lm = LOBCAST_module("CNN1", CNN1, HP())
+CNN_lm = LOBCAST_module(CNN1)

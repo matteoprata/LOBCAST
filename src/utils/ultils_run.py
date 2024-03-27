@@ -2,6 +2,7 @@ import wandb
 import src.constants as cst
 import itertools
 
+
 def wandb_init(sim):
     def wandb_lunch(sim):  # runs multiple instances
         with wandb.init() as wandb_instance:
@@ -14,8 +15,8 @@ def wandb_init(sim):
     sweep_id = wandb.sweep(project=cst.PROJECT_NAME_VERSION, sweep={
         'method': sim.SETTINGS.WANDB_SWEEP_METHOD,
         "metric": {"goal": "maximize", "name": cst.VALIDATION_METRIC},
-        'parameters': sim.TUNABLE_H_PRAM.__dict__,
-        'description': str(sim.SETTINGS) + str(sim.TUNABLE_H_PRAM),
+        'parameters': sim.HP_TUNABLE.__dict__,
+        'description': str(sim.SETTINGS) + str(sim.HP_TUNABLE),
     })
     return sweep_id, wandb_lunch
 
@@ -61,12 +62,14 @@ class ExecutionPlan:
         all_domains = [list(dom) for dom in self.plan.values()]
         configurations_attempts = list(itertools.product(*all_domains))
 
-        chosen_configurations = set()
-        for fixed_var, fixed_value in self.constraints.items():
-            for configuration in configurations_attempts:
-                vf_index = list(self.plan.keys()).index(fixed_var)
-                if configuration[vf_index] == fixed_value:
-                    chosen_configurations |= {configuration}
+        chosen_configurations = set(configurations_attempts)
+        if len(self.constraints) > 0:
+            chosen_configurations = set()
+            for fixed_var, fixed_value in self.constraints.items():
+                for configuration in configurations_attempts:
+                    vf_index = list(self.plan.keys()).index(fixed_var)
+                    if configuration[vf_index] == fixed_value:
+                        chosen_configurations |= {configuration}
 
         out_con = []
         for co_tup in chosen_configurations:

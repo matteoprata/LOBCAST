@@ -4,7 +4,7 @@
 
 from torch import nn
 from src.models.lobcast_model import LOBCAST_model, LOBCAST_module
-from src.hyper_parameters import ConfigHPTunable
+from src.hyper_parameters import HPTunable
 
 
 class MLP(LOBCAST_model):
@@ -33,11 +33,11 @@ class MLP(LOBCAST_model):
         return out
 
 
-class HP(ConfigHPTunable):
+class HP(HPTunable):
     def __init__(self):
         super().__init__()
-        self.hidden_layer_dim = {"values": [128, 64]}
+        self.hidden_layer_dim = {"values": [128]}
         self.p_dropout = {"values": [.1, .5]}
 
 
-MLP_lm = LOBCAST_module("MLP", MLP, HP())
+MLP_lm = LOBCAST_module(MLP, HP())

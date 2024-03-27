@@ -9,8 +9,8 @@ from src.settings import SettingsExp
 
 def run_simulation(sim):
     if not sim.SETTINGS.IS_WANDB:
-        # generates runs based on a grid search of the hyper prams
-        hparams_configs = grid_search_configurations(sim.TUNABLE_H_PRAM.__dict__)
+        # generates runs based on a grid search of the hyper params
+        hparams_configs = grid_search_configurations(sim.HP_TUNABLE.__dict__)
         for hparams_config in hparams_configs:
             sim.update_hyper_parameters(hparams_config)
             sim.end_setup()

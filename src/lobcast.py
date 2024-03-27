@@ -15,7 +15,7 @@ from src.metrics.metrics_log import Metrics
 np.set_printoptions(suppress=True)
 from src.utils.utils_generic import str_to_bool
 from src.settings import Settings
-from src.hyper_parameters import ConfigHPTunable, ConfigHPTuned
+from src.hyper_parameters import HPTunable, HPTuned
 
 from src.models.model_callbacks import callback_save_model
 from src.data_preprocessing.utils_dataset import pick_dataset
@@ -26,63 +26,82 @@ from src.utils.utils_generic import get_class_arguments
 
 
 class LOBCAST:
+    """ LOBCAST class is responsible to maintain all the information about the current simulation.
+    Including the simulation settings, tunable hyperparameters of the models. """
+
     def __init__(self):
 
-        self.SETTINGS = Settings()
-        self.TUNABLE_H_PRAM = ConfigHPTunable()
-        self.TUNED_H_PRAM = ConfigHPTuned()
+        self.SETTINGS = Settings()     # the settings of the simulation
+        self.HP_TUNABLE = HPTunable()  # the hyperparameters to vary and their domains
+        self.HP_TUNED = HPTuned()      # the hyperparameters and their values
 
-    def update_settings(self, setting_params):
+    def update_settings(self, setting_params: dict):
+        """ Updates the settings with the given parameters. """
         # settings new settings
         for key, value in setting_params.items():
             self.SETTINGS.__setattr__(key, value)
 
         self.SETTINGS.check_parameters_validity()
-
-        # based on the settings
         self.__init_hyper_parameters()
 
-        # at this point parameters are set
-        print("\nRunning with settings:\n", self.SETTINGS.__dict__)
+        if self.SETTINGS.IS_SANITY_CHECK:
+            self.__sanity_check_settings()
 
-    def update_hyper_parameters(self, tuning_parameters):
+        # at this point parameters are set
+        run_description = "\nRunning with settings:\n", self.SETTINGS.__dict__
+        print(run_description)
+
+    def __sanity_check_settings(self):
+        print("THIS IS A SANITY CHECK RUN.")
+        self.SETTINGS.EPOCHS_UB = 1
+
+    def update_hyper_parameters(self, tuning_parameters: dict):
+        """Update the hyperparameters with the given parameters"""
+
         # coming from wandb or from local grid search
         for key, value in tuning_parameters.items():
-            self.TUNED_H_PRAM.__setattr__(key, value)
+            self.HP_TUNED.update_hyperparameter(key, value)
 
         # at this point parameters are set
-        print("\nRunning with hyper parameters:\n", self.TUNED_H_PRAM.__dict__)
+        print("\nRunning with hyper parameters:\n", self.HP_TUNED.__dict__)
 
     def end_setup(self, wandb_instance=None):
-        self.__seed_everything(self.SETTINGS.SEED)
+        """ Ends the simulation setup based on the chosen settings and parameters. """
 
         self.DATE_TIME = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
-        self.__setup_all_directories(self.DATE_TIME, self.SETTINGS)
+        dir_detail = "SANITY_CHECK" if self.SETTINGS.IS_SANITY_CHECK else self.DATE_TIME
+        self.SETTINGS.DIR_EXPERIMENTS = f"{cst.DIR_EXPERIMENTS}-({dir_detail})/"
+
+        self.__seed_everything(self.SETTINGS.SEED)
+        self.__setup_all_directories(self.SETTINGS)
 
         self.METRICS = Metrics(self.SETTINGS.DIR_EXPERIMENTS, self.sim_name_format())
-        self.METRICS.dump_info(self.SETTINGS.__dict__, self.TUNED_H_PRAM.__dict__)
+        self.METRICS.dump_info(self.SETTINGS.__dict__, self.HP_TUNED.__dict__)
+
         self.WANDB_INSTANCE = wandb_instance
 
     def __init_hyper_parameters(self):
+        """ Init the simulation hyperparameters gathering those from the chosen model, declared by the user. """
         model_arguments = get_class_arguments(self.SETTINGS.PREDICTION_MODEL.value.model)[2:]
         model_tunable = self.SETTINGS.PREDICTION_MODEL.value.tunable_parameters
 
         # checks that HP are meaningful
         for param, values in model_tunable.__dict__.items():
-            if not (param in model_arguments or param in self.TUNABLE_H_PRAM.__dict__):
+            if not (param in model_arguments or param in self.HP_TUNABLE.__dict__):
                 raise KeyError(f"The declared hyper parameters \'{param}\' of model {self.SETTINGS.PREDICTION_MODEL.name} is never used. Remove it.")
 
-        self.TUNABLE_H_PRAM = model_tunable
+        self.HP_TUNABLE = model_tunable
 
-        # set to default, add the same parameters in the TUNED_H_PRAM object
-        for key, _ in self.TUNABLE_H_PRAM.__dict__.items():
-            self.TUNED_H_PRAM.add_hyperparameter(key, None)
+        # set to default, add the same parameters in the HP_TUNED object
+        for key, _ in self.HP_TUNABLE.__dict__.items():
+            self.HP_TUNED.add_hyperparameter(key, None)
 
     def __seed_everything(self, seed):
-        """ Sets the random seed to all the random generators. """
+        """ Sets the random seed of the whole simulator. """
         seed_everything(seed)
 
     def sim_name_format(self):
+        """ The name of the simulation. """
         SIM_NAME = "MOD={}-SEED={}-DS={}-HU={}-HP={}-HF={}-OB={}"
         return SIM_NAME.format(
             self.SETTINGS.PREDICTION_MODEL.name,
@@ -117,28 +136,26 @@ class LOBCAST:
         return setting_conf
 
     @staticmethod
-    def __setup_all_directories(fname, settings):
-        settings.DIR_EXPERIMENTS = f"{cst.DIR_EXPERIMENTS}-({fname})/"
-
+    def __setup_all_directories(settings):
+        """ Creates the necessary directories for the simulation. """
         # create the paths for the simulation if they do not exist already
-        paths = ["data", settings.DIR_EXPERIMENTS]
+        paths = ["data", "data/datasets", "data/experiments", settings.DIR_EXPERIMENTS]
         for p in paths:
             if not os.path.exists(p):
                 os.makedirs(p)
 
     def run(self):
-        """ Given a simulation, settings and hyper params, it runs the training loop. """
+        """ After having chosen settings and hyperparams, it runs LOBCAST training loop. """
 
         data_module = pick_dataset(self)
-        nets_module = pick_model(self, data_module, self.METRICS)
-
+        nets_module = pick_model(self, data_module)
 
         trainer = Trainer(
             accelerator=self.SETTINGS.DEVICE,
             devices=self.SETTINGS.N_GPUs,
             check_val_every_n_epoch=self.SETTINGS.VALIDATION_EVERY,
             max_epochs=self.SETTINGS.EPOCHS_UB,
-            num_sanity_val_steps=0,
+            num_sanity_val_steps=1 if self.SETTINGS.IS_SANITY_CHECK else 0,
             callbacks=[
                 callback_save_model(self.SETTINGS.DIR_EXPERIMENTS, self.sim_name_format(), cst.VALIDATION_METRIC, top_k=3)
             ],
@@ -158,6 +175,9 @@ class LOBCAST:
         trainer.test(nets_module, data_module, ckpt_path=model_path)
         self.__plot_stats()
         print('Completed.')
+
+        if self.SETTINGS.IS_SANITY_CHECK:
+            exit("Sanity check passed.")
 
     def __plot_stats(self):
         fnames_root = self.SETTINGS.DIR_EXPERIMENTS + self.sim_name_format()

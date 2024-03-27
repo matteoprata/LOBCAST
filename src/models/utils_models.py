@@ -9,11 +9,11 @@ from src.utils.utils_generic import get_class_arguments
 
 
 def get_tuned_parameters(sim, params):
-    values = [sim.TUNED_H_PRAM.__getattribute__(p) for p in params]
+    values = [sim.HP_TUNED.__getattribute__(p) for p in params]
     return values
 
 
-def pick_model(sim, data_module, metrics_log):
+def pick_model(sim, data_module):
     loss_weights = None
 
     num_features = data_module.x_shape
@@ -26,8 +26,8 @@ def pick_model(sim, data_module, metrics_log):
     engine = LOBCAST_NNEngine(
         neural_architecture,
         loss_weights,
-        hps=sim.TUNED_H_PRAM,
-        metrics_log=metrics_log,
+        hps=sim.HP_TUNED,
+        metrics_log=sim.METRICS,
         wandb_log=sim.WANDB_INSTANCE,
     ).to(sim.SETTINGS.DEVICE)
 

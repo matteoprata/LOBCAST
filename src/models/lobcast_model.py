@@ -1,13 +1,13 @@
 
 import pytorch_lightning as pl
+from src.hyper_parameters import HPTunable
 
 
 class LOBCAST_module:
-    def __init__(self, name, model, tunable_parameters):
-        self.name = name
+    def __init__(self, model, tunable_parameters=None):
         self.model = model
-        self.tunable_parameters = tunable_parameters
-
+        self.tunable_parameters = tunable_parameters if tunable_parameters is not None else HPTunable()
+        self.name = model.__class__.__name__
         self.line_color = "red"
         self.line_shape = "-"
 

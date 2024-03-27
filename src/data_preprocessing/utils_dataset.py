@@ -8,7 +8,7 @@ def prepare_data_fi(sim):
 
     if not sim.SETTINGS.IS_TEST_ONLY:
         fi_train = FIDataset(
-            cst.DATA_SOURCE + cst.DATASET_FI,
+            cst.DATASET_FI,
             dataset_type=cst.DatasetType.TRAIN,
             horizon=sim.SETTINGS.PREDICTION_HORIZON_FUTURE,
             observation_length=sim.SETTINGS.OBSERVATION_PERIOD,
@@ -17,7 +17,7 @@ def prepare_data_fi(sim):
         )
 
         fi_val = FIDataset(
-            cst.DATA_SOURCE + cst.DATASET_FI,
+            cst.DATASET_FI,
             dataset_type=cst.DatasetType.VALIDATION,
             horizon=sim.SETTINGS.PREDICTION_HORIZON_FUTURE,
             observation_length=sim.SETTINGS.OBSERVATION_PERIOD,
@@ -26,7 +26,7 @@ def prepare_data_fi(sim):
         )
 
     fi_test = FIDataset(
-        cst.DATA_SOURCE + cst.DATASET_FI,
+        cst.DATASET_FI,
         dataset_type=cst.DatasetType.TEST,
         observation_length=sim.SETTINGS.OBSERVATION_PERIOD,
         horizon=sim.SETTINGS.PREDICTION_HORIZON_FUTURE,
@@ -36,7 +36,7 @@ def prepare_data_fi(sim):
 
     fi_dm = DataModule(
         fi_train, fi_val, fi_test,
-        sim.TUNED_H_PRAM.BATCH_SIZE,
+        sim.HP_TUNED.BATCH_SIZE,
         sim.SETTINGS.DEVICE,
         sim.SETTINGS.IS_SHUFFLE_TRAIN_SET
     )
@@ -46,3 +46,5 @@ def prepare_data_fi(sim):
 def pick_dataset(sim):
     if sim.SETTINGS.DATASET_NAME == cst.DatasetFamily.FI:
         return prepare_data_fi(sim)
+    else:
+        raise ValueError(f"Unhandled dataset name: {sim.SETTINGS}")
